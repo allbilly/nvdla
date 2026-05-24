@@ -1,8 +1,9 @@
-look for refernce in  ref/*
+look for refernce in ref/*
+- ref/hw
+- ref/vp
 
 we are working in pure npu registers driver.
 - when face  problem, ask deepwiki
-
 
 Use `deepwiki_ask_question` on these repos:
 - `nvdla/doc` — Detailed nvdla documentation
@@ -16,6 +17,9 @@ Use `deepwiki_ask_question` on these repos:
   - `verif/traces/traceplayer/conv_8x8_fc_int16/input.txn` — Real register write sequences
 - `soDLA-publishment/soDLA`, Chisel implementation of the NVIDIA hw
 - `torvalds/linux` (drivers/accel/rocket/) — The **upstream Linux kernel** "rocket" driver for Rockchip NPU. Contains the canonical register definitions in `rocket_registers.h` (auto-generated from Mesa). When `rockchip.py` or `conv.py` register values seem wrong, check this file for ground-truth bitfield masks/shifts. Tomu got multicore NPU working on the merged linux mainline rocket NPU driver.
+- `ONNC/onnc` 
+- 'ONNC/onnc-tutorial/'
+- `nvdla/sw` 
 
 For simulator reference
 - 'nvdla/vp'
