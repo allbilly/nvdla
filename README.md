@@ -15,28 +15,20 @@ cd ../
 docker run -ti --rm -v ./ref/onnc:/onnc/onnc:z -v ./ref/onnc-tutorial:/tutorial:z onnc/onnc-community
 ```
 
-within container
+Within container, compile Lenet and simple ADD
 ```bash
 cd /onnc/onnc-umbrella/build-normal && smake -j8 install
-```
 
-# 1.1 Compile lenet
-
-```bash
 onnc -mquadruple nvdla /tutorial/models/lenet/lenet.onnx
 sudo mv out.nvdla /tutorial/models/lenet/
-```
 
-# 2. Compile simple ADD with ONNC
-
-```bash
 onnc -mquadruple nvdla /tutorial/models/test_Add/test_Add.onnx
 sudo mv out.nvdla /tutorial/models/test_Add/
 ```
 
-# 3. Run .nvdla
+# 2. Run nvdla loadable
 
-## 3.1 onnc/vp
+## 2.1 onnc/vp
 
 run inference of the compiled lenet
 nvdla login: root
@@ -75,12 +67,14 @@ cat output.dimg
 poweroff
 ```
 
-
-
-## 3.2 nvdla/vp
+## 2.2 nvdla/vp
 
 note nvdla/vp cannot run lenet.nvdla out.nvdla compiled from ONNC
 maybe it was compiled nv_small, or input problem?
+
+# 3 Parse nvdla loadable
+
+
 
 # reference
 https://github.com/ONNC/onnc-tutorial/blob/master/lab_1_Environment_Setup/lab_1.md
