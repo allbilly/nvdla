@@ -18,7 +18,7 @@ Use `deepwiki_ask_question` on these repos:
 - `soDLA-publishment/soDLA`, Chisel implementation of the NVIDIA hw
 - `torvalds/linux` (drivers/accel/rocket/) — The **upstream Linux kernel** "rocket" driver for Rockchip NPU. Contains the canonical register definitions in `rocket_registers.h` (auto-generated from Mesa). When `rockchip.py` or `conv.py` register values seem wrong, check this file for ground-truth bitfield masks/shifts. Tomu got multicore NPU working on the merged linux mainline rocket NPU driver.
 - `ONNC/onnc` 
-- 'ONNC/onnc-tutorial/'
+- `ONNC/onnc-tutorial/`
 - `nvdla/sw` 
 
 For simulator reference
