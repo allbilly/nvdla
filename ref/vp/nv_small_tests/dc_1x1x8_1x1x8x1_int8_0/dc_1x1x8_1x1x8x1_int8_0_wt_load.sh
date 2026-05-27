@@ -1,0 +1,4 @@
+#!/bin/sh
+
+devmem 0xd0000000 32 0x619475
+devmem 0xd0000004 32 0x3ffd8eaa

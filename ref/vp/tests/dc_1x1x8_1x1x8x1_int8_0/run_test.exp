@@ -1,0 +1,55 @@
+#!/usr/bin/expect -f
+# Automate VP test: boot, mount 9p, load data, run test, capture output
+
+set timeout 120
+set vp_dir [lindex $argv 0]
+
+if {$vp_dir == ""} {
+    set vp_dir "/home/fedora/nvdla/ref/vp"
+}
+
+spawn env SC_SIGNAL_WRITE_CHECK=DISABLE $vp_dir/build/bin/aarch64_toplevel -c $vp_dir/conf/aarch64_nvdla.lua
+
+# Wait for login prompt
+expect {
+    -re {login:|/ # \$} {
+        send "\n"
+        exp_continue
+    }
+    timeout {
+        puts "TIMEOUT waiting for boot"
+        exit 1
+    }
+}
+
+sleep 1
+send "\n"
+expect -re {/ #} {}
+
+# Mount 9p shared directory
+send "mount -t 9p -o trans=virtio r /mnt\n"
+expect -re {/ #} {}
+
+# cd to test directory
+send "cd /mnt/tests/dc_1x1x8_1x1x8x1_int8_0\n"
+expect -re {/ #} {}
+
+# Load data
+send "./dat_load.sh\n"
+expect -re {/ #} {}
+
+# Load weights
+send "./wt_load.sh\n"
+expect -re {/ #} {}
+
+# Run the test
+send "./dc_1x1x8_1x1x8x1_int8_0_test\n"
+expect -re {/ #} {}
+
+# Read output
+send "hexdump -C sdp2mcif_output.dat\n"
+expect -re {/ #} {}
+
+# Power off
+send "poweroff\n"
+expect eof

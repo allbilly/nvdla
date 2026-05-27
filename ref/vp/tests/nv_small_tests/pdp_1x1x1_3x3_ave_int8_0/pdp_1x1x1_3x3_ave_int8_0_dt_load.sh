@@ -1,0 +1,3 @@
+#!/bin/sh
+
+devmem 0xc0002b00 32 0xf6
