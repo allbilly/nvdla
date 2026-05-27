@@ -1,0 +1,2248 @@
+From 30287fd2b8d41cf578a72a672ac9a3eeb14203e1 Mon Sep 17 00:00:00 2001
+From: allbilly <53866088+allbilly@users.noreply.github.com>
+Date: Mon, 25 May 2026 10:42:57 +0800
+Subject: [PATCH] fix vp build
+
+---
+ .gitignore                            |  15 +
+ CMakeLists.txt                        | 111 +++++
+ ChangeLog                             |   3 +
+ LICENSE                               |  34 ++
+ README                                |  18 +
+ VERSION                               |   1 +
+ cmake/FindGREENLIB.cmake              |  70 +++
+ cmake/FindSystemC.cmake               | 172 +++++++
+ cmake/FindTLM.cmake                   |  75 +++
+ cmake/FindTLM2C.cmake                 |  57 +++
+ include/SimpleCPU/IRQ.h               |  60 +++
+ include/SimpleCPU/simpleCPU.h         | 188 ++++++++
+ include/SimpleCPU/thread_safe_event.h |  72 +++
+ include/SimpleCPU/tlm2CSCBridge.h     |  98 ++++
+ misc/FindSIMPLECPU.cmake              |  55 +++
+ src/simpleCPU.cpp                     | 642 ++++++++++++++++++++++++++
+ src/thread_safe_event.cpp             |  65 +++
+ src/tlm2CSCBridge.cpp                 | 283 ++++++++++++
+ test/CMakeLists.txt                   |  45 ++
+ test/SimpleCPU_testbench.cpp          |  12 +
+ 20 files changed, 2076 insertions(+)
+ create mode 100644 .gitignore
+ create mode 100644 CMakeLists.txt
+ create mode 100644 ChangeLog
+ create mode 100644 LICENSE
+ create mode 100644 README
+ create mode 100644 VERSION
+ create mode 100644 cmake/FindGREENLIB.cmake
+ create mode 100644 cmake/FindSystemC.cmake
+ create mode 100644 cmake/FindTLM.cmake
+ create mode 100644 cmake/FindTLM2C.cmake
+ create mode 100644 include/SimpleCPU/IRQ.h
+ create mode 100644 include/SimpleCPU/simpleCPU.h
+ create mode 100644 include/SimpleCPU/thread_safe_event.h
+ create mode 100644 include/SimpleCPU/tlm2CSCBridge.h
+ create mode 100644 misc/FindSIMPLECPU.cmake
+ create mode 100644 src/simpleCPU.cpp
+ create mode 100644 src/thread_safe_event.cpp
+ create mode 100644 src/tlm2CSCBridge.cpp
+ create mode 100644 test/CMakeLists.txt
+ create mode 100644 test/SimpleCPU_testbench.cpp
+
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..f111513
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,15 @@
++
++*~
++
++# CMakeFiles
++CMakeCache.txt
++CMakeFiles
++CTestTestfile.cmake
++Makefile
++Testing
++cmake_install.cmake
++install_manifest.txt
++
++# Objects
++test/SimpleCPU_testbench
++libsimplecpu.so
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+new file mode 100644
+index 0000000..a70a295
+--- /dev/null
++++ b/CMakeLists.txt
+@@ -0,0 +1,111 @@
++# Copyright (C) 2014, GreenSocs ltd.
++#
++# CMakeLists.txt
++#
++# KONRAD Frederic <fred.konrad@greensocs.com>
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or (at
++# your option) any later version.
++#
++# This program is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, see <http://www.gnu.org/licenses>.
++#
++# Linking GreenSocs code, statically or dynamically with other modules
++# is making a combined work based on GreenSocs code. Thus, the terms and
++# conditions of the GNU General Public License cover the whole
++# combination.
++#
++# In addition, as a special exception, the copyright holders, GreenSocs
++# Ltd, give you permission to combine GreenSocs code with free software
++# programs or libraries that are released under the GNU LGPL, under the
++# OSCI license, under the OCP TLM Kit Research License Agreement or
++# under the OVP evaluation license.You may copy and distribute such a
++# system following the terms of the GNU GPL and the licenses of the
++# other code concerned.
++#
++# Note that people who make modified versions of GreenSocs code are not
++# obligated to grant this special exception for their modified versions;
++# it is their choice whether to do so. The GNU General Public License
++# gives permission to release a modified version without this exception;
++# this exception also makes it possible to release a modified version
++# which carries forward this exception.
++
++CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
++PROJECT(SIMPLECPU)
++
++LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
++
++FIND_PACKAGE(SystemC)
++if(SystemC_FOUND)
++    INCLUDE_DIRECTORIES(${SystemC_INCLUDE_DIRS})
++    LINK_DIRECTORIES(${SystemC_LIBRARY_DIRS})
++else()
++    MESSAGE(FATAL_ERROR "SystemC library not found.")
++endif()
++
++FIND_PACKAGE(TLM)
++if(TLM_FOUND)
++    INCLUDE_DIRECTORIES(${TLM_INCLUDE_DIRS})
++else()
++    MESSAGE( FATAL_ERROR "TLM library not found." )
++endif()
++
++FIND_PACKAGE(GREENLIB)
++if(GREENLIB_FOUND)
++    INCLUDE_DIRECTORIES(${GREENLIB_INCLUDE_DIRS})
++    LINK_DIRECTORIES(${GREENLIB_LIBRARY_DIRS})
++else()
++    MESSAGE(FATAL_ERROR "GreenLib not found.")
++endif()
++
++FIND_PACKAGE(TLM2C)
++if(TLM2C_FOUND)
++    INCLUDE_DIRECTORIES(${TLM2C_INCLUDE_DIRS})
++    LINK_DIRECTORIES(${TLM2C_LIBRARY_DIRS})
++else()
++    MESSAGE(FATAL_ERROR "TLM2C not found.")
++endif()
++
++set (INCLUDE_DIRS ${INCLUDE_DIRS} include)
++
++INCLUDE_DIRECTORIES(${INCLUDE_DIRS})
++
++set(CMAKE_CXX_FLAGS "-Wall -Werror -Wno-deprecated-declarations -Wno-deprecated -Wno-register -Wno-overloaded-virtual -DSC_INCLUDE_DYNAMIC_PROCESSES")
++
++if(MINGW)
++    add_library(simplecpu STATIC src/simpleCPU.cpp
++                                 src/tlm2CSCBridge.cpp
++                                 src/thread_safe_event.cpp)
++else()
++    add_library(simplecpu SHARED src/simpleCPU.cpp
++                                 src/tlm2CSCBridge.cpp
++                                 src/thread_safe_event.cpp)
++endif()
++
++set(SIMPLECPU_LINK_LIBRARIES pthread
++                             tlm2c)
++
++if(NOT MINGW)
++    list(APPEND SIMPLECPU_LINK_LIBRARIES dl)
++endif()
++
++target_link_libraries(simplecpu ${SIMPLECPU_LINK_LIBRARIES})
++
++# Installation paths
++INSTALL(DIRECTORY include/SimpleCPU
++        DESTINATION include
++)
++
++# Not sure it's the right destination? Maybe we want lib64 in case of 64bits?
++INSTALL(TARGETS simplecpu DESTINATION lib)
++
++# Make tests
++ENABLE_TESTING()
++ADD_SUBDIRECTORY(test)
+diff --git a/ChangeLog b/ChangeLog
+new file mode 100644
+index 0000000..4716901
+--- /dev/null
++++ b/ChangeLog
+@@ -0,0 +1,3 @@
++2014-11-14  KONRAD Frederic  <fred.konrad@greensocs.com>
++
++	* Create the repository.
+diff --git a/LICENSE b/LICENSE
+new file mode 100644
+index 0000000..c671649
+--- /dev/null
++++ b/LICENSE
+@@ -0,0 +1,34 @@
++Copyright (C) 2014, GreenSocs ltd.
++
++This program is free software; you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation; either version 2 of the License, or (at
++your option) any later version.
++
++This program is distributed in the hope that it will be useful, but
++WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with this program; if not, see <http://www.gnu.org/licenses>.
++
++Linking GreenSocs code, statically or dynamically with other modules
++is making a combined work based on GreenSocs code. Thus, the terms and
++conditions of the GNU General Public License cover the whole
++combination.
++
++In addition, as a special exception, the copyright holders, GreenSocs
++Ltd, give you permission to combine GreenSocs code with free software
++programs or libraries that are released under the GNU LGPL, under the
++OSCI license, under the OCP TLM Kit Research License Agreement or
++under the OVP evaluation license.You may copy and distribute such a
++system following the terms of the GNU GPL and the licenses of the
++other code concerned.
++
++Note that people who make modified versions of GreenSocs code are not
++obligated to grant this special exception for their modified versions;
++it is their choice whether to do so. The GNU General Public License
++gives permission to release a modified version without this exception;
++this exception also makes it possible to release a modified version
++which carries forward this exception.
+diff --git a/README b/README
+new file mode 100644
+index 0000000..5905fee
+--- /dev/null
++++ b/README
+@@ -0,0 +1,18 @@
++This library provides SystemC CPUs.
++
++It can load shared libraries developped with TLM2C.
++
++How to include this model in a project:
++
++* Copy the misc/FindSIMPLECPU.cmake in your project repository.
++* Add the following lines into your CMakeLists.txt:
++    FIND_PACKAGE(SIMPLECPU)
++    if(SIMPLECPU_FOUND)
++      INCLUDE_DIRECTORIES(${SIMPLECPU_INCLUDE_DIRS})
++      LINK_DIRECTORIES(${SIMPLECPU_LIBRARY_DIRS})
++    else()
++      MESSAGE(FATAL_ERROR "SIMPLECPU not found.")
++    endif()
++
++You're now able to use SimpleCPU headers and link the toplevel with
++SIMPLECPU_LIBRARIES.
+diff --git a/VERSION b/VERSION
+new file mode 100644
+index 0000000..26aaba0
+--- /dev/null
++++ b/VERSION
+@@ -0,0 +1 @@
++1.2.0
+diff --git a/cmake/FindGREENLIB.cmake b/cmake/FindGREENLIB.cmake
+new file mode 100644
+index 0000000..4a428fb
+--- /dev/null
++++ b/cmake/FindGREENLIB.cmake
+@@ -0,0 +1,70 @@
++# - Find GreenLib
++# This module finds if GreenLib is installed and determines where the
++# include files and libraries are.
++#
++
++#=============================================================================
++# Copyright 2014 GreenSocs
++#
++# KONRAD Frederic <fred.konrad@greensocs.com>
++#
++#=============================================================================
++
++MESSAGE(STATUS "Searching for GreenLib")
++
++# The HINTS option should only be used for values computed from the system.
++SET(_GREENLIB_HINTS
++  ${GREENLIB_PREFIX}/include
++  ${GREENLIB_PREFIX}/lib
++  ${GREENLIB_PREFIX}/lib-linux
++  ${GREENLIB_PREFIX}/lib-linux64
++  ${GREENLIB_PREFIX}/lib-macos
++  $ENV{GREENLIB_PREFIX}/include
++  $ENV{GREENLIB_PREFIX}/lib
++  $ENV{GREENLIB_PREFIX}/lib-linux
++  $ENV{GREENLIB_PREFIX}/lib-linux64
++  $ENV{GREENLIB_PREFIX}/lib-macos
++  ${CMAKE_INSTALL_PREFIX}/include
++  ${CMAKE_INSTALL_PREFIX}/lib
++  ${CMAKE_INSTALL_PREFIX}/lib-linux
++  ${CMAKE_INSTALL_PREFIX}/lib-linux64
++  ${CMAKE_INSTALL_PREFIX}/lib-macos
++  )
++# Hard-coded guesses should still go in PATHS. This ensures that the user
++# environment can always override hard guesses.
++SET(_GREENLIB_PATHS
++  /usr/include
++  /usr/lib
++  /usr/lib-linux
++  /usr/lib-linux64
++  /usr/lib-macos
++  /usr/local/lib
++  /usr/local/lib-linux
++  /usr/local/lib-linux64
++  /usr/local/lib-macos
++  )
++
++FIND_PATH(GREENLIB_INCLUDE_DIRS
++  NAMES greencontrol/config.h
++  HINTS ${_GREENLIB_HINTS}
++  PATHS ${_GREENLIB_PATHS}
++)
++
++FIND_PATH(GREENLIB_LIBRARY_DIRS
++  NAMES libgreenreg.a
++  HINTS ${_GREENLIB_HINTS}
++  PATHS ${_GREENLIB_PATHS}
++)
++
++find_package(Boost REQUIRED)
++include_directories(${Boost_INCLUDE_DIRS})
++
++if("${GREENLIB_INCLUDE_DIRS}" MATCHES "GREENLIB_INCLUDE_DIRS-NOTFOUND")
++    SET(GREENLIB_FOUND FALSE)
++else("${GREENLIB_INCLUDE_DIRS}" MATCHES "GREENLIB_INCLUDE_DIRS-NOTFOUND")
++    SET(GREENLIB_FOUND TRUE)
++    MESSAGE(STATUS "GreenLib include directory = ${GREENLIB_INCLUDE_DIRS}")
++    MESSAGE(STATUS "GreenLib library directory = ${GREENLIB_LIBRARY_DIRS}")
++    SET(GREENLIB_LIBRARIES ${GREENLIB_LIBRARY_DIRS})
++endif("${GREENLIB_INCLUDE_DIRS}" MATCHES "GREENLIB_INCLUDE_DIRS-NOTFOUND")
++
+diff --git a/cmake/FindSystemC.cmake b/cmake/FindSystemC.cmake
+new file mode 100644
+index 0000000..54f2485
+--- /dev/null
++++ b/cmake/FindSystemC.cmake
+@@ -0,0 +1,172 @@
++# Find SystemC
++# This module finds if SystemC is installed and determines where the
++# include files and libraries are. This code sets the following
++# variables: (from kernel/sc_ver.h)
++#
++#  SystemC_VERSION_MAJOR      = The major version of the package found
++#  SystemC_VERSION_MINOR      = The minor version of the package found
++#  SystemC_VERSION_PATCH      = The patch version of the package found
++#  SystemC_VERSION            = The full version string of the package found
++#
++# For these components the following variables are set:
++# 
++#  SystemC_INCLUDE_DIRS             - Full paths to all include dirs
++#  SystemC_LIBRARY_DIRS             - Link directories for SystemC libraries
++#  SystemC::SystemC                 - Full path to SystemC library
++#  SystemC::SystemC_STATIC          - Full path to SystemC static library
++#  
++# Example Usages:
++#  find_package(SystemC)
++
++#=============================================================================
++# Copyright 2015 GreenSocs
++#=============================================================================
++
++function(SYSTEMC_APPEND_TARGET var prefix)
++    set(listVar "")
++    foreach(f ${ARGN})
++        list(APPEND listVar "${prefix}${f}")
++    endforeach(f)
++    set(${var} "${listVar}" PARENT_SCOPE)
++endfunction(SYSTEMC_APPEND_TARGET)
++
++set(_SYSTEMC_TARGET_SUFFIXES linux
++                             linux64
++                             bsd
++                             bsd64
++                             macosx
++                             macosx64
++                             macosxppc
++                             macosxppc64
++                             mingw
++                             mingw64
++                             gccsparcOS5
++                             sparcOS5)
++
++SYSTEMC_APPEND_TARGET(_SYSTEMC_PREFIX_SUFFIXES ${SYSTEMC_PREFIX}/lib- ${_SYSTEMC_TARGET_SUFFIXES})
++SYSTEMC_APPEND_TARGET(_SYSTEMC_HOME_SUFFIXES $ENV{SYSTEMC_HOME}/lib- ${_SYSTEMC_TARGET_SUFFIXES})
++SYSTEMC_APPEND_TARGET(_USR_SUFFIXES /usr/lib- ${_SYSTEMC_TARGET_SUFFIXES})
++SYSTEMC_APPEND_TARGET(_USR_LOCAL_SUFFIXES /usr/local/lib- ${_SYSTEMC_TARGET_SUFFIXES})
++
++set(_SYSTEMC_HINTS
++    ${SYSTEMC_PREFIX}/include
++    ${SYSTEMC_PREFIX}/lib
++    ${_SYSTEMC_PREFIX_SUFFIXES}
++    $ENV{SYSTEMC_HOME}/lib
++    $ENV{SYSTEMC_HOME}/include
++    ${_SYSTEMC_HOME_SUFFIXES})
++
++set(_SYSTEMC_PATHS
++    /usr/local/lib
++    ${_USR_LOCAL_SUFFIXES}
++    /usr/local/lib64
++    /usr/local/include
++    /usr/local/systemc
++    /usr/local/systemc/include
++    /usr/lib
++    ${_USR_SUFFIXES}
++    /usr/lib64
++    /usr/include
++    /usr/systemc
++    /usr/systemc/include)
++ 
++find_file(_SYSTEMC_VERSION_FILE
++          NAMES sc_ver.h
++          HINTS ${_SYSTEMC_HINTS}
++          PATHS ${_SYSTEMC_PATHS}
++          PATH_SUFFIXES sysc/kernel)
++
++if(EXISTS ${_SYSTEMC_VERSION_FILE})
++    file (READ ${_SYSTEMC_VERSION_FILE} _SYSTEMC_VERSION_FILE_CONTENTS)
++    string (REGEX MATCH 
++        "SC_API_VERSION_STRING[ \t]+sc_api_version_([0-9]+)_([0-9]+)_([0-9]+)" 
++        SC_API_VERSION_STRING ${_SYSTEMC_VERSION_FILE_CONTENTS})
++
++    if(NOT "${SC_API_VERSION_STRING}" MATCHES "")
++    	# SystemC < 2.3.1
++    	string (REGEX MATCHALL "([0-9]+)" _SystemC_VERSION 
++            ${SC_API_VERSION_STRING})
++    	list(GET _SystemC_VERSION 0 SystemC_VERSION_MAJOR)
++    	list(GET _SystemC_VERSION 1 SystemC_VERSION_MINOR)
++    	list(GET _SystemC_VERSION 2 SystemC_VERSION_PATCH)
++    else()
++    	# SystemC >= 2.3.1
++    	string (REGEX MATCH "SC_VERSION_MAJOR[ \t]+([0-9]+)" 
++            SystemC_VERSION_MAJOR ${_SYSTEMC_VERSION_FILE_CONTENTS})
++    	string (REGEX MATCH "([0-9]+)" SystemC_VERSION_MAJOR 
++            ${SystemC_VERSION_MAJOR})
++    	string (REGEX MATCH "SC_VERSION_MINOR[ \t]+([0-9]+)" 
++            SystemC_VERSION_MINOR ${_SYSTEMC_VERSION_FILE_CONTENTS})
++    	string (REGEX MATCH "([0-9]+)" SystemC_VERSION_MINOR 
++            ${SystemC_VERSION_MINOR})
++    	string (REGEX MATCH "SC_VERSION_PATCH[ \t]+([0-9]+)" 
++            SystemC_VERSION_PATCH ${_SYSTEMC_VERSION_FILE_CONTENTS})
++    	string (REGEX MATCH "([0-9]+)" SystemC_VERSION_PATCH 
++            ${SystemC_VERSION_PATCH})
++    endif()
++
++    set(SystemC_VERSION "${SystemC_VERSION_MAJOR}.${SystemC_VERSION_MINOR}.${SystemC_VERSION_PATCH}")
++    
++    # Compatibility variable
++    set(SystemC_VERSION_STRING ${SystemC_VERSION})
++    
++    find_path(SystemC_INCLUDE_DIRS
++              NAMES systemc systemc.h
++              HINTS ${_SYSTEMC_HINTS}
++              PATHS ${_SYSTEMC_PATHS})
++    
++    # Static
++    set(_SystemC_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
++    if(WIN32)
++        set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
++    else()
++        set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
++    endif()
++    
++    find_library(SystemC_LIBRARIES_STATIC
++                 NAMES systemc SystemC
++                 HINTS ${_SYSTEMC_HINTS}
++                 PATHS ${_SYSTEMC_PATHS})
++    
++    # Restore original CMAKE_FIND_LIBRARY_SUFFIXES
++    set(CMAKE_FIND_LIBRARY_SUFFIXES ${_SystemC_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
++    
++    # If SystemC_USE_STATIC_LIBS set to ON, force the use of the static libraries
++    if(SystemC_USE_STATIC_LIBS)
++        set(SystemC_LIBRARIES SystemC_LIBRARIES_STATIC)
++    else()
++        find_library(SystemC_LIBRARIES
++                     NAMES systemc SystemC
++                     HINTS ${_SYSTEMC_HINTS}
++                     PATHS ${_SYSTEMC_PATHS})
++    endif()
++    
++    # Default
++    if(NOT TARGET SystemC::SystemC)
++        add_library(SystemC::SystemC UNKNOWN IMPORTED)
++        set_target_properties(SystemC::SystemC PROPERTIES
++                              IMPORTED_LOCATION "${SystemC_LIBRARIES}")
++    endif()                          
++                          
++    # Static
++    if(NOT TARGET SystemC::SystemC_STATIC)
++        add_library(SystemC::SystemC_STATIC STATIC IMPORTED)
++        set_target_properties(SystemC::SystemC_STATIC PROPERTIES
++                              IMPORTED_LOCATION "${SystemC_LIBRARIES_STATIC}") 
++    endif()                                               
++    
++    if("${CMAKE_VERSION}" VERSION_GREATER 2.8.12)
++        get_filename_component(SystemC_LIBRARY_DIRS ${SystemC_LIBRARIES} 
++            DIRECTORY)
++    else("${CMAKE_VERSION}" VERSION_GREATER 2.8.12)    
++        get_filename_component(SystemC_LIBRARY_DIRS ${SystemC_LIBRARIES} 
++            PATH)
++    endif()
++endif()
++
++include(FindPackageHandleStandardArgs)
++FIND_PACKAGE_HANDLE_STANDARD_ARGS(SystemC 
++				                  FOUND_VAR SystemC_FOUND
++                                  REQUIRED_VARS SystemC_LIBRARIES SystemC_LIBRARY_DIRS SystemC_INCLUDE_DIRS
++                                  VERSION_VAR SystemC_VERSION)
++mark_as_advanced(SystemC_LIBRARIES SystemC_LIBRARY_DIRS SystemC_INCLUDE_DIRS)                                  
+diff --git a/cmake/FindTLM.cmake b/cmake/FindTLM.cmake
+new file mode 100644
+index 0000000..fdbd708
+--- /dev/null
++++ b/cmake/FindTLM.cmake
+@@ -0,0 +1,75 @@
++# Find TLM
++# This module finds if TLM is installed and determines where the
++# include files and libraries are. This code sets the following
++# variables: (from tlm_version.h)
++#
++#  TLM_VERSION_MAJOR      = The major version of the package found.
++#  TLM_VERSION_MINOR      = The minor version of the package found.
++#  TLM_VERSION_PATCH      = The patch version of the package found.
++#  TLM_VERSION            = The full version string of the package found.
++#
++# The minimum required version of TLM can be specified using the
++# standard CMake syntax, e.g. FIND_PACKAGE(TLM 2.2)
++#
++# For these components the following variables are set:
++#
++#  TLM_FOUND                    - TRUE if all components are found.
++#  TLM_INCLUDE_DIRS             - Full paths to all include dirs.
++#
++# Example Usages:
++#  FIND_PACKAGE(TLM)
++
++#=============================================================================
++# Copyright 2015 GreenSocs
++#=============================================================================
++
++set(_TLM_HINTS
++    ${TLM_PREFIX}
++    ${SYSTEMC_PREFIX}/include
++    $ENV{TLM_HOME}
++    $ENV{SYSTEMC_HOME}/include)
++
++set(_TLM_PATHS
++    /usr/local/include/tlm
++    /usr/local/include/systemc
++    /usr/include/tlm
++    /usr/include/systemc)
++
++find_file(_TLM_VERSION_FILE
++          NAMES tlm_version.h
++          HINTS ${_TLM_HINTS}
++          PATHS ${_TLM_PATHS}
++          PATH_SUFFIXES tlm_h
++                        tlm/tlm_h
++                        tlm_core/tlm_2)
++
++if(EXISTS ${_TLM_VERSION_FILE})
++    file (READ ${_TLM_VERSION_FILE} _TLM_VERSION_FILE_CONTENTS)
++
++    string (REGEX MATCH "TLM_VERSION_MAJOR[ \t]+([0-9]+)" 
++            TLM_VERSION_MAJOR ${_TLM_VERSION_FILE_CONTENTS})       
++    string (REGEX MATCH "([0-9]+)" TLM_VERSION_MAJOR 
++            ${TLM_VERSION_MAJOR})       
++    string (REGEX MATCH "TLM_VERSION_MINOR[ \t]+([0-9]+)" 
++            TLM_VERSION_MINOR ${_TLM_VERSION_FILE_CONTENTS})
++    string (REGEX MATCH "([0-9]+)" TLM_VERSION_MINOR 
++            ${TLM_VERSION_MINOR})
++    string (REGEX MATCH "TLM_VERSION_PATCH[ \t]+([0-9]+)" 
++            TLM_VERSION_PATCH ${_TLM_VERSION_FILE_CONTENTS})
++    string (REGEX MATCH "([0-9]+)" TLM_VERSION_PATCH 
++            ${TLM_VERSION_PATCH})
++
++    set(TLM_VERSION "${TLM_VERSION_MAJOR}.${TLM_VERSION_MINOR}.${TLM_VERSION_PATCH}")
++    
++    find_path(TLM_INCLUDE_DIRS
++              NAMES tlm tlm.h
++              HINTS ${_TLM_HINTS}
++              PATHS ${_TLM_PATHS}
++              PATH_SUFFIXES tlm)
++
++endif()
++
++include(FindPackageHandleStandardArgs)
++FIND_PACKAGE_HANDLE_STANDARD_ARGS(TLM
++                                  REQUIRED_VARS TLM_INCLUDE_DIRS
++                                  VERSION_VAR TLM_VERSION)
+\ No newline at end of file
+diff --git a/cmake/FindTLM2C.cmake b/cmake/FindTLM2C.cmake
+new file mode 100644
+index 0000000..e57582f
+--- /dev/null
++++ b/cmake/FindTLM2C.cmake
+@@ -0,0 +1,57 @@
++# - Find GreenLib
++# This module finds if TLM2C is installed and determines where the
++# include files and libraries are.
++#
++
++#=============================================================================
++# Copyright 2014 GreenSocs
++#
++# KONRAD Frederic <fred.konrad@greensocs.com>
++#
++#=============================================================================
++
++MESSAGE(STATUS "Searching for TLM2C")
++
++# The HINTS option should only be used for values computed from the system.
++SET(_TLM2C_HINTS
++  ${TLM2C_PREFIX}/include
++  ${TLM2C_PREFIX}/lib
++  ${TLM2C_PREFIX}/lib64
++  $ENV{TLM2C_PREFIX}/include
++  $ENV{TLM2C_PREFIX}/lib
++  $ENV{TLM2C_PREFIX}/lib64
++  ${CMAKE_INSTALL_PREFIX}/include
++  ${CMAKE_INSTALL_PREFIX}/lib
++  ${CMAKE_INSTALL_PREFIX}/lib64
++  )
++# Hard-coded guesses should still go in PATHS. This ensures that the user
++# environment can always override hard guesses.
++SET(_TLM2C_PATHS
++  /usr/include
++  /usr/lib
++  /usr/lib64
++  /usr/local/lib
++  /usr/local/lib64
++  )
++
++FIND_PATH(TLM2C_INCLUDE_DIRS
++  NAMES tlm2c/tlm2c.h
++  HINTS ${_TLM2C_HINTS}
++  PATHS ${_TLM2C_PATHS}
++)
++
++FIND_PATH(TLM2C_LIBRARY_DIRS
++  NAMES libtlm2c.a
++  HINTS ${_TLM2C_HINTS}
++  PATHS ${_TLM2C_PATHS}
++)
++
++if("${TLM2C_INCLUDE_DIRS}" MATCHES "TLM2C_INCLUDE_DIRS-NOTFOUND")
++    SET(TLM2C_FOUND FALSE)
++else("${TLM2C_INCLUDE_DIRS}" MATCHES "TLM2C_INCLUDE_DIRS-NOTFOUND")
++    SET(TLM2C_FOUND TRUE)
++    MESSAGE(STATUS "TLM2C include directory = ${TLM2C_INCLUDE_DIRS}")
++    MESSAGE(STATUS "TLM2C library directory = ${TLM2C_LIBRARY_DIRS}")
++    SET(TLM2C_LIBRARIES -llibtlm2c.a)
++endif("${TLM2C_INCLUDE_DIRS}" MATCHES "TLM2C_INCLUDE_DIRS-NOTFOUND")
++
+diff --git a/include/SimpleCPU/IRQ.h b/include/SimpleCPU/IRQ.h
+new file mode 100644
+index 0000000..5adeaea
+--- /dev/null
++++ b/include/SimpleCPU/IRQ.h
+@@ -0,0 +1,60 @@
++/*
++ * IRQ.h
++ *
++ * Copyright (C) 2014, GreenSocs Ltd.
++ *
++ * Developped by Konrad Frederic <fred.konrad@greensocs.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or (at
++ * your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, see <http://www.gnu.org/licenses>.
++ *
++ * Linking GreenSocs code, statically or dynamically with other modules
++ * is making a combined work based on GreenSocs code. Thus, the terms and
++ * conditions of the GNU General Public License cover the whole
++ * combination.
++ *
++ * In addition, as a special exception, the copyright holders, GreenSocs
++ * Ltd, give you permission to combine GreenSocs code with free software
++ * programs or libraries that are released under the GNU LGPL, under the
++ * OSCI license, under the OCP TLM Kit Research License Agreement or
++ * under the OVP evaluation license.You may copy and distribute such a
++ * system following the terms of the GNU GPL and the licenses of the
++ * other code concerned.
++ *
++ * Note that people who make modified versions of GreenSocs code are not
++ * obligated to grant this special exception for their modified versions;
++ * it is their choice whether to do so. The GNU General Public License
++ * gives permission to release a modified version without this exception;
++ * this exception also makes it possible to release a modified version
++ * which carries forward this exception.
++ *
++ */
++
++#ifndef IRQ_H
++#define IRQ_H
++
++/*
++ * This just defines an IRQ extension for GreenSignal to pass the IRQ number and
++ * the value.
++ */
++GS_GUARD_ONLY_EXTENSION(IRQ_LINE_EXTENSION);
++
++typedef struct IRQ_ext_data
++{
++  uint32_t value;
++  uint32_t irq_line;
++} IRQ_ext_data;
++
++
++
++#endif /* !IRQ_H */
+diff --git a/include/SimpleCPU/simpleCPU.h b/include/SimpleCPU/simpleCPU.h
+new file mode 100644
+index 0000000..0e96156
+--- /dev/null
++++ b/include/SimpleCPU/simpleCPU.h
+@@ -0,0 +1,188 @@
++/*
++ * simpleCPU.h
++ *
++ * Copyright (C) 2014, GreenSocs Ltd.
++ *
++ * Developped by Konrad Frederic <fred.konrad@greensocs.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or (at
++ * your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, see <http://www.gnu.org/licenses>.
++ *
++ * Linking GreenSocs code, statically or dynamically with other modules
++ * is making a combined work based on GreenSocs code. Thus, the terms and
++ * conditions of the GNU General Public License cover the whole
++ * combination.
++ *
++ * In addition, as a special exception, the copyright holders, GreenSocs
++ * Ltd, give you permission to combine GreenSocs code with free software
++ * programs or libraries that are released under the GNU LGPL, under the
++ * OSCI license, under the OCP TLM Kit Research License Agreement or
++ * under the OVP evaluation license.You may copy and distribute such a
++ * system following the terms of the GNU GPL and the licenses of the
++ * other code concerned.
++ *
++ * Note that people who make modified versions of GreenSocs code are not
++ * obligated to grant this special exception for their modified versions;
++ * it is their choice whether to do so. The GNU General Public License
++ * gives permission to release a modified version without this exception;
++ * this exception also makes it possible to release a modified version
++ * which carries forward this exception.
++ *
++ */
++
++#include <pthread.h>
++#include <systemc.h>
++#include "tlm2CSCBridge.h"
++#include "SimpleCPU/thread_safe_event.h"
++
++#include "greencontrol/config.h"
++#include "gsgpsocket/transport/GSGPMasterBlockingSocket.h"
++#include "gsgpsocket/transport/GSGPSlaveSocket.h"
++#include "gsgpsocket/transport/GSGPconfig.h"
++#include "greensignalsocket/green_signal.h"
++#if AWS_FPGA_PRESENT
++#include "fpga_pci.h"
++#endif
++#ifndef SC_INCLUDE_DYNAMIC_PROCESSES
++#define SC_INCLUDE_DYNAMIC_PROCESSES
++#endif
++
++#if REGISTER_ACCESS_TRACE
++#include <iomanip>
++#include <iostream>
++#include <fstream>
++#include <time.h>
++#endif
++
++class SimpleCPU:
++  public TLM2CSCBridge,
++  public gs::payload_event_queue_output_if<gs::gp::master_atom>
++{
++  SC_HAS_PROCESS(SimpleCPU);
++  public:
++  SimpleCPU(sc_core::sc_module_name name);
++  ~SimpleCPU();
++
++  typedef gs::gp::GenericMasterBlockingPort<32>::accessHandle transactionHandle;
++  gs::gp::GenericMasterBlockingPort<32> master_socket;
++  typedef gs_generic_signal::gs_generic_signal_payload irqPayload;
++  gs_generic_signal::target_signal_multi_socket<SimpleCPU> irq_socket;
++  void irq_b_transport(unsigned int port, irqPayload& payload,
++                       sc_core::sc_time& time);
++
++  void memory_bt(Payload *p);
++  int memory_get_direct_mem_ptr(Payload *p, DMIData *d);
++  void set_dmi_mutex(pthread_mutex_t *mtx, bool is_fpga);//wrapper for cmod and fpga
++  void set_dmi_mutex(pthread_mutex_t *mtx);//cmod function
++  void set_dmi_mutex_fpga(pthread_mutex_t *mtx);//fpga function
++  void set_dmi_base_addr(uint64_t addr);
++#if AWS_FPGA_PRESENT
++  bool set_pci_bar_handle(pci_bar_handle_t pci_bar_handle_in);
++#endif
++  private:
++  /*
++   * Internal tlm2c socket.
++   */
++  TargetSocket *targetSocket;
++  InitiatorSocket *initiatorSocket;
++
++  void additional_init();
++
++  void notify(gs::gp::master_atom& tc) {};
++  void end_of_elaboration();
++
++  /* Kernel filename to be loaded by the CPU. */
++  gs::gs_param<std::string> kernel;
++  gs::gs_param<std::string> dtb;
++  gs::gs_param<std::string> rootfs;
++  gs::gs_param<std::string> kernel_cmd;
++
++  // Extra parameters
++  gs::gs_param<uint64_t> GDBPort;
++  gs::gs_param<std::string> extraArguments;
++
++  /* Transaction posting mechanism. */
++  transactionHandle transaction;      /*<! Transaction to be posted. */
++  bool transaction_pending;           /*<! CPU is waiting SystemC for a txn. */
++  void post_a_transaction();
++  void init_io();
++  void destroy_io();
++  pthread_mutex_t io_done_mtx;
++  pthread_cond_t io_done_cond;
++  bool io_completed;
++  void finish_io();
++  void wait_for_io_completion();
++  void do_io();
++  thread_safe_event io_evt;
++
++  /* Synchronisation mechanism. */
++  int systemc_running;                /*<! false when SystemC sleep. */
++  void init_systemc_sleep();
++  void wake_up_systemc();
++  void systemc_sleep();
++  void destroy_systemc_sleep();
++  pthread_mutex_t sc_sleep_mtx;
++  pthread_cond_t sc_sleep_cond;
++  void quantum_notify();
++  void end_of_quantum();
++  sc_event quantum_evt;
++  gs::gs_param<uint64_t> quantum;
++  volatile bool cpu_has_finished;
++  bool systemc_has_finished;
++  bool cpu_init;                      /*<! CPU mutexes initialised. */
++  /* CPU sleep. */
++  void init_cpu_sleep();
++  void wake_up_cpu();
++  void cpu_sleep();
++  void destroy_cpu_sleep();
++  int cpu_running;
++  pthread_mutex_t cpu_sleep_mtx;
++  pthread_cond_t cpu_sleep_cond;
++
++  // DMI
++  void memory_invalidate_direct_mem_ptr(unsigned int index,
++                                        sc_dt::uint64 start,
++                                        sc_dt::uint64 end);
++#if AWS_FPGA_PRESENT
++  bool data_write(uint64_t addr, uint8_t *p_data, int len);
++  bool data_read(uint64_t addr, uint8_t *p_data, int len);
++#endif
++  bool DMIInvalidatePending;
++  uint64_t DMIInvalidateStart;
++  uint64_t DMIInvalidateEnd;
++
++  /* dummy event. */
++  sc_event dummy_evt;
++  void dummy();
++
++  /* stop mechanism. */
++  void stop_request();
++  void stop();
++  thread_safe_event stop_evt;
++
++  /* dmi mode */
++  pthread_mutex_t *dmi_mtx;
++  bool is_dmi;
++  bool is_dmi_fpga;
++  uint64_t dmi_base_addr;
++  uint64_t *ptr;
++#if AWS_FPGA_PRESENT
++  pci_bar_handle_t pci_bar_handle;
++#endif
++
++#if REGISTER_ACCESS_TRACE
++  //this ofstream is used for generate perf time analysis report.
++  ofstream  fout;
++#endif
++};
++
+diff --git a/include/SimpleCPU/thread_safe_event.h b/include/SimpleCPU/thread_safe_event.h
+new file mode 100644
+index 0000000..df6b414
+--- /dev/null
++++ b/include/SimpleCPU/thread_safe_event.h
+@@ -0,0 +1,72 @@
++/*
++ * thread_safe_event.h
++ *
++ * Copyright (C) 2014, GreenSocs Ltd.
++ *
++ * Developped by Konrad Frederic <fred.konrad@greensocs.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or (at
++ * your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, see <http://www.gnu.org/licenses>.
++ *
++ * Linking GreenSocs code, statically or dynamically with other modules
++ * is making a combined work based on GreenSocs code. Thus, the terms and
++ * conditions of the GNU General Public License cover the whole
++ * combination.
++ *
++ * In addition, as a special exception, the copyright holders, GreenSocs
++ * Ltd, give you permission to combine GreenSocs code with free software
++ * programs or libraries that are released under the GNU LGPL, under the
++ * OSCI license, under the OCP TLM Kit Research License Agreement or
++ * under the OVP evaluation license.You may copy and distribute such a
++ * system following the terms of the GNU GPL and the licenses of the
++ * other code concerned.
++ *
++ * Note that people who make modified versions of GreenSocs code are not
++ * obligated to grant this special exception for their modified versions;
++ * it is their choice whether to do so. The GNU General Public License
++ * gives permission to release a modified version without this exception;
++ * this exception also makes it possible to release a modified version
++ * which carries forward this exception.
++ *
++ */
++
++#ifndef THREAD_SAFE_EVENT_H
++#define THREAD_SAFE_EVENT_H
++
++#include <systemc.h>
++
++class thread_safe_event_if:
++  public sc_core::sc_interface
++{
++  virtual void notify(sc_core::sc_time delay = SC_ZERO_TIME) = 0;
++  virtual const sc_core::sc_event& default_event(void) const = 0;
++  protected:
++  virtual void update(void) = 0;
++};
++
++class thread_safe_event:
++  sc_core::sc_prim_channel,
++  public thread_safe_event_if
++{
++  public:
++  thread_safe_event(const char* name = "");
++  void notify(sc_core::sc_time delay = SC_ZERO_TIME);
++  const sc_core::sc_event& default_event(void) const;
++  protected:
++  virtual void update(void);
++  private:
++  sc_core::sc_event m_event;
++  sc_core::sc_time m_delay;
++};
++
++#endif /*!THREAD_SAFE_EVENT_H*/
+diff --git a/include/SimpleCPU/tlm2CSCBridge.h b/include/SimpleCPU/tlm2CSCBridge.h
+new file mode 100644
+index 0000000..b10aadb
+--- /dev/null
++++ b/include/SimpleCPU/tlm2CSCBridge.h
+@@ -0,0 +1,98 @@
++/*
++ * tlm2CSCBridge.h
++ *
++ * Copyright (C) 2014, GreenSocs Ltd.
++ *
++ * Developped by Konrad Frederic <fred.konrad@greensocs.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or (at
++ * your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, see <http://www.gnu.org/licenses>.
++ *
++ * Linking GreenSocs code, statically or dynamically with other modules
++ * is making a combined work based on GreenSocs code. Thus, the terms and
++ * conditions of the GNU General Public License cover the whole
++ * combination.
++ *
++ * In addition, as a special exception, the copyright holders, GreenSocs
++ * Ltd, give you permission to combine GreenSocs code with free software
++ * programs or libraries that are released under the GNU LGPL, under the
++ * OSCI license, under the OCP TLM Kit Research License Agreement or
++ * under the OVP evaluation license.You may copy and distribute such a
++ * system following the terms of the GNU GPL and the licenses of the
++ * other code concerned.
++ *
++ * Note that people who make modified versions of GreenSocs code are not
++ * obligated to grant this special exception for their modified versions;
++ * it is their choice whether to do so. The GNU General Public License
++ * gives permission to release a modified version without this exception;
++ * this exception also makes it possible to release a modified version
++ * which carries forward this exception.
++ *
++ */
++
++#ifndef TLM2C_SC_BRIDGE_H
++#define TLM2C_SC_BRIDGE_H
++
++#include <systemc>
++#include "greencontrol/config.h"
++
++extern "C"
++{
++#include <tlm2c/tlm2c.h>
++}
++
++class TLM2CSCBridge:
++  public sc_core::sc_module
++{
++  public:
++  SC_HAS_PROCESS(TLM2CSCBridge);
++  TLM2CSCBridge(sc_core::sc_module_name name);
++  ~TLM2CSCBridge();
++  void addNotification(uint64_t time_ns);
++  virtual void end_of_quantum() = 0;
++  virtual void stop_request() = 0;
++
++  protected:
++  Socket *(*tlm2c_socket_get_by_name)(const char *name);
++
++  private:
++  /*
++   * TLM2C interface.
++   */
++  Model *tlm2c_model;           /*<! Remote object to bind. */
++  void before_end_of_elaboration();
++  void end_of_elaboration();
++  void notification();
++  sc_core::sc_event tlm2c_method;
++  Model *(*tlm2c_elaboration)(Environment *); /*<! Elaboration of tlm2c. */
++
++  void init();
++  Environment environment;
++  virtual void additional_init() = 0;
++
++  /*
++   * Library loading system.
++   */
++  void loadLibrary();
++  void cleanLibrary();
++  static std::vector<std::string> libraryNames;
++  static std::vector<int> libraryOccurence;
++  std::string libraryAssociated; /*<! Filename for the associated library. */
++  bool removeLibrary;            /*<! Remove the library in the destructor. */
++  void *libraryHandle;           /*<! Handle for the opened library. */
++
++  gs::gs_param<std::string> libraryName; /*<! Library name for this CPU */
++
++};
++
++#endif
+diff --git a/misc/FindSIMPLECPU.cmake b/misc/FindSIMPLECPU.cmake
+new file mode 100644
+index 0000000..0dcfee1
+--- /dev/null
++++ b/misc/FindSIMPLECPU.cmake
+@@ -0,0 +1,55 @@
++# This module looks for SIMPLECPU module and determines where the header files
++# and libraries are.
++
++#=============================================================================
++# Copyright 2014 GreenSocs
++#
++# KONRAD Frederic <fred.konrad@greensocs.com>
++#
++#=============================================================================
++
++MESSAGE(STATUS "Searching for SimpleCPU model.")
++
++# The HINTS option should only be used for values computed from the system.
++SET(_SIMPLECPU_HINTS
++  ${SIMPLECPU_PREFIX}/include
++  ${SIMPLECPU_PREFIX}/lib
++  ${SIMPLECPU_PREFIX}/lib64
++  $ENV{SIMPLECPU_PREFIX}/include
++  $ENV{SIMPLECPU_PREFIX}/lib
++  $ENV{SIMPLECPU_PREFIX}/lib64
++  ${CMAKE_INSTALL_PREFIX}/include
++  ${CMAKE_INSTALL_PREFIX}/lib
++  ${CMAKE_INSTALL_PREFIX}/lib64
++  )
++# Hard-coded guesses should still go in PATHS. This ensures that the user
++# environment can always override hard guesses.
++SET(_SIMPLECPU_PATHS
++  /usr/include
++  /usr/lib
++  /usr/lib64
++  /usr/local/lib
++  /usr/local/lib64
++  )
++
++FIND_PATH(SIMPLECPU_INCLUDE_DIRS
++  NAMES SimpleCPU/simpleCPU.h
++  HINTS ${_SIMPLECPU_HINTS}
++  PATHS ${_SIMPLECPU_PATHS}
++)
++
++FIND_PATH(SIMPLECPU_LIBRARY_DIRS
++  NAMES libsimplecpu.so
++  HINTS ${_SIMPLECPU_HINTS}
++  PATHS ${_SIMPLECPU_PATHS}
++)
++
++if("${SIMPLECPU_INCLUDE_DIRS}" MATCHES "SIMPLECPU_INCLUDE_DIRS-NOTFOUND")
++    SET(SIMPLECPU_FOUND FALSE)
++else("${SIMPLECPU_INCLUDE_DIRS}" MATCHES "SIMPLECPU_INCLUDE_DIRS-NOTFOUND")
++    SET(SIMPLECPU_FOUND TRUE)
++    MESSAGE(STATUS "SimpleCPU include directory = ${SIMPLECPU_INCLUDE_DIRS}")
++    MESSAGE(STATUS "SimpleCPU library directory = ${SIMPLECPU_LIBRARY_DIRS}")
++    SET(SIMPLECPU_LIBRARIES simplecpu)
++endif("${SIMPLECPU_INCLUDE_DIRS}" MATCHES "SIMPLECPU_INCLUDE_DIRS-NOTFOUND")
++
+diff --git a/src/simpleCPU.cpp b/src/simpleCPU.cpp
+new file mode 100644
+index 0000000..4101e42
+--- /dev/null
++++ b/src/simpleCPU.cpp
+@@ -0,0 +1,642 @@
++/*
++ * simpleCPU.cpp
++ *
++ * Copyright (C) 2014, GreenSocs Ltd.
++ *
++ * Developped by Konrad Frederic <fred.konrad@greensocs.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or (at
++ * your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, see <http://www.gnu.org/licenses>.
++ *
++ * Linking GreenSocs code, statically or dynamically with other modules
++ * is making a combined work based on GreenSocs code. Thus, the terms and
++ * conditions of the GNU General Public License cover the whole
++ * combination.
++ *
++ * In addition, as a special exception, the copyright holders, GreenSocs
++ * Ltd, give you permission to combine GreenSocs code with free software
++ * programs or libraries that are released under the GNU LGPL, under the
++ * OSCI license, under the OCP TLM Kit Research License Agreement or
++ * under the OVP evaluation license.You may copy and distribute such a
++ * system following the terms of the GNU GPL and the licenses of the
++ * other code concerned.
++ *
++ * Note that people who make modified versions of GreenSocs code are not
++ * obligated to grant this special exception for their modified versions;
++ * it is their choice whether to do so. The GNU General Public License
++ * gives permission to release a modified version without this exception;
++ * this exception also makes it possible to release a modified version
++ * which carries forward this exception.
++ *
++ */
++
++#include "SimpleCPU/simpleCPU.h"
++#include "SimpleCPU/IRQ.h"
++#if DEBUG_LOG
++static int const verb = SC_HIGH;
++#endif
++
++static void _memory_bt(void *handle, Payload *p)
++{
++  SimpleCPU *_this = (SimpleCPU *)handle;
++  _this->memory_bt(p);
++}
++
++static int _memory_get_direct_mem_ptr(void *handle, Payload *p, DMIData *d)
++{
++  SimpleCPU *_this = (SimpleCPU *)handle;
++  return _this->memory_get_direct_mem_ptr(p, d);
++}
++
++SimpleCPU::SimpleCPU(sc_core::sc_module_name name):
++  TLM2CSCBridge(name),
++  master_socket("iport"),
++  irq_socket("interrupt_socket"),
++  kernel("kernel", ""),
++  dtb("dtb", ""),
++  rootfs("rootfs", ""),
++  kernel_cmd("kernel_cmd", ""),
++  GDBPort("gdb_port", (uint64_t)0),
++  extraArguments("extra_arguments", ""),
++  quantum("quantum", 100000000),
++  is_dmi(false),
++  is_dmi_fpga(false),
++  dmi_base_addr(0),
++  ptr(NULL)
++{
++  master_socket.out_port(*this);
++  /*
++   * IRQ socket configuration.
++   */
++  gs::socket::config<gs_generic_signal::gs_generic_signal_protocol_types> cnf;
++  cnf.use_mandatory_extension<IRQ_LINE_EXTENSION>();
++  irq_socket.set_config(cnf);
++  irq_socket.register_b_transport(this, &SimpleCPU::irq_b_transport);
++  master_socket.register_invalidate_direct_mem_ptr(this,
++      &SimpleCPU::memory_invalidate_direct_mem_ptr);
++
++  SC_METHOD(quantum_notify);
++  sensitive << quantum_evt;
++  dont_initialize();
++  quantum_evt.notify(quantum, sc_core::SC_NS);
++
++  SC_METHOD(stop);
++  sensitive << stop_evt;
++  dont_initialize();
++
++  this->cpu_has_finished = false;
++  this->systemc_has_finished = false;
++  this->cpu_init = false;
++  this->DMIInvalidatePending = false;
++
++  init_io();
++  init_systemc_sleep();
++  init_cpu_sleep();
++
++#if REGISTER_ACCESS_TRACE
++  //Open the performance log when vp starts.
++  fout.open("./performance.log");
++#endif
++}
++
++SimpleCPU::~SimpleCPU()
++{
++  destroy_io();
++  destroy_systemc_sleep();
++  destroy_cpu_sleep();
++}
++
++void SimpleCPU::set_dmi_mutex(pthread_mutex_t *mtx, bool is_fpga)
++{
++  if(is_fpga)
++      set_dmi_mutex_fpga(mtx);
++  else
++      set_dmi_mutex(mtx);
++}
++
++void SimpleCPU::set_dmi_mutex(pthread_mutex_t *mtx)
++{
++  dmi_mtx = mtx;
++  is_dmi = true;
++}
++
++void SimpleCPU::set_dmi_mutex_fpga(pthread_mutex_t *mtx) //Set the lock pointer and set the is_dmi_fpga to be true
++{
++  dmi_mtx = mtx;
++  is_dmi_fpga = true;
++}
++
++void SimpleCPU::set_dmi_base_addr(uint64_t addr)
++{
++  dmi_base_addr = addr;
++  std::cout << "RAM base address: 0x" << std::hex << addr << endl;
++}
++
++void SimpleCPU::additional_init()
++{
++  /*
++   * Specific to M3: Create the sockets and bind everything together.
++   */
++
++  /*
++   * Target for the memory bus.
++   */
++  this->targetSocket = socket_target_create("wrapper_memory");
++
++  /*
++   * Initiator for the IRQ.
++   */
++  this->initiatorSocket = socket_initiator_create("wrapper_irq");
++
++  socket_target_register_b_transport(this->targetSocket, this, _memory_bt);
++  tlm2c_socket_target_register_dmi(this->targetSocket,
++                                   _memory_get_direct_mem_ptr);
++
++  /*
++   * tlm2c bindings.
++   */
++  TargetSocket *remote_target =
++    (TargetSocket *)this->tlm2c_socket_get_by_name("qbox.irq_slave");
++  InitiatorSocket *remote_initiator =
++    (InitiatorSocket *)this->tlm2c_socket_get_by_name("qbox.memory_master");
++
++  if (!remote_initiator)
++  {
++    std::cout << "error can't find 'qbox.memory_master' socket" << std::endl;
++    abort();
++  }
++  if (!remote_target)
++  {
++    std::cout << "error can't find 'qbox.irq_slave' socket" << std::endl;
++    abort();
++  }
++
++  tlm2c_bind(this->initiatorSocket, remote_target);
++  tlm2c_bind(remote_initiator, this->targetSocket);
++}
++
++void SimpleCPU::end_of_elaboration()
++{
++  /* Create transaction. */
++  transaction = master_socket.create_transaction();
++}
++
++void SimpleCPU::memory_bt(Payload *payload)
++{
++  /*
++   * Get info from the source payload.
++   */
++  GenericPayload *p = (GenericPayload *)payload;
++  uint64_t address = payload_get_address(p);
++  uint64_t value = payload_get_value(p);
++  uint64_t size = payload_get_size(p);
++  Command cmd = payload_get_command(p);
++  gs::GSDataType::dtype data = gs::GSDataType::dtype((unsigned char *)&value,
++                                                     size);
++
++  /* Fill the transaction. */
++  this->transaction->reset();
++  this->transaction->setMBurstLength(size);
++  this->transaction->setMAddr(address);
++  this->transaction->setMData(data);
++  if (cmd == READ)
++  {
++    this->transaction->setMCmd(gs::Generic_MCMD_RD);
++  }
++  else if (cmd == WRITE)
++  {
++    this->transaction->setMCmd(gs::Generic_MCMD_WR);
++  }
++
++  if (is_dmi_fpga && (address > dmi_base_addr)) 
++  {
++#if AWS_FPGA_PRESENT
++        // Issue request
++    uint64_t addr_fpga = address;
++    if (cmd == WRITE) {
++      if (0 != data_write(addr_fpga, reinterpret_cast<uint8_t *>(&value), static_cast<int>(size))) {
++        SC_REPORT_ERROR(name(), "ERROR on data write!\n");
++      } else {
++#if DEBUG_LOG
++        std::ostringstream oss;
++        oss << "CPU: iswrite=1 addr=0x" << std::hex << addr_fpga << std::dec << " len=" << size << " data=0x " << std::hex << *(reinterpret_cast<uint32_t *>(&value)) << std::endl;
++        SC_REPORT_INFO_VERB(name(), oss.str().c_str(), verb);
++#endif
++      }
++    } else {
++      if (0 != data_read(addr_fpga, reinterpret_cast<uint8_t *>(&value),static_cast<int>(size))) {
++        SC_REPORT_ERROR(name(), "ERROR on data read!\n");
++      } else {
++#if DEBUG_LOG
++        std::ostringstream oss;
++        oss << "CPU: iswrite=0 addr=0x" << std::hex << addr_fpga << std::dec << " len=" << size << " data=0x " << std::hex << *(reinterpret_cast<uint32_t *>(&value)) << std::endl;
++        SC_REPORT_INFO_VERB(name(), oss.str().c_str(), verb);
++#endif
++      }
++    }
++    if (cmd == READ)
++    {
++      payload_set_value(p, value);
++    }
++
++    payload_set_response_status(p, OK_RESPONSE);
++#endif
++  } else if (is_dmi && (address > dmi_base_addr)) {
++    if (ptr == NULL)
++    {
++      DMIData dmi;
++      memory_get_direct_mem_ptr(payload, &dmi);
++      ptr = (uint64_t *)(dmi.pointer);
++    }
++
++    pthread_mutex_lock(dmi_mtx);
++
++    uint64_t offset = address - dmi_base_addr;
++    switch (cmd)
++    {
++        case READ:
++          memcpy((uint8_t *)&value, &(((uint8_t *)ptr)[offset]), size);
++          break;
++        case WRITE:
++          memcpy(&(((uint8_t *)ptr)[offset]), (uint8_t *)&value, size);
++          break;
++        default:
++          std::cout << "error invalid command type" << std::endl;
++          break;
++    }
++
++    pthread_mutex_unlock(dmi_mtx);
++
++    if (cmd == READ)
++    {
++      payload_set_value(p, value);
++    }
++
++    payload_set_response_status(p, OK_RESPONSE);
++  } else {
++    /* Ask SystemC to do the transaction. */
++    this->post_a_transaction();
++
++    if (cmd == READ)
++    {
++      value = *((uint32_t *)data.getData());
++      payload_set_value(p, value);
++    }
++
++#if REGISTER_ACCESS_TRACE
++    if (address<=0xc0000000)
++    {
++        clock_t now_clk;
++        now_clk = clock();
++        if(cmd == READ)
++            fout << "[ "<<setprecision(10)<<((float)now_clk/CLOCKS_PER_SEC) << " s ] " <<"CPU: iswrite=0 Read addr=0x" << std::hex <<address <<"  data=0x"<<std::hex<<value<<std::endl;
++        else
++            fout << "[ "<<setprecision(10)<<((float)now_clk/CLOCKS_PER_SEC) << " s ] " <<"CPU: iswrite=1 Write addr=0x" << std::hex <<address <<"  data=0x"<<std::hex<<value<<std::endl;
++    }
++#endif
++
++    if (this->transaction->getSResp() == gs::Generic_SRESP_ERR)
++    {
++      payload_set_response_status(p, ADDRESS_ERROR_RESPONSE);
++    }
++    else
++    {
++      payload_set_response_status(p, OK_RESPONSE);
++    }
++  }
++}
++
++int SimpleCPU::memory_get_direct_mem_ptr(Payload *p, DMIData *d)
++{
++  uint64_t address = payload_get_address((GenericPayload *)p);
++
++  tlm::tlm_generic_payload payload;
++  tlm::tlm_dmi dmi_data;
++
++  payload.set_address(address);
++  if (this->master_socket->get_direct_mem_ptr(payload, dmi_data))
++  {
++    d->pointer = dmi_data.get_dmi_ptr();
++    return 1;
++  }
++  else
++  {
++    return 0;
++  }
++}
++
++void SimpleCPU::memory_invalidate_direct_mem_ptr(unsigned int index,
++                                                 sc_dt::uint64 start,
++                                                 sc_dt::uint64 end)
++{
++    this->DMIInvalidatePending = true;
++    this->DMIInvalidateStart = start;
++    this->DMIInvalidateEnd = end;
++}
++
++void SimpleCPU::init_io()
++{
++  transaction_pending = false;
++  pthread_mutex_init(&io_done_mtx, NULL);
++  pthread_cond_init(&io_done_cond, NULL);
++
++  SC_THREAD(do_io);
++
++  SC_METHOD(dummy);
++  sensitive << dummy_evt;
++  dont_initialize();
++}
++
++void SimpleCPU::destroy_io()
++{
++  pthread_mutex_destroy(&io_done_mtx);
++  pthread_cond_destroy(&io_done_cond);
++}
++
++void SimpleCPU::do_io()
++{
++  while (true)
++  {
++    wait(io_evt.default_event());
++    /* Do all the IO for the CPU in the SystemC thread. */
++    if (this->transaction_pending)
++    {
++      /*
++       * At this time SystemC thread has the io_done_mtx mutex. Just call
++       * b_transport with the pending transaction.
++       */
++      this->transaction_pending = false;
++      master_socket.Transact(this->transaction);
++      this->finish_io();
++    }
++
++    if (this->systemc_has_finished)
++    {
++      /* Notify quantum_notify() as SystemC has finished. */
++      quantum_evt.notify();
++    }
++    else
++    {
++      /*
++       * SystemC won't really sleep here. But it was woken up for nothing by
++       * post_a_transaction.
++       */
++      systemc_sleep();
++    }
++  }
++}
++
++void SimpleCPU::finish_io()
++{
++    if(this->DMIInvalidatePending) {
++        tlm2c_memory_invalidate_direct_mem_ptr(this->targetSocket,
++                                             this->DMIInvalidateStart,
++                                             this->DMIInvalidateEnd);
++        this->DMIInvalidatePending = false;
++    }
++  pthread_mutex_lock(&io_done_mtx);
++  this->io_completed = true;
++  pthread_mutex_unlock(&this->io_done_mtx);
++  pthread_cond_signal(&io_done_cond);
++}
++
++void SimpleCPU::wait_for_io_completion()
++{
++  pthread_mutex_lock(&io_done_mtx);
++  while (!this->io_completed)
++  {
++    pthread_cond_wait(&io_done_cond, &io_done_mtx);
++  }
++  pthread_mutex_unlock(&io_done_mtx);
++}
++
++void SimpleCPU::post_a_transaction()
++{
++  /*
++   * As SystemC is not thread safe at all, only SystemC can access SystemC code.
++   * The transaction might come from an other thread so a post mechanism is
++   * implemented to ensure that only SystemC call b_transport for memory access.
++   */
++  this->io_completed = false;
++  this->transaction_pending = true;
++  /* Notify the event ASAP. */
++  io_evt.notify();
++  this->wake_up_systemc();
++  this->wait_for_io_completion();
++}
++
++
++void SimpleCPU::dummy()
++{
++  /* dummy does nothing.. */
++}
++
++void SimpleCPU::init_systemc_sleep()
++{
++  systemc_running = 1;
++  pthread_mutex_init(&sc_sleep_mtx, NULL);
++  pthread_cond_init(&sc_sleep_cond, NULL);
++}
++
++void SimpleCPU::wake_up_systemc()
++{
++  /* Wake up SystemC for IO or at the end of the CPU quantum. */
++  pthread_mutex_lock(&sc_sleep_mtx);
++  systemc_running++;
++  pthread_mutex_unlock(&sc_sleep_mtx);
++  pthread_cond_signal(&sc_sleep_cond);
++}
++
++void SimpleCPU::systemc_sleep()
++{
++  /* SystemC is sleeping here until somebody calls wake_up_systemc. */
++  pthread_mutex_lock(&sc_sleep_mtx);
++  systemc_running--;
++  while (systemc_running <= 0)
++  {
++    pthread_cond_wait(&sc_sleep_cond, &sc_sleep_mtx);
++  }
++  pthread_mutex_unlock(&sc_sleep_mtx);
++  /* Notify a dummy event just to not increase time for async events. */
++  dummy_evt.notify();
++}
++
++void SimpleCPU::destroy_systemc_sleep()
++{
++  pthread_mutex_destroy(&sc_sleep_mtx);
++  pthread_cond_destroy(&sc_sleep_cond);
++}
++
++void SimpleCPU::init_cpu_sleep()
++{
++  cpu_running = 1;
++  pthread_mutex_init(&cpu_sleep_mtx, NULL);
++  pthread_cond_init(&cpu_sleep_cond, NULL);
++}
++
++void SimpleCPU::wake_up_cpu()
++{
++  /* Wake up CPU when SystemC has finished it's quantum. */
++  pthread_mutex_lock(&cpu_sleep_mtx);
++  cpu_running++;
++  pthread_mutex_unlock(&cpu_sleep_mtx);
++  pthread_cond_signal(&cpu_sleep_cond);
++}
++
++void SimpleCPU::cpu_sleep()
++{
++  /* CPU is sleeping here until SystemC calls wake_up_cpu. */
++  pthread_mutex_lock(&cpu_sleep_mtx);
++  cpu_running--;
++  while (cpu_running <= 0)
++  {
++    pthread_cond_wait(&cpu_sleep_cond, &cpu_sleep_mtx);
++  }
++  pthread_mutex_unlock(&cpu_sleep_mtx);
++}
++
++void SimpleCPU::destroy_cpu_sleep()
++{
++  pthread_mutex_destroy(&cpu_sleep_mtx);
++  pthread_cond_destroy(&cpu_sleep_cond);
++}
++
++void SimpleCPU::quantum_notify()
++{
++  /* Wait for the CPU to be initialised. */
++  while (!this->cpu_init);
++
++  /*
++   * SystemC is going to sleep. CPU thread wakes up SystemC if it posts an IO
++   * or finishes it's quantum.
++   */
++  systemc_has_finished = true;
++  systemc_sleep();
++
++  if (!cpu_has_finished)
++  {
++    return;
++  }
++
++  cpu_has_finished = false;
++  systemc_has_finished = false;
++
++  /* Notify for the next quantum. */
++  quantum_evt.notify(quantum, sc_core::SC_NS);
++  /* Release CPU. */
++  wake_up_cpu();
++}
++
++void SimpleCPU::end_of_quantum()
++{
++  /* First time called at zero for initialisation. */
++  if (!cpu_init)
++  {
++    cpu_init = true;
++    return;
++  }
++
++  /* The CPU has finished it's quantum. It just needs to wait for SystemC. */
++  cpu_has_finished = true;
++  wake_up_systemc();
++  cpu_sleep();
++}
++
++void SimpleCPU::stop_request()
++{
++  stop_evt.notify();
++  wake_up_systemc();
++}
++
++void SimpleCPU::stop()
++{
++  sc_core::sc_stop();
++}
++
++void SimpleCPU::irq_b_transport(unsigned int port, irqPayload& payload,
++                                sc_core::sc_time& time)
++{
++  IRQ_ext_data *data = (IRQ_ext_data *)(payload.get_data_ptr());
++
++  static GenericPayload *p = payload_create();
++  payload_set_address(p, data->irq_line);
++  payload_set_value(p, data->value);
++  payload_set_command(p, WRITE);
++  b_transport(this->initiatorSocket, (Payload *)p);
++}
++
++#if AWS_FPGA_PRESENT
++
++/* write data to FPGA RAM */
++bool SimpleCPU::data_write(uint64_t addr, uint8_t *p_data, int len)
++{
++    bool ret  = true;
++    int index = 0;
++    bool poke_ret = false;
++
++    if (len >= 4 && (len%4 != 0 || ((addr&0x3) != 0)))
++        SC_REPORT_ERROR(name(), "ERROR: data_write only support 4 byte alignment read, when len is more than 4!\n");
++
++    //Process the 4 byte alignment data.
++    while (len >= 4)
++    {
++        poke_ret = fpga_pci_poke(pci_bar_handle, (addr+index), *(reinterpret_cast<uint32_t *>(&(p_data[index]))));
++        ret   = ret & poke_ret;
++        len   = len - 4;
++        index = index + 4;
++    }
++
++    //Process the 1 byte data, need aws-fpga sdk v1.4 to support 8 bit read and write.
++    if (len == 1)
++    {
++        poke_ret = fpga_pci_poke8(pci_bar_handle, (addr+index), *(reinterpret_cast<uint8_t *>(&(p_data[index]))));
++        ret   = ret & poke_ret;
++    }
++
++    return ret;
++}
++
++/* read data from FPGA RAM */
++bool SimpleCPU::data_read(uint64_t addr, uint8_t *p_data, int len)
++{
++    bool ret  = true;
++    int index = 0;
++    bool peek_ret = false;
++
++    if (len >= 4 && (len%4 != 0 || ((addr&0x3) != 0)))
++        SC_REPORT_ERROR(name(), "ERROR: data_read only support 4 byte alignment read, when len is more than 4!\n");
++    
++    while (len >= 4)
++    {
++        peek_ret = fpga_pci_peek(pci_bar_handle, (addr+index)&0xfffffffc, reinterpret_cast<uint32_t *>(&(p_data[index])));
++        ret   = ret & peek_ret;
++        len   = len - 4;
++        index = index + 4;
++    }
++
++    if (len == 1)
++    {
++        peek_ret = fpga_pci_peek8(pci_bar_handle, (addr+index), reinterpret_cast<uint8_t *>(&(p_data[index])));
++        ret   = ret & peek_ret;
++    }
++
++    return ret;
++}
++
++/* Get the PCI handle, which make the SimpleCPU read and write the FPGA RAM directly */
++bool SimpleCPU::set_pci_bar_handle(pci_bar_handle_t pci_bar_handle_in)
++{
++  pci_bar_handle = pci_bar_handle_in;
++  return true;
++}
++#endif
+diff --git a/src/thread_safe_event.cpp b/src/thread_safe_event.cpp
+new file mode 100644
+index 0000000..5712719
+--- /dev/null
++++ b/src/thread_safe_event.cpp
+@@ -0,0 +1,65 @@
++/*
++ * thread_safe_event.cpp
++ *
++ * Copyright (C) 2014, GreenSocs Ltd.
++ *
++ * Developped by Konrad Frederic <fred.konrad@greensocs.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or (at
++ * your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, see <http://www.gnu.org/licenses>.
++ *
++ * Linking GreenSocs code, statically or dynamically with other modules
++ * is making a combined work based on GreenSocs code. Thus, the terms and
++ * conditions of the GNU General Public License cover the whole
++ * combination.
++ *
++ * In addition, as a special exception, the copyright holders, GreenSocs
++ * Ltd, give you permission to combine GreenSocs code with free software
++ * programs or libraries that are released under the GNU LGPL, under the
++ * OSCI license, under the OCP TLM Kit Research License Agreement or
++ * under the OVP evaluation license.You may copy and distribute such a
++ * system following the terms of the GNU GPL and the licenses of the
++ * other code concerned.
++ *
++ * Note that people who make modified versions of GreenSocs code are not
++ * obligated to grant this special exception for their modified versions;
++ * it is their choice whether to do so. The GNU General Public License
++ * gives permission to release a modified version without this exception;
++ * this exception also makes it possible to release a modified version
++ * which carries forward this exception.
++ *
++ */
++
++#include "SimpleCPU/thread_safe_event.h"
++
++thread_safe_event::thread_safe_event(const char* name)
++{
++
++}
++
++void thread_safe_event::notify(sc_core::sc_time delay)
++{
++  m_delay = delay;
++  async_request_update();
++}
++
++const sc_core::sc_event& thread_safe_event::default_event() const
++{
++  return m_event;
++}
++
++void thread_safe_event::update(void)
++{
++  m_event.notify(m_delay);
++}
++
+diff --git a/src/tlm2CSCBridge.cpp b/src/tlm2CSCBridge.cpp
+new file mode 100644
+index 0000000..db3c80b
+--- /dev/null
++++ b/src/tlm2CSCBridge.cpp
+@@ -0,0 +1,283 @@
++/*
++ * tlm2CBridge.cpp
++ *
++ * Copyright (C) 2014, GreenSocs Ltd.
++ *
++ * Developped by Konrad Frederic <fred.konrad@greensocs.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or (at
++ * your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, see <http://www.gnu.org/licenses>.
++ *
++ * Linking GreenSocs code, statically or dynamically with other modules
++ * is making a combined work based on GreenSocs code. Thus, the terms and
++ * conditions of the GNU General Public License cover the whole
++ * combination.
++ *
++ * In addition, as a special exception, the copyright holders, GreenSocs
++ * Ltd, give you permission to combine GreenSocs code with free software
++ * programs or libraries that are released under the GNU LGPL, under the
++ * OSCI license, under the OCP TLM Kit Research License Agreement or
++ * under the OVP evaluation license.You may copy and distribute such a
++ * system following the terms of the GNU GPL and the licenses of the
++ * other code concerned.
++ *
++ * Note that people who make modified versions of GreenSocs code are not
++ * obligated to grant this special exception for their modified versions;
++ * it is their choice whether to do so. The GNU General Public License
++ * gives permission to release a modified version without this exception;
++ * this exception also makes it possible to release a modified version
++ * which carries forward this exception.
++ *
++ */
++
++#include "SimpleCPU/tlm2CSCBridge.h"
++
++#include <dlfcn.h>
++#include <sstream>
++#include <iomanip>
++
++static void request_notify(void *handler, uint64_t time_ns);
++static uint64_t get_time_ns(void *handler);
++static void request_stop(void *handler);
++static void get_param_list(void *handler, char **list[], size_t *size);
++static uint64_t get_uint_param(void *handler, const char *name);
++static int64_t get_int_param(void *handler, const char *name);
++static void get_string_param(void *handler, const char *name, char **param);
++static void signal_end_of_quantum(void *handler);
++
++std::vector<std::string> TLM2CSCBridge::libraryNames;
++std::vector<int> TLM2CSCBridge::libraryOccurence;
++
++TLM2CSCBridge::TLM2CSCBridge(sc_core::sc_module_name name):
++  sc_core::sc_module(name),
++  libraryName("library", "no")
++{
++  this->environment.get_time_ns = get_time_ns;
++  this->environment.request_stop = request_stop;
++  this->environment.request_notify = request_notify;
++  this->environment.get_uint_param = get_uint_param;
++  this->environment.get_int_param = get_int_param;
++  this->environment.get_param_list = get_param_list;
++  this->environment.get_string_param = get_string_param;
++  this->environment.end_of_quantum = signal_end_of_quantum;
++  this->environment.handler = this;
++
++  SC_METHOD(notification);
++  sensitive << tlm2c_method;
++}
++
++TLM2CSCBridge::~TLM2CSCBridge()
++{
++  this->cleanLibrary();
++}
++
++void TLM2CSCBridge::before_end_of_elaboration()
++{
++  this->loadLibrary();
++  this->init();
++}
++
++void TLM2CSCBridge::end_of_elaboration()
++{
++
++}
++
++void TLM2CSCBridge::notification()
++{
++  /*
++   * This is called for every notified method in tlm2c.
++   */
++  model_notify(this->tlm2c_model);
++}
++
++void TLM2CSCBridge::addNotification(uint64_t time_ns)
++{
++  tlm2c_method.notify(sc_core::sc_time((double)(time_ns), sc_core::SC_NS));
++}
++
++void request_notify(void *handler, uint64_t time_ns)
++{
++  TLM2CSCBridge *_this = (TLM2CSCBridge *)handler;
++  _this->addNotification(time_ns);
++}
++
++uint64_t get_time_ns(void *handler)
++{
++  return sc_core::sc_time_stamp().value() / 1000;
++}
++
++void get_param_list(void *handler, char **list[], size_t *size)
++{
++  gs::cnf::cnf_api *Api = gs::cnf::GCnf_Api::getApiInstance(NULL);
++  assert(Api);
++
++  std::vector<std::string> params = Api->getParamList();
++
++  *list = (char **)malloc(params.size() * sizeof(char *));
++  *size = params.size();
++
++  for (size_t i = 0; i < params.size(); i++)
++  {
++    (*list)[i] = strdup(params[i].c_str());
++  }
++}
++
++uint64_t get_uint_param(void *handler, const char *name)
++{
++  uint64_t value;
++  gs::cnf::cnf_api *Api = gs::cnf::GCnf_Api::getApiInstance(NULL);
++  assert(Api);
++
++  Api->getPar(name)->getValue(value);
++
++  return value;
++}
++
++int64_t get_int_param(void *handler, const char *name)
++{
++  int64_t value;
++  gs::cnf::cnf_api *Api = gs::cnf::GCnf_Api::getApiInstance(NULL);
++  assert(Api);
++
++  Api->getPar(name)->getValue(value);
++
++  return value;
++}
++
++void get_string_param(void *handler, const char *name, char **param)
++{
++  std::string value;
++  gs::cnf::cnf_api *Api = gs::cnf::GCnf_Api::getApiInstance(NULL);
++  assert(Api);
++
++  *param = NULL;
++  if (Api->getPar(name))
++  {
++    Api->getPar(name)->getValue(value);
++    *param = strdup(value.c_str());
++  }
++}
++
++void signal_end_of_quantum(void *handler)
++{
++  TLM2CSCBridge *_this = (TLM2CSCBridge *)handler;
++  _this->end_of_quantum();
++}
++
++void request_stop(void *handler)
++{
++  TLM2CSCBridge *_this = (TLM2CSCBridge *)handler;
++  _this->stop_request();
++}
++
++void TLM2CSCBridge::loadLibrary()
++{
++  char *error = NULL;
++  std::string lib = libraryName;
++  std::stringstream stream;
++  std::string copyCommand;
++
++  if (lib == "no")
++  {
++    SC_REPORT_ERROR(name(), "You need to specify a library name:\n"
++                            "Set 'library' param with the library to load.");
++  }
++
++  /*
++   * There are no way of loading a library twice without sharing the global
++   * variables. So this make a copy of the library and load the copy.
++   */
++  for (size_t i = 0; i < libraryNames.size(); i++)
++  {
++    if (libraryNames[i] == lib)
++    {
++      /*
++       * We already have this library. Just append the library occurence and
++       * copy the file.
++       */
++      (libraryOccurence[i])++;
++      stream.clear();
++      stream.str("");
++      stream << libraryOccurence[i];
++      libraryAssociated = lib + stream.str();
++      copyCommand = "cp " + lib + " " + libraryAssociated;
++      system(copyCommand.c_str());
++      this->removeLibrary = true;
++      break;
++    }
++  }
++
++  if (!this->removeLibrary)
++  {
++    /*
++     * This is the first load.. We don't have to copy the library.
++     * Just push the name and the occurence for the next library user.
++     */
++    libraryNames.push_back(lib);
++    libraryOccurence.push_back(0);
++    this->libraryAssociated = lib;
++  }
++
++  /*
++   * More than one instance of a library can be inited.
++   * This requires the library to be loaded more than one time.
++   */
++  dlerror();
++  libraryHandle = dlopen(this->libraryAssociated.c_str(), RTLD_LAZY);
++  error = dlerror();
++
++  if (libraryHandle == NULL)
++  {
++    /*
++     * Library not available just quit..
++     */
++    std::cout << "Can't load " << this->libraryAssociated << " :-(."
++              << std::endl;
++
++    if (error != NULL)
++    {
++      std::cout << error << std::endl;
++    }
++
++    abort();
++  }
++
++  this->tlm2c_elaboration =
++    (Model *(*)(Environment *))dlsym(libraryHandle, "tlm2c_elaboration");
++  this->tlm2c_socket_get_by_name =
++    (Socket* (*)(const char*))dlsym(libraryHandle, "tlm2c_socket_get_by_name");
++
++}
++
++void TLM2CSCBridge::init()
++{
++  std::cout << "bridge: tlm2c_elaborate.." << std::endl;
++  this->tlm2c_model = this->tlm2c_elaboration(&this->environment);
++  this->additional_init();
++}
++
++void TLM2CSCBridge::cleanLibrary()
++{
++  if (this->libraryHandle != NULL)
++  {
++    dlclose(this->libraryHandle);
++  }
++
++  if (this->removeLibrary)
++  {
++    /*
++     * Remove the shared library created int the libraryInit function.
++     */
++    system(std::string("rm " + this->libraryAssociated + " -f").c_str());
++  }
++}
+diff --git a/test/CMakeLists.txt b/test/CMakeLists.txt
+new file mode 100644
+index 0000000..f1bb11b
+--- /dev/null
++++ b/test/CMakeLists.txt
+@@ -0,0 +1,45 @@
++#
++# CMakeLists.txt
++#
++# Copyright (C) 2014, GreenSocs ltd.
++#
++# Developped by Konrad Frederic <fred.konrad@greensocs.com>
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or (at
++# your option) any later version.
++#
++# This program is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, see <http://www.gnu.org/licenses>.
++#
++# Linking GreenSocs code, statically or dynamically with other modules
++# is making a combined work based on GreenSocs code. Thus, the terms and
++# conditions of the GNU General Public License cover the whole
++# combination.
++#
++# In addition, as a special exception, the copyright holders, GreenSocs
++# Ltd, give you permission to combine GreenSocs code with free software
++# programs or libraries that are released under the GNU LGPL, under the
++# OSCI license, under the OCP TLM Kit Research License Agreement or
++# under the OVP evaluation license.You may copy and distribute such a
++# system following the terms of the GNU GPL and the licenses of the
++# other code concerned.
++#
++# Note that people who make modified versions of GreenSocs code are not
++# obligated to grant this special exception for their modified versions;
++# it is their choice whether to do so. The GNU General Public License
++# gives permission to release a modified version without this exception;
++# this exception also makes it possible to release a modified version
++# which carries forward this exception.
++
++ADD_EXECUTABLE(SimpleCPU_testbench
++               SimpleCPU_testbench.cpp
++               )
++TARGET_LINK_LIBRARIES(SimpleCPU_testbench simplecpu ${SystemC_LIBRARIES})
++ADD_TEST(NAME SimpleCPU COMMAND ./SimpleCPU_testbench)
+diff --git a/test/SimpleCPU_testbench.cpp b/test/SimpleCPU_testbench.cpp
+new file mode 100644
+index 0000000..a7bb30c
+--- /dev/null
++++ b/test/SimpleCPU_testbench.cpp
+@@ -0,0 +1,12 @@
++#include "SimpleCPU/simpleCPU.h"
++
++int sc_main(int argc, char *argv[])
++{
++  /*
++   * TODO: To be completed.
++   */
++  std::cout << "We have nothing to test. Just check it compiles correctly."
++            << std::endl;
++
++  return 0;
++}
+-- 
+2.54.0
+
