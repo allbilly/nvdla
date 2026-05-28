@@ -10,20 +10,33 @@ on the host to inspect available generated tests.
 from __future__ import annotations
 
 import argparse
+import binascii
 import ctypes
 import mmap
 import os
 import re
 import struct
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 
 
 DEFAULT_TEST = "dc_1x1x8_1x1x8x1_int8_0"
+
 NVDLA_MMIO_BASE = 0x10200000
 NVDLA_MMIO_SIZE = 0x10220000 - 0x10200000
-INTR_STATUS = 0x100C
+
+UVM_FEATURE_BASE = 0x80000000
+VP_FEATURE_BASE = 0xC0000000
+UVM_WEIGHT_BASE = 0x90000000
+VP_WEIGHT_BASE = 0xD0000000
+UVM_OUTPUT_BASE = 0xA0000000
+VP_OUTPUT_BASE = 0xF0000000
+
+
+class reg:
+    GLB_S_INTR_STATUS = 0x100C
+    CDMA_S_CBUF_FLUSH_STATUS = 0x300C
+
 
 DONE_BITS = [
     ("SDP_DONE", 0),
@@ -39,56 +52,18 @@ DONE_BITS = [
 ]
 
 
-@dataclass(frozen=True)
-class RegWrite:
-    name: str
-    offset: int
-    value: int
-    after_cbuf_poll: bool
-
-
-@dataclass(frozen=True)
-class MemLoad:
-    addr: int
-    path: Path
-
-
-@dataclass(frozen=True)
-class MemInit:
-    addr: int
-    size: int
-
-
-@dataclass(frozen=True)
-class CrcCheck:
-    addr: int
-    size: int
-    expected: int
-
-
-@dataclass
-class NvSmallTest:
-    name: str
-    cfg: Path
-    mem_inits: list[MemInit]
-    mem_loads: list[MemLoad]
-    initial_regs: list[RegWrite]
-    enable_regs: list[RegWrite]
-    crc_checks: list[CrcCheck]
-
-
-def script_root() -> Path:
+def script_root():
     return Path(__file__).resolve().parents[1]
 
 
-def default_tests_root() -> Path:
+def default_tests_root():
     local = script_root() / "ref" / "vp" / "tests" / "nv_small_tests"
     if local.exists():
         return local
     return Path("/mnt/nv_small_tests")
 
 
-def available_tests(root: Path, kind: str) -> list[str]:
+def available_tests(root, kind):
     tests = []
     for path in root.iterdir():
         if not path.is_dir() or path.name.startswith("__"):
@@ -101,19 +76,19 @@ def available_tests(root: Path, kind: str) -> list[str]:
     return sorted(tests)
 
 
-def relocate_addr(addr: int) -> int:
+def relocate_addr(addr):
     region = (addr >> 24) & 0xFF
     if region == 0x80:
-        return addr - 0x80000000 + 0xC0000000
+        return addr - UVM_FEATURE_BASE + VP_FEATURE_BASE
     if region == 0x90:
-        return addr - 0x90000000 + 0xD0000000
+        return addr - UVM_WEIGHT_BASE + VP_WEIGHT_BASE
     if region == 0xA0:
-        return addr - 0xA0000000 + 0xF0000000
+        return addr - UVM_OUTPUT_BASE + VP_OUTPUT_BASE
     return addr
 
 
-def parse_reg_offsets() -> dict[str, int]:
-    reg_map: dict[str, int] = {}
+def load_reg_map():
+    reg_map = {}
     manual_dir = script_root() / "ref" / "hw" / "outdir" / "nv_small" / "spec" / "manual"
     for header in manual_dir.glob("NVDLA_*.h"):
         for line in header.read_text(errors="replace").splitlines():
@@ -125,18 +100,18 @@ def parse_reg_offsets() -> dict[str, int]:
     return reg_map
 
 
-def cfg_name_to_macro(name: str) -> str:
+def cfg_name_to_macro(name):
     return name.replace(".", "_")
 
 
-def parse_cfg(root: Path, name: str, reg_map: dict[str, int]) -> NvSmallTest:
+def load_nv_small_test(root, name, reg_map):
     cfg = root / name / f"{name}.cfg"
     text = cfg.read_text()
-    mem_inits: list[MemInit] = []
-    mem_loads: list[MemLoad] = []
-    initial_regs: list[RegWrite] = []
-    enable_regs: list[RegWrite] = []
-    crc_checks: list[CrcCheck] = []
+    mem_inits = []
+    mem_loads = []
+    initial_regs = []
+    enable_regs = []
+    crc_checks = []
     saw_cbuf_poll = False
     enable_phase = False
     addr_re = re.compile(r"(?:BASE_)?ADDR_(?:LOW|HIGH)|DATAOUT_ADDR")
@@ -145,12 +120,12 @@ def parse_cfg(root: Path, name: str, reg_map: dict[str, int]) -> NvSmallTest:
         line = raw.strip()
         match = re.match(r'mem_init\(pri_mem,\s*(0x[0-9a-fA-F]+),\s*(0x[0-9a-fA-F]+),\s*ALL_ZERO\)', line)
         if match:
-            mem_inits.append(MemInit(relocate_addr(int(match.group(1), 16)), int(match.group(2), 16)))
+            mem_inits.append((relocate_addr(int(match.group(1), 16)), int(match.group(2), 16)))
             continue
 
         match = re.match(r'mem_load\(pri_mem,\s*(0x[0-9a-fA-F]+),\s*"([^"]+\.dat)"\)', line)
         if match:
-            mem_loads.append(MemLoad(relocate_addr(int(match.group(1), 16)), cfg.parent / match.group(2)))
+            mem_loads.append((relocate_addr(int(match.group(1), 16)), cfg.parent / match.group(2)))
             continue
 
         if re.match(r"poll_reg_equal\(NVDLA_CDMA\.S_CBUF_FLUSH_STATUS_0", line):
@@ -167,18 +142,30 @@ def parse_cfg(root: Path, name: str, reg_map: dict[str, int]) -> NvSmallTest:
             if offset is None:
                 raise KeyError(f"unknown register {macro} in {cfg}")
             enable_phase = enable_phase or macro.endswith("_D_OP_ENABLE_0")
-            write = RegWrite(macro, offset, value, saw_cbuf_poll)
+            write = (offset, value, macro, saw_cbuf_poll)
             (enable_regs if saw_cbuf_poll or enable_phase else initial_regs).append(write)
             continue
 
         match = re.match(r"check_crc\(.*?,\s*\d+,\s*(0x[0-9a-fA-F]+),\s*(0x[0-9a-fA-F]+),\s*(0x[0-9a-fA-F]+)\)", line)
         if match:
-            crc_checks.append(CrcCheck(relocate_addr(int(match.group(1), 16)), int(match.group(2), 16), int(match.group(3), 16)))
+            crc_checks.append((relocate_addr(int(match.group(1), 16)), int(match.group(2), 16), int(match.group(3), 16)))
 
-    return NvSmallTest(name, cfg, mem_inits, mem_loads, initial_regs, enable_regs, crc_checks)
+    return {
+        "name": name,
+        "cfg": cfg,
+        "mem_inits": mem_inits,
+        "mem_loads": mem_loads,
+        "initial_regs": initial_regs,
+        "enable_regs": enable_regs,
+        "crc_checks": crc_checks,
+    }
 
 
-def parse_dat(path: Path) -> list[tuple[int, bytes]]:
+def build_conv_regs(test):
+    return test["initial_regs"], test["enable_regs"]
+
+
+def parse_dat(path):
     text = path.read_text(errors="replace")
     entries = []
     pattern = r"\{offset:(0x[0-9a-fA-F]+),\s*size:(\d+),\s*payload:((?:0x[0-9a-fA-F]+\s*)+)\}"
@@ -190,35 +177,37 @@ def parse_dat(path: Path) -> list[tuple[int, bytes]]:
     return entries
 
 
-def map_region(fd: int, addr: int, size: int, prot: int) -> tuple[mmap.mmap, int]:
+def map_region(fd, addr, size, prot):
     page_base = addr & ~0xFFF
     page_off = addr & 0xFFF
     map_size = ((page_off + size + 4095) // 4096) * 4096
     return mmap.mmap(fd, map_size, mmap.MAP_SHARED, prot, offset=page_base), page_off
 
 
-def write32(mm: mmap.mmap, offset: int, value: int) -> None:
+def write32(mm, offset, value):
     mm[offset:offset + 4] = struct.pack("<I", value & 0xFFFFFFFF)
 
 
-def read32(mm: mmap.mmap, offset: int) -> int:
+def read32(mm, offset):
     return struct.unpack("<I", mm[offset:offset + 4])[0]
 
 
-def zero_region(fd: int, init: MemInit) -> None:
-    mm, off = map_region(fd, init.addr, init.size, mmap.PROT_READ | mmap.PROT_WRITE)
+def zero_buffer(fd, mem_init):
+    addr, size = mem_init
+    mm, off = map_region(fd, addr, size, mmap.PROT_READ | mmap.PROT_WRITE)
     try:
-        mm[off:off + init.size] = b"\x00" * init.size
+        mm[off:off + size] = b"\x00" * size
     finally:
         mm.close()
 
 
-def load_dat(fd: int, load: MemLoad) -> None:
-    entries = parse_dat(load.path)
+def load_buffer_dat(fd, mem_load):
+    addr, path = mem_load
+    entries = parse_dat(path)
     if not entries:
         return
     size = max(offset + len(payload) for offset, payload in entries)
-    mm, base_off = map_region(fd, load.addr, size, mmap.PROT_READ | mmap.PROT_WRITE)
+    mm, base_off = map_region(fd, addr, size, mmap.PROT_READ | mmap.PROT_WRITE)
     try:
         for offset, payload in entries:
             mm[base_off + offset:base_off + offset + len(payload)] = payload
@@ -226,25 +215,35 @@ def load_dat(fd: int, load: MemLoad) -> None:
         mm.close()
 
 
-def program_regs(mmio: mmap.mmap, regs: list[RegWrite]) -> None:
-    for write in regs:
-        write32(mmio, write.offset, write.value)
+def write_buffers(fd, test):
+    for mem_init in test["mem_inits"]:
+        zero_buffer(fd, mem_init)
+    for mem_load in test["mem_loads"]:
+        load_buffer_dat(fd, mem_load)
+    for addr, size, _expected in test["crc_checks"]:
+        zero_buffer(fd, (addr, size))
 
 
-def wait_cbuf_flush(mmio: mmap.mmap) -> None:
-    cbuf_status = 0x300C
+def write_regs(mmio, regs, dump_regs=False):
+    for offset, value, name, _after_cbuf_poll in regs:
+        if dump_regs:
+            print(f"{name} offset=0x{offset:04x} value=0x{value:08x}")
+        write32(mmio, offset, value)
+
+
+def wait_cbuf_flush(mmio):
     for _ in range(1_000_000):
-        if read32(mmio, cbuf_status) & 1:
+        if read32(mmio, reg.CDMA_S_CBUF_FLUSH_STATUS) & 1:
             print("CBUF flush done")
             return
     print("CBUF flush timeout")
 
 
-def wait_done(mmio: mmap.mmap) -> None:
+def wait_done(mmio):
     seen = 0
     extra_wait = 0
     for _ in range(100_000_000):
-        status = read32(mmio, INTR_STATUS)
+        status = read32(mmio, reg.GLB_S_INTR_STATUS)
         new_bits = status & ~seen
         seen |= status
         for label, bit in DONE_BITS:
@@ -259,50 +258,52 @@ def wait_done(mmio: mmap.mmap) -> None:
     raise TimeoutError("NVDLA done interrupt timeout")
 
 
-def verify_crc(fd: int, checks: list[CrcCheck]) -> int:
+def verify_output(fd, test):
     failures = 0
-    for idx, check in enumerate(checks):
-        mm, off = map_region(fd, check.addr, check.size, mmap.PROT_READ)
+    for idx, (addr, size, expected) in enumerate(test["crc_checks"]):
+        mm, off = map_region(fd, addr, size, mmap.PROT_READ)
         try:
-            crc = ctypes.c_uint32(0)
-            # binascii.crc32 is intentionally imported lazily to keep the top
-            # section close to the register-oriented RK examples.
-            import binascii
-            crc.value = binascii.crc32(mm[off:off + check.size]) & 0xFFFFFFFF
+            crc = ctypes.c_uint32(binascii.crc32(mm[off:off + size]) & 0xFFFFFFFF)
         finally:
             mm.close()
-        ok = crc.value == check.expected
-        print(f"CRC[{idx}] = 0x{crc.value:08x} expect 0x{check.expected:08x} {'PASS' if ok else 'FAIL'}")
+        ok = crc.value == expected
+        print(f"CRC[{idx}] = 0x{crc.value:08x} expect 0x{expected:08x} {'PASS' if ok else 'FAIL'}")
         failures += 0 if ok else 1
     return failures
 
 
-def run_test(test: NvSmallTest, dry_run: bool) -> int:
-    print(f"test={test.name}")
-    print(f"cfg={test.cfg}")
-    print(f"mem_init={len(test.mem_inits)} mem_load={len(test.mem_loads)} regs={len(test.initial_regs) + len(test.enable_regs)} crc={len(test.crc_checks)}")
+def print_test_summary(test):
+    print(f"test={test['name']}")
+    print(f"cfg={test['cfg']}")
+    print(
+        f"mem_init={len(test['mem_inits'])} "
+        f"mem_load={len(test['mem_loads'])} "
+        f"regs={len(test['initial_regs']) + len(test['enable_regs'])} "
+        f"crc={len(test['crc_checks'])}"
+    )
+
+
+def run_conv_from_cfg(test, dry_run=False, dump_regs=False):
+    print_test_summary(test)
     if dry_run:
         return 0
 
+    failures = 0
     fd = os.open("/dev/mem", os.O_RDWR | os.O_SYNC)
     try:
         mmio, _ = map_region(fd, NVDLA_MMIO_BASE, NVDLA_MMIO_SIZE, mmap.PROT_READ | mmap.PROT_WRITE)
         try:
-            for init in test.mem_inits:
-                zero_region(fd, init)
-            for load in test.mem_loads:
-                load_dat(fd, load)
+            initial_regs, enable_regs = build_conv_regs(test)
+            write_buffers(fd, test)
             print("Programming initial registers")
-            program_regs(mmio, test.initial_regs)
-            if any(write.after_cbuf_poll for write in test.enable_regs):
+            write_regs(mmio, initial_regs, dump_regs=dump_regs)
+            if any(after_cbuf_poll for *_rest, after_cbuf_poll in enable_regs):
                 wait_cbuf_flush(mmio)
-            for check in test.crc_checks:
-                zero_region(fd, MemInit(check.addr, check.size))
             print("Firing OP_ENABLE")
-            program_regs(mmio, test.enable_regs)
+            write_regs(mmio, enable_regs, dump_regs=dump_regs)
             wait_done(mmio)
-            failures = verify_crc(fd, test.crc_checks)
-            if not test.crc_checks:
+            failures = verify_output(fd, test)
+            if not test["crc_checks"]:
                 print("No CRC checks in cfg; run completed without output verification")
         finally:
             mmio.close()
@@ -312,7 +313,7 @@ def run_test(test: NvSmallTest, dry_run: bool) -> int:
     return failures
 
 
-def main() -> int:
+def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tests-root", type=Path, default=default_tests_root())
     parser.add_argument("--test", default=DEFAULT_TEST)
@@ -320,6 +321,7 @@ def main() -> int:
     parser.add_argument("--list", action="store_true")
     parser.add_argument("--all", action="store_true", help="run or dry-run every selected test")
     parser.add_argument("--dry-run", action="store_true", help="parse and print the selected test without touching /dev/mem")
+    parser.add_argument("--dump-regs", action="store_true", help="print each register write before writing it")
     args = parser.parse_args()
 
     if args.list:
@@ -328,19 +330,20 @@ def main() -> int:
         return 0
 
     tests = available_tests(args.tests_root, args.kind if args.all else "all")
+    reg_map = load_reg_map()
     if args.all:
-        reg_map = parse_reg_offsets()
         failures = 0
         for name in tests:
-            failures += run_test(parse_cfg(args.tests_root, name, reg_map), dry_run=args.dry_run)
+            test = load_nv_small_test(args.tests_root, name, reg_map)
+            failures += run_conv_from_cfg(test, dry_run=args.dry_run, dump_regs=args.dump_regs)
         return failures
 
     if args.test not in tests:
         print(f"unknown nv_small test: {args.test}", file=sys.stderr)
         return 1
 
-    test = parse_cfg(args.tests_root, args.test, parse_reg_offsets())
-    return run_test(test, dry_run=args.dry_run)
+    test = load_nv_small_test(args.tests_root, args.test, reg_map)
+    return run_conv_from_cfg(test, dry_run=args.dry_run, dump_regs=args.dump_regs)
 
 
 if __name__ == "__main__":
