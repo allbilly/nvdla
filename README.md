@@ -3,18 +3,28 @@ This repo aims do pure registers programming on the NVDLA NPU.
 
 ## 1. Quick start
 
-Run test case in VP
-```
-cd examples
-SC_SIGNAL_WRITE_CHECK=DISABLE ./vp/aarch64_toplevel --conf ./vp/aarch64_nvdla.lua
+```bash
+docker run -it --rm -p 6667:6667 -d \
+    -v ./examples/vp/test_Add.nvdla:/usr/local/nvdla/test_Add.nvdla:z \
+    -v ./examples/vp/input1x5x7.pgm:/usr/local/nvdla/input1x5x7.pgm:z \
+    -v ./examples/vp/rootfs.ext4:/usr/local/nvdla/rootfs.ext4:z \
+    -w /usr/local/nvdla/ \
+    -e SC_SIGNAL_WRITE_CHECK=DISABLE \
+    onnc/vp aarch64_toplevel -c aarch64_nvdla.lua
 
-# Login: root / nvdla
-mount -t 9p -o trans=virtio r /mnt && cd /mnt
-./dc_1x1x8_1x1x8x1_int8_0_test
+ssh -p 6667 root@127.0.0.1
+
+mount -t 9p -o trans=virtio r /mnt 
+cd /mnt && insmod drm.ko && insmod opendla.ko
+./nvdla_runtime --loadable test_Add.nvdla --image input1x5x7.pgm --rawdump
+cat output.dimg
 ```
 
 ## 2. Parse nvdla loadable
-https://zhuanlan.zhihu.com/p/378122624
+
+```bash
+python parse.py examples/vp/test_Add.nvdla
+```
 
 # reference
 - https://github.com/nvdla/vp

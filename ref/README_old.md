@@ -1,6 +1,21 @@
 # NVDLA
 This repo aims do pure registers programming on the NVDLA NPU. 
 
+## 1. Quick start
+
+Run test case in VP
+```
+cd examples
+SC_SIGNAL_WRITE_CHECK=DISABLE ./vp/aarch64_toplevel --conf ./vp/aarch64_nvdla.lua > vp.log 2>&1 &
+ssh -p 6667 root@localhost 'ls -la /mnt/vp/vp/portable-python/python/bin/python3.10'
+ssh -p 6667 root@127.0.0.1
+
+
+# Login: root / nvdla
+mount -t 9p -o trans=virtio r /mnt && cd /mnt
+./dc_1x1x8_1x1x8x1_int8_0_test
+```
+
 # 1. Compile with ONNC
 
 Old vp image was built on ubuntu 14.04 with no arm supprot, so you must run on x86_64

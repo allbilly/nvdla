@@ -1,555 +1,455 @@
 #!/usr/bin/env python3
-"""
-NVDLA Loadable Parser (parse.py)
-
-A single-file Python parser for NVDLA loadable FlatBuffer files,
-matching the behavior of nvdla-parser/ while keeping all implementation
-in one file. Supports parsing loadable files, resolving memory/blob
-references, and decoding DLA firmware descriptor blobs.
-
-Usage:
-    python3 parse.py <loadable-file.nvdla> [--summary|--lists|--descs|--json]
-"""
-
-import argparse
-import json
-import sys
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
 import struct
+import sys
 
 
-# =============================================================================
-# Constants from loadable_generated.h and dla_interface.h
-# =============================================================================
+class ParseError(Exception):
+    pass
 
-# Blob sub-interface names used by examples
-BLOB_SUB_INTERFACE_NAMES = ["NONE", "ADDR0", "DEPS", "OPS", "SURFS", "LUTS"]
 
-# DLA operation types
-DLA_OP_BDMA = 0
-DLA_OP_CONV = 1
-DLA_OP_SDP = 2
-DLA_OP_PDP = 3
-DLA_OP_CDP = 4
-DLA_OP_RUBIK = 5
-DLA_OP_TYPES = ["BDMA", "CONV", "SDP", "PDP", "CDP", "RUBIK"]
+INTERFACE = {0: "NONE", 1: "DLA1", 2: "EMU1"}
+MEM_DOMAIN = {0: "SYSTEM", 1: "SRAM"}
+BLOB_SUBIF = {0: "NONE", 1: "ADDR0", 2: "DEPS", 3: "OPS", 4: "SURFS", 5: "LUTS"}
+EVENT_TYPE = {0: "EVENTTYPE0", 1: "EVENTTYPE1", 2: "EVENTTYPE2"}
+EVENT_OP = {0: "WAIT", 1: "SIGNAL"}
+OP_TYPE = {0: "BDMA", 1: "CONV", 2: "SDP", 3: "PDP", 4: "CDP", 5: "RUBIK"}
 
-# Memory domain flags
-MemoryDomain = {
-    0: "SYSTEM",
-    1: "SRAM"
+DATA_CUBE_SIZE = 32
+DATA_CUBE_COMPACT_SIZE = 28
+DATA_CUBE_ONNC_SIZE = 28
+COMMON_OP_SIZE = 36
+SDP_SURFACE_SIZE = DATA_CUBE_SIZE * 5
+SDP_OP_SIZE = 116
+SURFACE_CONTAINER_SIZE = 644
+OP_CONTAINER_SIZE = 880
+
+SDP_REGS = {
+    "D_OP_ENABLE": 0xB038,
+    "D_DATA_CUBE_WIDTH": 0xB03C,
+    "D_DATA_CUBE_HEIGHT": 0xB040,
+    "D_DATA_CUBE_CHANNEL": 0xB044,
+    "D_DST_BASE_ADDR_LOW": 0xB048,
+    "D_DST_BASE_ADDR_HIGH": 0xB04C,
+    "D_DST_LINE_STRIDE": 0xB050,
+    "D_DST_SURFACE_STRIDE": 0xB054,
+    "D_DP_BS_CFG": 0xB058,
+    "D_DP_BS_ALU_CFG": 0xB05C,
+    "D_DP_BS_ALU_SRC_VALUE": 0xB060,
+    "D_DP_BS_MUL_CFG": 0xB064,
+    "D_DP_BS_MUL_SRC_VALUE": 0xB068,
+    "D_DP_BN_CFG": 0xB06C,
+    "D_DP_BN_ALU_CFG": 0xB070,
+    "D_DP_BN_ALU_SRC_VALUE": 0xB074,
+    "D_DP_BN_MUL_CFG": 0xB078,
+    "D_DP_BN_MUL_SRC_VALUE": 0xB07C,
+    "D_DP_EW_CFG": 0xB080,
+    "D_DP_EW_ALU_CFG": 0xB084,
+    "D_DP_EW_ALU_SRC_VALUE": 0xB088,
+    "D_DP_EW_ALU_CVT_OFFSET_VALUE": 0xB08C,
+    "D_DP_EW_ALU_CVT_SCALE_VALUE": 0xB090,
+    "D_DP_EW_ALU_CVT_TRUNCATE_VALUE": 0xB094,
+    "D_DP_EW_MUL_CFG": 0xB098,
+    "D_DP_EW_MUL_SRC_VALUE": 0xB09C,
+    "D_DP_EW_MUL_CVT_OFFSET_VALUE": 0xB0A0,
+    "D_DP_EW_MUL_CVT_SCALE_VALUE": 0xB0A4,
+    "D_DP_EW_MUL_CVT_TRUNCATE_VALUE": 0xB0A8,
+    "D_DP_EW_TRUNCATE_VALUE": 0xB0AC,
+    "D_FEATURE_MODE_CFG": 0xB0B0,
+    "D_DST_DMA_CFG": 0xB0B4,
+    "D_DST_BATCH_STRIDE": 0xB0B8,
+    "D_DATA_FORMAT": 0xB0BC,
+    "D_CVT_OFFSET": 0xB0C0,
+    "D_CVT_SCALE": 0xB0C4,
+    "D_CVT_SHIFT": 0xB0C8,
 }
 
-# Memory flags (bitmask)
-MemoryFlags = {
-    0: "NONE",
-    1: "ALLOC",
-    2: "SET",
-    4: "INPUT",
-    8: "OUTPUT"
-}
 
-# Interface types
-Interface = {
-    0: "NONE",
-    1: "DLA1",
-    2: "EMU1"
-}
+def need(buf, off, size, what):
+    if off < 0 or off + size > len(buf):
+        raise ParseError(f"{what} out of range at {off}, need {size}, file {len(buf)}")
 
-# =============================================================================
-# FlatBuffer Helper Functions
-# =============================================================================
 
-def read_u8(data: bytes, offset: int) -> int:
-    return data[offset]
+def unpack(buf, off, fmt, what):
+    size = struct.calcsize(fmt)
+    need(buf, off, size, what)
+    return struct.unpack_from(fmt, buf, off)[0]
 
-def read_u16(data: bytes, offset: int) -> int:
-    return struct.unpack('<H', data[offset:offset+2])[0]
 
-def read_u32(data: bytes, offset: int) -> int:
-    return struct.unpack('<I', data[offset:offset+4])[0]
+def uoffset(buf, off, what):
+    return unpack(buf, off, "<I", what)
 
-def read_u64(data: bytes, offset: int) -> int:
-    return struct.unpack('<Q', data[offset:offset+8])[0]
 
-def read_i16(data: bytes, offset: int) -> int:
-    val = struct.unpack('<h', data[offset:offset+2])[0]
-    return val if val < 128 else -(256 - val)
-
-def read_i32(data: bytes, offset: int) -> int:
-    val = struct.unpack('<i', data[offset:offset+4])[0]
-    return val if val < 128 * 128 else -(2**32 + val)
-
-def read_i64(data: bytes, offset: int) -> int:
-    val = struct.unpack('<q', data[offset:offset+8])[0]
-    return val if val < 2**31 else -(2**64 + val)
-
-def read_scalar(data: bytes, offset: int, scalar_type: str, default: Any) -> Any:
-    """Read scalar value at offset."""
-    try:
-        if scalar_type == 'u8':
-            return read_u8(data, offset)
-        elif scalar_type == 'u16':
-            return read_u16(data, offset)
-        elif scalar_type == 'u32':
-            return read_u32(data, offset)
-        elif scalar_type == 'u64':
-            return read_u64(data, offset)
-        elif scalar_type == 'i8':
-            return struct.unpack('<b', data[offset:offset+1])[0]
-        elif scalar_type == 'i16':
-            return read_i16(data, offset)
-        elif scalar_type == 'i32':
-            return read_i32(data, offset)
-        elif scalar_type == 'i64':
-            return read_i64(data, offset)
-        else:
-            raise ValueError(f"Unknown scalar type: {scalar_type}")
-    except Exception as e:
-        raise ValueError(f"Cannot read {scalar_type} at offset {offset}: {e}")
-
-def read_string(data: bytes, offset: int) -> Optional[str]:
-    """Read FlatBuffer string at offset."""
-    if offset < 0 or offset >= len(data):
+def field_pos(buf, table, vt):
+    need(buf, table, 4, "table")
+    vtable = table - unpack(buf, table, "<i", "vtable offset")
+    need(buf, vtable, 4, "vtable")
+    vlen = unpack(buf, vtable, "<H", "vtable length")
+    if vt >= vlen:
         return None
-    null_pos = data.find(b'\x00', offset)
-    if null_pos >= 0:
-        return data[offset:null_pos].decode('utf-8', errors='replace')
-    else:
-        return data[offset:].decode('utf-8', errors='replace')
+    rel = unpack(buf, vtable + vt, "<H", "field offset")
+    return table + rel if rel else None
 
-def read_vector_bytes(data: bytes, vec_offset: int) -> bytes:
-    """Read FlatBuffer vector bytes at offset."""
-    if vec_offset < 0 or vec_offset >= len(data):
-        raise ValueError(f"Invalid vector offset: {vec_offset}")
-    vec_start = data[vec_offset]
-    vec_len = vec_start[0]
-    if vec_len < 0 or vec_len > 1024:
-        raise ValueError(f"Invalid vector length: {vec_len}")
-    vec_end = vec_start[1]
-    return data[vec_start[1]:vec_end]
 
-# =============================================================================
-# Loadable Schema VTable Offsets
-# =============================================================================
+def scalar(buf, table, vt, fmt, default=0):
+    pos = field_pos(buf, table, vt)
+    if pos is None:
+        return default
+    return unpack(buf, pos, fmt, f"field {vt}")
 
-def get_vtable_offset(table_type: str, vtable_pos: int) -> int:
-    """Get vtable offset for a table field."""
-    vtables = {
-        "Loadable": {4: "version", 6: "task_list", 8: "memory_list", 10: "address_list",
-                     12: "event_list", 14: "blobs", 16: "tensor_desc_list", 18: "reloc_list", 20: "submit_list"},
-        "Blob": {4: "name", 6: "size", 8: "interface", 10: "sub_interface", 12: "version", 14: "data"},
-        "MemoryListEntry": {4: "id", 6: "domain", 8: "flags", 10: "size", 12: "alignment",
-                           14: "contents", 16: "offsets", 18: "bind_id", 20: "tensor_desc_id"},
-        "EventListEntry": {4: "id", 6: "type", 8: "target", 10: "val", 12: "op"},
-        "TaskListEntry": {4: "id", 6: "interface", 8: "instance", 10: "address_list",
-                         12: "pre_actions", 14: "post_actions"},
-        "AddressListEntry": {4: "id", 6: "mem_id", 8: "offset", 10: "size"},
-        "SubmitListEntry": {4: "id", 6: "task_id"},
-        "TensorDescListEntry": {4: "name", 6: "id", 8: "mem_id", 10: "size", 12: "offset",
-                                14: "data_format", 16: "data_type", 18: "data_category",
-                                20: "pixel_format", 22: "pixel_mapping", 24: "n", 26: "c",
-                                28: "h", 30: "w", 32: "stride_0", 34: "stride_1", 36: "stride_2",
-                                38: "stride_3", 40: "stride_4", 42: "stride_5", 44: "stride_6",
-                                46: "stride_7"},
-        "RelocListEntry": {4: "address_id", 6: "write_id", 8: "offset", 10: "interface",
-                          12: "sub_interface", 14: "reloc_type"},
-    }
-    return vtables.get(table_type, {}).get(vtable_pos, -1)
 
-def read_root_table(data: bytes, root_offset: int) -> Optional[Dict]:
-    """Read root FlatBuffer table at offset."""
-    if root_offset < 0 or root_offset >= len(data):
+def struct_pos(buf, table, vt):
+    return field_pos(buf, table, vt)
+
+
+def vector_pos(buf, table, vt):
+    pos = field_pos(buf, table, vt)
+    if pos is None:
         return None
-    vtable_offset = data[root_offset]
-    if vtable_offset < 0 or vtable_offset >= len(data):
+    vec = pos + uoffset(buf, pos, f"vector field {vt}")
+    need(buf, vec, 4, "vector")
+    return vec
+
+
+def string_at(buf, pos):
+    if pos is None:
+        return ""
+    start = pos + uoffset(buf, pos, "string offset")
+    length = uoffset(buf, start, "string length")
+    need(buf, start + 4, length, "string bytes")
+    return buf[start + 4:start + 4 + length].decode("utf-8", "replace")
+
+
+def vec_len(buf, vec):
+    return 0 if vec is None else uoffset(buf, vec, "vector length")
+
+
+def vec_table(buf, vec, i):
+    elem = vec + 4 + i * 4
+    return elem + uoffset(buf, elem, "table vector element")
+
+
+def vec_scalar(buf, vec, i, fmt):
+    size = struct.calcsize(fmt)
+    return unpack(buf, vec + 4 + i * size, fmt, "scalar vector element")
+
+
+def vec_string(buf, vec, i):
+    return string_at(buf, vec + 4 + i * 4)
+
+
+def vec_bytes(buf, vec):
+    n = vec_len(buf, vec)
+    need(buf, vec + 4, n, "byte vector")
+    return bytes(buf[vec + 4:vec + 4 + n])
+
+
+def version(buf, pos):
+    if pos is None:
+        raise ParseError("missing required loadable version")
+    need(buf, pos, 3, "version")
+    return {"major": buf[pos], "minor": buf[pos + 1], "sub_minor": buf[pos + 2]}
+
+
+def enum_name(names, value):
+    return f"{value}:{names.get(value, 'UNKNOWN')}"
+
+
+def mem_flags(value):
+    parts = [name for bit, name in ((1, "ALLOC"), (2, "SET"), (4, "INPUT"), (8, "OUTPUT")) if value & bit]
+    return "|".join(parts) if parts else "NONE"
+
+
+def s16(v):
+    return v - 0x10000 if v & 0x8000 else v
+
+
+def u32(v):
+    return v & 0xFFFFFFFF
+
+
+def parse_network_desc(data):
+    if len(data) < 40:
+        raise ParseError("network descriptor too small")
+    vals = struct.unpack_from("<8h6h4HhBB", data, 0)
+    return {"operation_desc_index": vals[0], "surface_desc_index": vals[1],
+            "dependency_graph_index": vals[2], "lut_data_index": vals[3],
+            "roi_array_index": vals[4], "surface_index": vals[5], "stat_list_index": vals[6],
+            "op_head": list(vals[8:14]), "num_rois": vals[14], "num_operations": vals[15],
+            "num_luts": vals[16], "num_addresses": vals[17], "input_layer": vals[18],
+            "dynamic_roi": vals[19]}
+
+
+def parse_common_op(data, idx):
+    off = idx * COMMON_OP_SIZE
+    if off + COMMON_OP_SIZE > len(data):
+        raise ParseError("common op descriptor array too small")
+    index, roi_index, op_type, dep_count = struct.unpack_from("<hbBB", data, off)
+    consumers = []
+    pos = off + 8
+    for _ in range(6):
+        ci, ev, _res = struct.unpack_from("<hBB", data, pos)
+        consumers.append({"index": ci, "event": ev})
+        pos += 4
+    fi, fev, _fres = struct.unpack_from("<hBB", data, pos)
+    return {"index": index, "roi_index": roi_index, "op_type": op_type,
+            "dependency_count": dep_count, "consumers": consumers,
+            "fused_parent": {"index": fi, "event": fev}}
+
+
+def parse_cube(data, off):
+    vals = struct.unpack_from("<HhIIHHHHIII", data, off)
+    return {"type": vals[0], "address": vals[1], "offset": vals[2], "size": vals[3],
+            "width": vals[4], "height": vals[5], "channel": vals[6],
+            "line_stride": vals[8], "surf_stride": vals[9], "plane_stride": vals[10]}
+
+
+def parse_cube_compact(data, off):
+    vals = struct.unpack_from("<HhIHHHHIII", data, off)
+    return {"type": vals[0], "address": vals[1], "offset": 0, "size": vals[2],
+            "width": vals[3], "height": vals[4], "channel": vals[5],
+            "line_stride": vals[7], "surf_stride": vals[8], "plane_stride": vals[9]}
+
+
+def parse_sdp_surface(data, idx):
+    compact_size = DATA_CUBE_COMPACT_SIZE * 5
+    if len(data) % compact_size == 0 or len(data) == 644:
+        off = idx * compact_size
+        names = ("src_data", "x1_data", "x2_data", "y_data", "dst_data")
+        return {name: parse_cube_compact(data, off + i * DATA_CUBE_COMPACT_SIZE) for i, name in enumerate(names)}
+    off = idx * SDP_SURFACE_SIZE if len(data) == SDP_SURFACE_SIZE else idx * SURFACE_CONTAINER_SIZE
+    if off + SDP_SURFACE_SIZE > len(data):
+        raise ParseError("SDP surface descriptor array too small")
+    names = ("src_data", "x1_data", "x2_data", "y_data", "dst_data")
+    return {name: parse_cube(data, off + i * DATA_CUBE_SIZE) for i, name in enumerate(names)}
+
+
+def parse_cvt_param(data, off):
+    scale, truncate, enable, offset = struct.unpack_from("<hBBi", data, off)
+    return {"scale": scale, "truncate": truncate, "enable": enable, "offset": offset}
+
+
+def parse_sdp_op_unit(data, off):
+    enable, alu_type, typ, mode, act, shift, truncate, precision, alu_operand, mul_operand = struct.unpack_from("<BBBBBBBBii", data, off)
+    return {"enable": enable, "alu_type": alu_type, "type": typ, "mode": mode,
+            "act": act, "shift_value": shift, "truncate": truncate, "precision": precision,
+            "alu_operand": alu_operand, "mul_operand": mul_operand,
+            "alu_cvt": parse_cvt_param(data, off + 16), "mul_cvt": parse_cvt_param(data, off + 24)}
+
+
+def parse_sdp_op_desc(data, idx):
+    off = idx * SDP_OP_SIZE if len(data) == SDP_OP_SIZE else idx * OP_CONTAINER_SIZE
+    if off + SDP_OP_SIZE > len(data):
+        raise ParseError("SDP op descriptor array too small")
+    src_precision, dst_precision, lut_index = struct.unpack_from("<BBh", data, off)
+    return {"src_precision": src_precision, "dst_precision": dst_precision, "lut_index": lut_index,
+            "out_cvt": parse_cvt_param(data, off + 4),
+            "conv_mode": data[off + 12], "batch_num": data[off + 13],
+            "batch_stride": struct.unpack_from("<I", data, off + 16)[0],
+            "x1_op": parse_sdp_op_unit(data, off + 20),
+            "x2_op": parse_sdp_op_unit(data, off + 52),
+            "y_op": parse_sdp_op_unit(data, off + 84)}
+
+
+def sdp_cfg(op):
+    bypass = 0 if op["enable"] else 1
+    alu_bypass = 0 if op["type"] in (2, 3) else 1
+    mul_bypass = 0 if op["type"] in (1, 3) else 1
+    return bypass | (alu_bypass << 1) | (op["alu_type"] << 2) | (mul_bypass << 4) | ((1 if op["act"] else 0) << 6)
+
+
+def sdp_op_regs(surface, op):
+    dst = surface["dst_data"]
+    regs = []
+    add = regs.append
+    add(("D_DATA_CUBE_WIDTH", dst["width"]))
+    add(("D_DATA_CUBE_HEIGHT", dst["height"]))
+    add(("D_DATA_CUBE_CHANNEL", dst["channel"]))
+    add(("D_DST_BASE_ADDR_LOW", u32(dst["offset"])))
+    add(("D_DST_BASE_ADDR_HIGH", 0))
+    add(("D_DST_LINE_STRIDE", dst["line_stride"]))
+    add(("D_DST_SURFACE_STRIDE", dst["surf_stride"]))
+    add(("D_DP_BS_CFG", sdp_cfg(op["x1_op"])))
+    add(("D_DP_BS_ALU_CFG", op["x1_op"]["shift_value"]))
+    add(("D_DP_BS_ALU_SRC_VALUE", u32(op["x1_op"]["alu_operand"])))
+    add(("D_DP_BS_MUL_CFG", op["x1_op"]["truncate"]))
+    add(("D_DP_BS_MUL_SRC_VALUE", u32(op["x1_op"]["mul_operand"])))
+    add(("D_DP_BN_CFG", sdp_cfg(op["x2_op"])))
+    add(("D_DP_BN_ALU_CFG", op["x2_op"]["shift_value"]))
+    add(("D_DP_BN_ALU_SRC_VALUE", u32(op["x2_op"]["alu_operand"])))
+    add(("D_DP_BN_MUL_CFG", op["x2_op"]["truncate"]))
+    add(("D_DP_BN_MUL_SRC_VALUE", u32(op["x2_op"]["mul_operand"])))
+    add(("D_DP_EW_CFG", sdp_cfg(op["y_op"])))
+    add(("D_DP_EW_ALU_CFG", op["y_op"]["mode"] | (op["y_op"]["alu_cvt"]["enable"] << 8)))
+    add(("D_DP_EW_ALU_SRC_VALUE", u32(op["y_op"]["alu_operand"])))
+    add(("D_DP_EW_ALU_CVT_OFFSET_VALUE", u32(op["y_op"]["alu_cvt"]["offset"])))
+    add(("D_DP_EW_ALU_CVT_SCALE_VALUE", u32(op["y_op"]["alu_cvt"]["scale"])))
+    add(("D_DP_EW_ALU_CVT_TRUNCATE_VALUE", op["y_op"]["alu_cvt"]["truncate"]))
+    add(("D_DP_EW_MUL_CFG", op["y_op"]["mode"] | (op["y_op"]["mul_cvt"]["enable"] << 8)))
+    add(("D_DP_EW_MUL_SRC_VALUE", u32(op["y_op"]["mul_operand"])))
+    add(("D_DP_EW_MUL_CVT_OFFSET_VALUE", u32(op["y_op"]["mul_cvt"]["offset"])))
+    add(("D_DP_EW_MUL_CVT_SCALE_VALUE", u32(op["y_op"]["mul_cvt"]["scale"])))
+    add(("D_DP_EW_MUL_CVT_TRUNCATE_VALUE", op["y_op"]["mul_cvt"]["truncate"]))
+    add(("D_DP_EW_TRUNCATE_VALUE", op["y_op"]["truncate"]))
+    feature = (op["conv_mode"] << 0) | (0 << 1) | (op["batch_num"] << 8)
+    add(("D_FEATURE_MODE_CFG", feature))
+    add(("D_DST_DMA_CFG", dst["type"]))
+    add(("D_DST_BATCH_STRIDE", op["batch_stride"]))
+    add(("D_DATA_FORMAT", op["src_precision"] | (op["dst_precision"] << 2)))
+    add(("D_CVT_OFFSET", u32(op["out_cvt"]["offset"])))
+    add(("D_CVT_SCALE", u32(op["out_cvt"]["scale"])))
+    add(("D_CVT_SHIFT", op["out_cvt"]["truncate"]))
+    add(("D_OP_ENABLE", 1))
+    return regs
+
+
+def descriptor_context(l, task):
+    memory_by_id = {m["id"]: m for m in l["memory_list"]}
+    address_by_id = {a["id"]: a for a in l["address_list"]}
+    blob_by_name = {b["name"]: b for b in l["blob_list"]}
+
+    def blob_for_address_id(address_id):
+        address = address_by_id.get(address_id)
+        memory = memory_by_id.get(address["mem_id"]) if address else None
+        return blob_by_name.get(memory["contents"][0]) if memory and memory["contents"] else None
+
+    def blob_for_slot(slot):
+        if slot < 0 or slot >= len(task["address_list"]):
+            return None
+        return blob_for_address_id(task["address_list"][slot])
+
+    net_blob = blob_for_slot(0)
+    if not net_blob:
         return None
-    vtable_len = vtable_offset[0]
-    if vtable_len < 0 or vtable_len > 1024:
-        return None
-    vtable_len = vtable_len[0]
-    vtable_data = data[1:vtable_offset+vtable_len+1]
-    return vtable_data
+    net = parse_network_desc(net_blob["data"])
+    return {"network": net, "network_blob": net_blob,
+            "common_blob": blob_for_slot(net["dependency_graph_index"]),
+            "surface_blob": blob_for_slot(net["surface_desc_index"]),
+            "operation_blob": blob_for_slot(net["operation_desc_index"])}
 
-# =============================================================================
-# Loadable Data Classes
-# =============================================================================
 
-@dataclass
-class Version:
-    major: int
-    minor: int
-    sub_minor: int
+def parse_blob(buf, t):
+    ver = version(buf, struct_pos(buf, t, 12)) if struct_pos(buf, t, 12) is not None else None
+    data_vec = vector_pos(buf, t, 14)
+    data = vec_bytes(buf, data_vec) if data_vec is not None else b""
+    return {"name": string_at(buf, field_pos(buf, t, 4)), "size": scalar(buf, t, 6, "<Q"),
+            "interface": scalar(buf, t, 8, "<I"), "sub_interface": scalar(buf, t, 10, "<I"),
+            "version": ver, "data": data}
 
-@dataclass
-class Blob:
-    name: str
-    size: int
-    interface: str
-    sub_interface: str
-    version: str
-    data: bytes
 
-@dataclass
-class MemoryListEntry:
-    id: int
-    domain: str
-    flags: str
-    size: int
-    alignment: int
-    contents: List[str] = field(default_factory=list)
-    offsets: List[int] = field(default_factory=list)
-    bind_id: int = 0
-    tensor_desc_id: int = 0
+def parse_memory(buf, t):
+    cvec = vector_pos(buf, t, 14)
+    ovec = vector_pos(buf, t, 16)
+    return {"id": scalar(buf, t, 4, "<H"), "domain": scalar(buf, t, 6, "<B"),
+            "flags": scalar(buf, t, 8, "<H"), "size": scalar(buf, t, 10, "<Q"),
+            "alignment": scalar(buf, t, 12, "<I"),
+            "contents": [vec_string(buf, cvec, i) for i in range(vec_len(buf, cvec))],
+            "offsets": [vec_scalar(buf, ovec, i, "<Q") for i in range(vec_len(buf, ovec))],
+            "bind_id": scalar(buf, t, 18, "<H"), "tensor_desc_id": scalar(buf, t, 20, "<H")}
 
-@dataclass
-class EventListEntry:
-    id: int
-    type: str
-    target: int
-    val: int
-    op: str
 
-@dataclass
-class TaskListEntry:
-    id: int
-    interface: str
-    instance: int
-    address_list: List[int] = field(default_factory=list)
-    pre_actions: List[int] = field(default_factory=list)
-    post_actions: List[int] = field(default_factory=list)
+def parse_task(buf, t):
+    avec = vector_pos(buf, t, 10)
+    pre = vector_pos(buf, t, 12)
+    post = vector_pos(buf, t, 14)
+    return {"id": scalar(buf, t, 4, "<H"), "interface": scalar(buf, t, 6, "<I"),
+            "instance": scalar(buf, t, 8, "<h"),
+            "address_list": [vec_scalar(buf, avec, i, "<H") for i in range(vec_len(buf, avec))],
+            "pre_actions": [vec_scalar(buf, pre, i, "<H") for i in range(vec_len(buf, pre))],
+            "post_actions": [vec_scalar(buf, post, i, "<H") for i in range(vec_len(buf, post))]}
 
-@dataclass
-class AddressListEntry:
-    id: int
-    mem_id: int
-    offset: int
-    size: int
 
-@dataclass
-class SubmitListEntry:
-    id: int
-    task_id: List[int] = field(default_factory=list)
+def parse_addr(buf, t):
+    return {"id": scalar(buf, t, 4, "<H"), "mem_id": scalar(buf, t, 6, "<H"),
+            "offset": scalar(buf, t, 8, "<Q"), "size": scalar(buf, t, 10, "<Q")}
 
-@dataclass
-class TensorDescListEntry:
-    name: str
-    id: int
-    mem_id: int
-    size: int
-    offset: int
-    data_format: str
-    data_type: str
-    data_category: str
-    pixel_format: str
-    pixel_mapping: str
-    n: int
-    c: int
-    h: int
-    w: int
-    stride_0: int
-    stride_1: int
-    stride_2: int
-    stride_3: int
-    stride_4: int
-    stride_5: int
-    stride_6: int
-    stride_7: int
 
-@dataclass
-class RelocListEntry:
-    address_id: int
-    write_id: int
-    offset: int
-    interface: str
-    sub_interface: str
-    reloc_type: str
+def parse_event(buf, t):
+    return {"id": scalar(buf, t, 4, "<H"), "type": scalar(buf, t, 6, "<B"),
+            "target": scalar(buf, t, 8, "<H"), "val": scalar(buf, t, 10, "<I"),
+            "op": scalar(buf, t, 12, "<B")}
 
-# =============================================================================
-# Loadable Parser
-# =============================================================================
 
-def parse_loadable(data: bytes) -> Optional[Dict]:
-    """Parse a loadable FlatBuffer file."""
-    if len(data) < 16:
-        raise ValueError("Loadable file too small")
-    
-    root = data[0]
-    if root < 0 or root >= len(data):
-        raise ValueError("Invalid root offset")
-    
-    vtable = data[root]
-    if vtable < 0 or vtable >= len(data):
-        raise ValueError("Invalid vtable offset")
-    vtable_len = vtable[0]
-    if vtable_len < 0 or vtable_len > 1024:
-        raise ValueError("Invalid vtable length")
-    vtable_len = vtable_len[0]
-    vtable_data = data[1:vtable_offset+vtable_len]
-    
-    version = vtable_data[4]
-    major = read_u8(data, version)
-    minor = read_u8(data, version+1)
-    sub_minor = read_u8(data, version+2)
-    
-    # Parse top-level lists
-    task_list = parse_list(data, vtable+6)
-    memory_list = parse_list(data, vtable+8)
-    address_list = parse_list(data, vtable+10)
-    event_list = parse_list(data, vtable+12)
-    blob_list = parse_list(data, vtable+14)
-    tensor_desc_list = parse_list(data, vtable+16)
-    reloc_list = parse_list(data, vtable+18)
-    submit_list = parse_list(data, vtable+20)
-    
-    return {
-        "version": {"major": major, "minor": minor, "sub_minor": sub_minor},
-        "task_list": task_list,
-        "memory_list": memory_list,
-        "address_list": address_list,
-        "event_list": event_list,
-        "blob_list": blob_list,
-        "tensor_desc_list": tensor_desc_list,
-        "reloc_list": reloc_list,
-        "submit_list": submit_list
-    }
+def parse_submit(buf, t):
+    tv = vector_pos(buf, t, 6)
+    return {"id": scalar(buf, t, 4, "<H"), "task_id": [vec_scalar(buf, tv, i, "<H") for i in range(vec_len(buf, tv))]}
 
-def parse_list(data: bytes, list_offset: int) -> List:
-    """Parse a FlatBuffer vector list at offset."""
-    if list_offset < 0 or list_offset >= len(data):
-        return []
-    vec_offset = data[list_offset]
-    if vec_offset < 0 or vec_offset >= len(data):
-        return []
-    vec_len = vec_offset[0]
-    if vec_len < 0 or vec_len > 1024:
-        return []
-    vec_start = vec_offset[1]
-    vec_end = vec_start[1]
-    vec_data = data[vec_start+1:vec_end]
-    return []
 
-def parse_blob_list(data: bytes, blob_offset: int) -> List[Blob]:
-    """Parse list of blobs into Blob objects."""
-    if blob_offset < 0 or blob_offset >= len(data):
-        return []
-    vec_offset = data[blob_offset]
-    if vec_offset < 0 or vec_offset >= len(data):
-        return []
-    vec_len = vec_offset[0]
-    if vec_len < 0 or vec_len > 1024:
-        return []
-    blob_list = []
-    for i in range(vec_len):
-        blob = data[vec_offset+i]
-        if blob < 0 or blob >= len(data):
+def parse_tensor(buf, t):
+    d = {"name": string_at(buf, field_pos(buf, t, 4)), "id": scalar(buf, t, 6, "<H"), "mem_id": scalar(buf, t, 8, "<H"),
+         "size": scalar(buf, t, 10, "<Q"), "offset": scalar(buf, t, 12, "<Q")}
+    for name, vt, fmt in [("data_format",14,"<B"),("data_type",16,"<B"),("data_category",18,"<B"),("pixel_format",20,"<B"),("pixel_mapping",22,"<B"),("n",24,"<i"),("c",26,"<i"),("h",28,"<i"),("w",30,"<i")]:
+        d[name] = scalar(buf, t, vt, fmt)
+    for i, vt in enumerate(range(32, 48, 2)):
+        d[f"stride_{i}"] = scalar(buf, t, vt, "<I")
+    return d
+
+
+def parse_reloc(buf, t):
+    return {"address_id": scalar(buf, t, 4, "<H"), "write_id": scalar(buf, t, 6, "<H"),
+            "offset": scalar(buf, t, 8, "<Q"), "interface": scalar(buf, t, 10, "<I"),
+            "sub_interface": scalar(buf, t, 12, "<I"), "reloc_type": scalar(buf, t, 14, "<B")}
+
+
+def parse_table_vec(buf, root, vt, fn):
+    vec = vector_pos(buf, root, vt)
+    return [fn(buf, vec_table(buf, vec, i)) for i in range(vec_len(buf, vec))]
+
+
+def parse_loadable(buf):
+    if len(buf) < 8:
+        raise ParseError("file too small")
+    root = uoffset(buf, 0, "root offset")
+    need(buf, root, 4, "root table")
+    return {"version": version(buf, struct_pos(buf, root, 4)),
+            "task_list": parse_table_vec(buf, root, 6, parse_task),
+            "memory_list": parse_table_vec(buf, root, 8, parse_memory),
+            "address_list": parse_table_vec(buf, root, 10, parse_addr),
+            "event_list": parse_table_vec(buf, root, 12, parse_event),
+            "blob_list": parse_table_vec(buf, root, 14, parse_blob),
+            "tensor_desc_list": parse_table_vec(buf, root, 16, parse_tensor),
+            "reloc_list": parse_table_vec(buf, root, 18, parse_reloc),
+            "submit_list": parse_table_vec(buf, root, 20, parse_submit)}
+
+
+def print_regs(l):
+    for task in l["task_list"]:
+        if task["interface"] != 1:
             continue
-        name_offset = blob[4]
-        size = blob[5]
-        interface = blob[7]
-        sub_interface = blob[9]
-        version = blob[11]
-        data_offset = blob[13]
-        
-        name = read_string(data, name_offset) if name_offset >= 0 else ""
-        data_bytes = read_vector_bytes(data, data_offset) if data_offset >= 0 else b""
-        
-        blob_obj = Blob(
-            name=name or f"blob_{i}",
-            size=size,
-            interface=Interface.get(interface, "UNKNOWN"),
-            sub_interface=BLOB_SUB_INTERFACE_NAMES[sub_interface] if sub_interface >= 0 else "UNKNOWN",
-            version=Interface.get(version, "UNKNOWN"),
-            data=data_bytes
-        )
-        blob_list.append(blob_obj)
-    return blob_list
-
-def parse_memory_list(data: bytes, mem_offset: int) -> List[MemoryListEntry]:
-    """Parse list of memory list entries."""
-    if mem_offset < 0 or mem_offset >= len(data):
-        return []
-    vec_offset = data[mem_offset]
-    if vec_offset < 0 or vec_offset >= len(data):
-        return []
-    vec_len = vec_offset[0]
-    if vec_len < 0 or vec_len > 1024:
-        return []
-    mem_list = []
-    for i in range(vec_len):
-        mem = data[vec_offset+i]
-        if mem < 0 or mem >= len(data):
+        ctx = descriptor_context(l, task)
+        if not ctx or not (ctx["common_blob"] and ctx["surface_blob"] and ctx["operation_blob"]):
             continue
-        entry_id = mem[4]
-        domain = mem[6]
-        flags = mem[8]
-        size = mem[10]
-        alignment = mem[12]
-        contents_offset = mem[14]
-        offsets_offset = mem[16]
-        bind_id = mem[18]
-        tensor_desc_id = mem[20]
-        
-        contents = []
-        if contents_offset >= 0 and contents_offset < len(data):
-            contents_vec = data[contents_offset]
-            if contents_vec[0] >= 0:
-                contents = [read_string(data, contents_vec[j]) for j in range(contents_vec[0])]
-        
-        offsets = []
-        if offsets_offset >= 0 and offsets_offset < len(data):
-            offsets_vec = data[offsets_offset]
-            if offsets_vec[0] >= 0:
-                offsets = [read_i64(data, offsets_vec[j]) for j in range(offsets_vec[0])]
-        
-        mem_obj = MemoryListEntry(
-            id=entry_id,
-            domain=MemoryDomain.get(domain, "UNKNOWN"),
-            flags=MemoryFlags.get(flags, "UNKNOWN"),
-            size=size,
-            alignment=alignment,
-            contents=contents,
-            offsets=offsets,
-            bind_id=bind_id,
-            tensor_desc_id=tensor_desc_id
-        )
-        mem_list.append(mem_obj)
-    return mem_list
+        net = ctx["network"]
+        print(f"task[{task['id']}] NVDLA decoded registers")
+        for i in range(net["num_operations"]):
+            common = parse_common_op(ctx["common_blob"]["data"], i)
+            print(f"layer[{i}] op_type={enum_name(OP_TYPE, common['op_type'])}")
+            if common["op_type"] != 2:
+                print("  register decode for this op type is not implemented yet")
+                continue
+            surface = parse_sdp_surface(ctx["surface_blob"]["data"], i)
+            op = parse_sdp_op_desc(ctx["operation_blob"]["data"], i)
+            for cube_name in ("src_data", "x1_data", "x2_data", "y_data", "dst_data"):
+                c = surface[cube_name]
+                print(f"  cube {cube_name}: type={c['type']} address={c['address']} offset={c['offset']} size={c['size']} dims={c['width']}x{c['height']}x{c['channel']} line={c['line_stride']} surf={c['surf_stride']}")
+            print("  regs:")
+            for name, value in sdp_op_regs(surface, op):
+                print(f"    NVDLA_SDP_{name}_0 @ 0x{SDP_REGS[name]:04x} = 0x{value & 0xFFFFFFFF:08x} ({value})")
 
-def parse_address_list(data: bytes, addr_offset: int) -> List[AddressListEntry]:
-    """Parse list of address list entries."""
-    if addr_offset < 0 or addr_offset >= len(data):
-        return []
-    vec_offset = data[addr_offset]
-    if vec_offset < 0 or vec_offset >= len(data):
-        return []
-    vec_len = vec_offset[0]
-    if vec_len < 0 or vec_len > 1024:
-        return []
-    addr_list = []
-    for i in range(vec_len):
-        addr = data[vec_offset+i]
-        if addr < 0 or addr >= len(data):
-            continue
-        addr_id = addr[4]
-        mem_id = addr[6]
-        offset = addr[8]
-        size = addr[10]
-        addr_obj = AddressListEntry(
-            id=addr_id,
-            mem_id=mem_id,
-            offset=offset,
-            size=size
-        )
-        addr_list.append(addr_obj)
-    return addr_list
-
-def parse_task_list(data: bytes, task_offset: int) -> List[TaskListEntry]:
-    """Parse list of task list entries."""
-    if task_offset < 0 or task_offset >= len(data):
-        return []
-    vec_offset = data[task_offset]
-    if vec_offset < 0 or vec_offset >= len(data):
-        return []
-    vec_len = vec_offset[0]
-    if vec_len < 0 or vec_len > 1024:
-        return []
-    task_list = []
-    for i in range(vec_len):
-        task = data[vec_offset+i]
-        if task < 0 or task >= len(data):
-            continue
-        task_id = task[4]
-        iface = task[6]
-        instance = task[8]
-        addr_list_offset = task[10]
-        pre_actions_offset = task[12]
-        post_actions_offset = task[14]
-        
-        task_obj = TaskListEntry(
-            id=task_id,
-            interface=Interface.get(iface, "UNKNOWN"),
-            instance=instance,
-            address_list=[],
-            pre_actions=[],
-            post_actions=[]
-        )
-        task_list.append(task_obj)
-    return task_list
-
-# =============================================================================
-# Main Entry Point
-# =============================================================================
 
 def main():
-    parser = argparse.ArgumentParser(description="NVDLA Loadable Parser")
-    parser.add_argument("loadable_file", help="Path to loadable .nvdla file")
-    parser.add_argument("--summary", action="store_true", help="Print summary")
-    parser.add_argument("--lists", action="store_true", help="Print all lists")
-    parser.add_argument("--descs", action="store_true", help="Print descriptor blobs")
-    parser.add_argument("--json", action="store_true", help="Output as JSON")
-    parser.add_argument("--hex-bytes", type=int, default=64, help="Number of bytes for hex preview")
-    
-    args = parser.parse_args()
-    
+    if len(sys.argv) < 2:
+        print("Usage: python parse.py <loadable_file>", file=sys.stderr)
+        return 1
+    loadable_file = sys.argv[1]
     try:
-        with open(args.loadable_file, "rb") as f:
-            data = f.read()
-        
-        if args.json:
-            print("Loading loadable file...")
-            loadable = parse_loadable(data)
-        else:
-            print(f"Loading loadable file: {args.loadable_file}")
-            loadable = parse_loadable(data)
-        
-        if loadable is None:
-            print("Error: Failed to parse loadable file")
-            sys.exit(1)
-        
-        if args.summary:
-            print(f"Loadable Version: {loadable['version']['major']}.{loadable['version']['minor']}.{loadable['version']['sub_minor']}")
-            print(f"Task List Size: {len(loadable['task_list'])}")
-            print(f"Memory List Size: {len(loadable['memory_list'])}")
-            print(f"Address List Size: {len(loadable['address_list'])}")
-            print(f"Blob List Size: {len(loadable['blob_list'])}")
-            print(f"Tensor Desc List Size: {len(loadable['tensor_desc_list'])}")
-            print(f"Reloc List Size: {len(loadable['reloc_list'])}")
-            print(f"Submit List Size: {len(loadable['submit_list'])}")
-        
-        if args.lists:
-            print("=== Task List ===")
-            for i, task in enumerate(loadable['task_list']):
-                print(f"Task {i}: id={task['id']}, interface={task['interface']}, instance={task['instance']}")
-                print(f"  Address List: {task['address_list']}")
-                print(f"  Pre-Actions: {task['pre_actions']}")
-                print(f"  Post-Actions: {task['post_actions']}")
-            print("=== Memory List ===")
-            for i, mem in enumerate(loadable['memory_list']):
-                flags = ""
-                if mem['flags'] & MemoryFlags.get(1, 0):
-                    flags += " ALLOC"
-                if mem['flags'] & MemoryFlags.get(2, 0):
-                    flags += " SET"
-                if mem['flags'] & MemoryFlags.get(4, 0):
-                    flags += " INPUT"
-                if mem['flags'] & MemoryFlags.get(8, 0):
-                    flags += " OUTPUT"
-                print(f"Memory {i}: id={mem['id']}, domain={mem['domain']}{flags}, size={mem['size']}, alignment={mem['alignment']}")
-                print(f"  Contents: {mem['contents']}")
-                print(f"  Offsets: {mem['offsets']}")
-        
-        if args.descs:
-            print("=== Blob List ===")
-            for i, blob in enumerate(loadable['blob_list']):
-                print(f"Blob {i}: name={blob['name']}, size={blob['size']}, interface={blob['interface']}, sub_interface={blob['sub_interface']}")
-                print(f"  Version: {blob['version']}")
-        
-        sys.exit(0)
-    except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(1)
+        with open(loadable_file, "rb") as f:
+            loadable = parse_loadable(f.read())
+        print_regs(loadable)
+    except (OSError, ParseError, struct.error) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

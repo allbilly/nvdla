@@ -32,6 +32,58 @@ VP_WEIGHT_BASE = 0xD0000000
 UVM_OUTPUT_BASE = 0xA0000000
 VP_OUTPUT_BASE = 0xF0000000
 
+INPUT_ADDR = VP_FEATURE_BASE + 0x400
+WEIGHT_ADDR = VP_WEIGHT_BASE
+OUTPUT_ADDR = VP_OUTPUT_BASE
+OUTPUT_SIZE = 8
+OUTPUT_CRC = 0x8F68A2AE
+
+INPUT_DATA = bytes([0x00, 0x00, 0x00, 0x6F, 0x00, 0x10, 0x00, 0x00])
+WEIGHT_DATA = bytes([0x75, 0x94, 0x61, 0x00, 0xAA, 0x8E, 0xFD, 0x3F])
+
+INITIAL_REGS = [
+    (0x1004, 0x003f03fc), (0x100c, 0x00000000), (0x9004, 0x00000000), (0x904c, 0x00000000),
+    (0x90e0, 0x00000000), (0x90e4, 0x00000000), (0x9054, 0x00000008), (0x90f0, 0x00000000),
+    (0x90ec, 0x00000000), (0x9000, 0x00000000), (0x90f4, 0x00000000), (0x90a0, 0x8eb59288),
+    (0x9084, 0x00000002), (0x9090, 0x0000b016), (0x90ac, 0x00000033), (0x9060, 0x0000ab7d),
+    (0x90d0, 0x00000000), (0x906c, 0x0000006b), (0x9064, 0x00002101), (0x90a8, 0x00000018),
+    (0x90d8, 0x00000000), (0x90bc, 0x00000000), (0x9058, 0x00000b), (0x908c, 0x42139b55),
+    (0x907c, 0x00007e67), (0x90d4, 0x00000000), (0x903c, 0x00000000), (0x90e8, 0x00000000),
+    (0x90b8, 0xdf4cdbe0), (0x90c8, 0x00000021), (0x9088, 0x000097e0), (0x9094, 0x00000035),
+    (0x9050, 0x00000008), (0x9098, 0x00000001), (0x909c, 0xabc443a9), (0x905c, 0x00000e01),
+    (0x90c0, 0x3dc324eb), (0x90b4, 0x00000001), (0x90c4, 0x0000a433), (0x9070, 0x00001e00),
+    (0x9048, OUTPUT_ADDR), (0x9080, 0x00000001), (0x9078, 0x00000401), (0x9044, 0x00000000),
+    (0x90f8, 0x00000000), (0x90cc, 0x00000000), (0x9068, 0x000059c1), (0x90dc, 0x00000007),
+    (0x9074, 0x00009430), (0x9040, 0x00000000), (0x90a4, 0x000090b8), (0x90b0, 0x00000009),
+    (0x3004, 0x00000000), (0x30a4, 0x000000b0), (0x30c4, 0x00000000), (0x30d0, 0x00000000),
+    (0x30a8, 0x000036e4), (0x3058, 0x00000000), (0x30c8, 0x00000000), (0x30a0, 0x97392cf4),
+    (0x301c, 0x00000000), (0x304c, 0x00000000), (0x30dc, 0x00000000), (0x3064, 0x00000000),
+    (0x30cc, 0x00000000), (0x3000, 0x00000000), (0x3098, 0x00000000), (0x3014, 0x10000000),
+    (0x303c, 0x62189ce0), (0x3084, 0x00000079), (0x30e8, 0xaaaadb06), (0x30e4, 0x00000000),
+    (0x30e0, 0x00000000), (0x300c, 0x00000000), (0x30d4, 0x00000000), (0x3060, 0x00000000),
+    (0x309c, 0xfec724c9), (0x3080, 0x00000080), (0x3034, INPUT_ADDR), (0x30b8, 0x0000d0c0),
+    (0x3040, 0x000001c0), (0x3028, 0x00020003), (0x3094, 0x02399f80), (0x3074, 0x00000001),
+    (0x30ac, 0x0000f9fa), (0x3048, 0x00002100), (0x308c, 0x000000cc), (0x307c, WEIGHT_ADDR),
+    (0x3020, 0x00000007), (0x3090, 0x50b37f00), (0x3078, 0x00000000), (0x3008, 0x000b0007),
+    (0x30c0, 0x00000001), (0x3038, 0x0000007c), (0x3068, 0x00000000), (0x3024, 0x00000000),
+    (0x302c, 0x00000001), (0x306c, 0x00000007), (0x3030, 0x00000000), (0x30d8, 0x00000000),
+    (0x3018, 0x00000400), (0x3088, 0x94654220), (0x30b0, 0x00010000), (0x30bc, 0x00070006),
+    (0x3044, 0xf0e1fb40), (0x305c, 0x00000000), (0x3070, 0x00000000), (0x30b4, 0x00000000),
+    (0x4004, 0x00000000), (0x4048, 0x00000000), (0x403c, 0x00000000), (0x4020, 0x00000000),
+    (0x401c, 0x00000000), (0x4034, 0x00000080), (0x402c, 0x00000000), (0x4040, 0x00000000),
+    (0x4060, 0x00000001), (0x4014, 0x00000000), (0x4000, 0x00000000), (0x4064, 0xaaaadb06),
+    (0x4024, 0x00000000), (0x4028, 0x00000000), (0x405c, 0x00070006), (0x4044, 0x00000000),
+    (0x404c, 0x00010000), (0x4050, 0x000d0003), (0x4054, 0x00000000), (0x4038, 0x02399f80),
+    (0x4058, 0x0000d0c0), (0x4018, 0x00000007), (0x4030, 0x00000007), (0x4010, 0x00000000),
+    (0x400c, 0x10000000), (0x5004, 0x00000000), (0x500c, 0x00000000), (0x5000, 0x00000000),
+    (0x6004, 0x00000000), (0x6000, 0x00000000), (0x600c, 0x00000000), (0x7004, 0x00000000),
+    (0x702c, 0x00000006), (0x7018, 0x0f5ac2e0), (0x700c, 0x00000000), (0x7000, 0x00000000),
+    (0x7010, 0x00000000), (0x7034, 0xaaaadb06), (0x7020, 0x00000020), (0x7028, 0x00010001),
+    (0x7024, 0x00000020), (0x7030, 0x00000000), (0x701c, 0x00000000), (0x7014, 0x00000000),
+]
+
+ENABLE_REGS = [(0x9038, 1), (0x7008, 1), (0x5008, 1), (0x6008, 1), (0x4008, 1), (0x3010, 1)]
+
 
 class reg:
     GLB_S_INTR_STATUS = 0x100C
@@ -60,11 +112,16 @@ def default_tests_root():
     local = script_root() / "ref" / "vp" / "tests" / "nv_small_tests"
     if local.exists():
         return local
+    bundled = Path(__file__).resolve().parent
+    if (bundled / f"{DEFAULT_TEST}.cfg").exists():
+        return bundled
     return Path("/mnt/nv_small_tests")
 
 
 def available_tests(root, kind):
-    tests = []
+    tests = [DEFAULT_TEST] if kind in ("all", "dc") else []
+    if not root.is_dir():
+        return tests
     for path in root.iterdir():
         if not path.is_dir() or path.name.startswith("__"):
             continue
@@ -73,7 +130,7 @@ def available_tests(root, kind):
         if kind != "all" and not path.name.startswith(f"{kind}_"):
             continue
         tests.append(path.name)
-    return sorted(tests)
+    return sorted(set(tests))
 
 
 def relocate_addr(addr):
@@ -96,7 +153,8 @@ def load_reg_map():
             if match:
                 reg_map[match.group(1)] = int(match.group(2), 16)
     if not reg_map:
-        raise RuntimeError(f"no NVDLA register headers found under {manual_dir}")
+        from nv_small_reg_map import REG_MAP
+        reg_map = REG_MAP
     return reg_map
 
 
@@ -105,7 +163,18 @@ def cfg_name_to_macro(name):
 
 
 def load_nv_small_test(root, name, reg_map):
-    cfg = root / name / f"{name}.cfg"
+    if name == DEFAULT_TEST:
+        return {
+            "name": name,
+            "cfg": "direct",
+            "mem_inits": [(INPUT_ADDR, len(INPUT_DATA)), (WEIGHT_ADDR, len(WEIGHT_DATA)), (OUTPUT_ADDR, OUTPUT_SIZE)],
+            "mem_loads": [(INPUT_ADDR, INPUT_DATA), (WEIGHT_ADDR, WEIGHT_DATA)],
+            "initial_regs": INITIAL_REGS,
+            "enable_regs": ENABLE_REGS,
+            "crc_checks": [(OUTPUT_ADDR, OUTPUT_SIZE, OUTPUT_CRC)],
+        }
+    bundled_cfg = root / f"{name}.cfg"
+    cfg = bundled_cfg if bundled_cfg.exists() else root / name / f"{name}.cfg"
     text = cfg.read_text()
     mem_inits = []
     mem_loads = []
@@ -202,10 +271,13 @@ def zero_buffer(fd, mem_init):
 
 
 def load_buffer_dat(fd, mem_load):
-    addr, path = mem_load
-    entries = parse_dat(path)
-    if not entries:
-        return
+    addr, data = mem_load
+    if isinstance(data, bytes):
+        entries = [(0, data)]
+    else:
+        entries = parse_dat(data)
+        if not entries:
+            return
     size = max(offset + len(payload) for offset, payload in entries)
     mm, base_off = map_region(fd, addr, size, mmap.PROT_READ | mmap.PROT_WRITE)
     try:
@@ -225,9 +297,10 @@ def write_buffers(fd, test):
 
 
 def write_regs(mmio, regs, dump_regs=False):
-    for offset, value, name, _after_cbuf_poll in regs:
+    for reg_write in regs:
+        offset, value = reg_write[:2]
         if dump_regs:
-            print(f"{name} offset=0x{offset:04x} value=0x{value:08x}")
+            print(f"offset=0x{offset:04x} value=0x{value:08x}")
         write32(mmio, offset, value)
 
 
@@ -297,8 +370,7 @@ def run_conv_from_cfg(test, dry_run=False, dump_regs=False):
             write_buffers(fd, test)
             print("Programming initial registers")
             write_regs(mmio, initial_regs, dump_regs=dump_regs)
-            if any(after_cbuf_poll for *_rest, after_cbuf_poll in enable_regs):
-                wait_cbuf_flush(mmio)
+            wait_cbuf_flush(mmio)
             print("Firing OP_ENABLE")
             write_regs(mmio, enable_regs, dump_regs=dump_regs)
             wait_done(mmio)

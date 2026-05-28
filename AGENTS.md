@@ -1,3 +1,6 @@
+read README.md
+use podman if docker is not found
+
 look for refernce in ref/*
 - ref/hw
 - ref/vp
