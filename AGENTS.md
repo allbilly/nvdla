@@ -9,6 +9,7 @@ we are working in pure npu registers driver.
 - when face  problem, ask deepwiki
 
 Use `deepwiki_ask_question` on these repos:
+- `powderluv/nvdla-notes` - Detail on how to build
 - `nvdla/doc` — Detailed nvdla documentation
 - `nvdla/hw` — For C-model behavior (cmod/), register definitions, convolution pipeline details, weight/activation data flow. This is the **canonical hardware reference**. Key files:
   - `cmod/csc/NV_NVDLA_csc.cpp` — Convolution stream controller (data sequencing, Winograd)

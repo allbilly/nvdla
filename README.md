@@ -8,6 +8,7 @@ docker run -it --rm -p 6667:6667 -d \
     -v ./examples/vp/test_Add.nvdla:/usr/local/nvdla/test_Add.nvdla:z \
     -v ./examples/vp/input1x5x7.pgm:/usr/local/nvdla/input1x5x7.pgm:z \
     -v ./examples/vp/rootfs.ext4:/usr/local/nvdla/rootfs.ext4:z \
+    -v ./examples/vp:/usr/local/nvdla/vp:z \
     -w /usr/local/nvdla/ \
     -e SC_SIGNAL_WRITE_CHECK=DISABLE \
     onnc/vp aarch64_toplevel -c aarch64_nvdla.lua
@@ -24,6 +25,19 @@ cat output.dimg
 
 ```bash
 python parse.py examples/vp/test_Add.nvdla
+```
+
+## Note
+build rootfs.ext4
+```
+
+podman run --rm -it --security-opt label=disable \
+  -v /home/fedora/nvdla:/nvdla \
+  -w /nvdla/buildroot-2017.11-rc1-clean \
+  nvdla-build \
+  make menuconfig
+
+podman run --rm --security-opt label=disable -v /home/fedora/nvdla:/nvdla -w /nvdla/buildroot-2017.11-rc1-clean nvdla-build bash -c "make olddefconfig && make -j\$(($(nproc)-1)) WGET='wget --no-config'"
 ```
 
 # reference
