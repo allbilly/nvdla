@@ -1,421 +1,297 @@
 #!/usr/bin/env python3
-"""Standalone NVDLA VP nv_small register runner.
+"""Self-contained CONV+ReLU (2x2 kernel, 4→6 ch, FP16) on NVDLA via DRM ioctl.
 
-Default:
-  dc_1x1x8_1x1x8x1_int8_0
-
-Run inside the VP guest after mounting this repo at /mnt, or use --list/--dry-run
-on the host to inspect available generated tests.
+Pipeline: CONV(2x2, 4→6) → SDP(ReLU) → SDP(Identity)
+Input: 5x5x4 FP16 NCxHWx, Output: 4x4x6 FP16 NCxHWx
+Weights: all 1.0 FP16
 """
-from __future__ import annotations
+from fcntl import ioctl
+import ctypes, mmap, os, struct
 
-import argparse
-import binascii
-import ctypes
-import mmap
-import os
-import re
-import struct
-import sys
-from pathlib import Path
+# ---- Tensor parameters ----
+IN_W, IN_H, IN_C = 5, 5, 4
+OUT_W, OUT_H, OUT_C = 4, 4, 6
+KH, KW = 2, 2
+BPE = 2
+X = 16
 
+IN_LINE_STRIDE = IN_W * X * BPE          # 5*32 = 160
+IN_SURF_STRIDE = IN_H * IN_LINE_STRIDE   # 800
+OUT_LINE_STRIDE = OUT_W * X * BPE        # 128
+OUT_SURF_STRIDE = OUT_H * OUT_LINE_STRIDE # 512
+TOTAL_WEIGHT_BYTES = 256
 
-DEFAULT_TEST = "dc_1x1x8_1x1x8x1_int8_0"
+# ---- Decoded descriptor data ----
 
-NVDLA_MMIO_BASE = 0x10200000
-NVDLA_MMIO_SIZE = 0x10220000 - 0x10200000
-
-UVM_FEATURE_BASE = 0x80000000
-VP_FEATURE_BASE = 0xC0000000
-UVM_WEIGHT_BASE = 0x90000000
-VP_WEIGHT_BASE = 0xD0000000
-UVM_OUTPUT_BASE = 0xA0000000
-VP_OUTPUT_BASE = 0xF0000000
-
-INPUT_ADDR = VP_FEATURE_BASE + 0x400
-WEIGHT_ADDR = VP_WEIGHT_BASE
-OUTPUT_ADDR = VP_OUTPUT_BASE
-OUTPUT_SIZE = 8
-OUTPUT_CRC = 0x8F68A2AE
-
-INPUT_DATA = bytes([0x00, 0x00, 0x00, 0x6F, 0x00, 0x10, 0x00, 0x00])
-WEIGHT_DATA = bytes([0x75, 0x94, 0x61, 0x00, 0xAA, 0x8E, 0xFD, 0x3F])
-
-INITIAL_REGS = [
-    (0x1004, 0x003f03fc), (0x100c, 0x00000000), (0x9004, 0x00000000), (0x904c, 0x00000000),
-    (0x90e0, 0x00000000), (0x90e4, 0x00000000), (0x9054, 0x00000008), (0x90f0, 0x00000000),
-    (0x90ec, 0x00000000), (0x9000, 0x00000000), (0x90f4, 0x00000000), (0x90a0, 0x8eb59288),
-    (0x9084, 0x00000002), (0x9090, 0x0000b016), (0x90ac, 0x00000033), (0x9060, 0x0000ab7d),
-    (0x90d0, 0x00000000), (0x906c, 0x0000006b), (0x9064, 0x00002101), (0x90a8, 0x00000018),
-    (0x90d8, 0x00000000), (0x90bc, 0x00000000), (0x9058, 0x00000b), (0x908c, 0x42139b55),
-    (0x907c, 0x00007e67), (0x90d4, 0x00000000), (0x903c, 0x00000000), (0x90e8, 0x00000000),
-    (0x90b8, 0xdf4cdbe0), (0x90c8, 0x00000021), (0x9088, 0x000097e0), (0x9094, 0x00000035),
-    (0x9050, 0x00000008), (0x9098, 0x00000001), (0x909c, 0xabc443a9), (0x905c, 0x00000e01),
-    (0x90c0, 0x3dc324eb), (0x90b4, 0x00000001), (0x90c4, 0x0000a433), (0x9070, 0x00001e00),
-    (0x9048, OUTPUT_ADDR), (0x9080, 0x00000001), (0x9078, 0x00000401), (0x9044, 0x00000000),
-    (0x90f8, 0x00000000), (0x90cc, 0x00000000), (0x9068, 0x000059c1), (0x90dc, 0x00000007),
-    (0x9074, 0x00009430), (0x9040, 0x00000000), (0x90a4, 0x000090b8), (0x90b0, 0x00000009),
-    (0x3004, 0x00000000), (0x30a4, 0x000000b0), (0x30c4, 0x00000000), (0x30d0, 0x00000000),
-    (0x30a8, 0x000036e4), (0x3058, 0x00000000), (0x30c8, 0x00000000), (0x30a0, 0x97392cf4),
-    (0x301c, 0x00000000), (0x304c, 0x00000000), (0x30dc, 0x00000000), (0x3064, 0x00000000),
-    (0x30cc, 0x00000000), (0x3000, 0x00000000), (0x3098, 0x00000000), (0x3014, 0x10000000),
-    (0x303c, 0x62189ce0), (0x3084, 0x00000079), (0x30e8, 0xaaaadb06), (0x30e4, 0x00000000),
-    (0x30e0, 0x00000000), (0x300c, 0x00000000), (0x30d4, 0x00000000), (0x3060, 0x00000000),
-    (0x309c, 0xfec724c9), (0x3080, 0x00000080), (0x3034, INPUT_ADDR), (0x30b8, 0x0000d0c0),
-    (0x3040, 0x000001c0), (0x3028, 0x00020003), (0x3094, 0x02399f80), (0x3074, 0x00000001),
-    (0x30ac, 0x0000f9fa), (0x3048, 0x00002100), (0x308c, 0x000000cc), (0x307c, WEIGHT_ADDR),
-    (0x3020, 0x00000007), (0x3090, 0x50b37f00), (0x3078, 0x00000000), (0x3008, 0x000b0007),
-    (0x30c0, 0x00000001), (0x3038, 0x0000007c), (0x3068, 0x00000000), (0x3024, 0x00000000),
-    (0x302c, 0x00000001), (0x306c, 0x00000007), (0x3030, 0x00000000), (0x30d8, 0x00000000),
-    (0x3018, 0x00000400), (0x3088, 0x94654220), (0x30b0, 0x00010000), (0x30bc, 0x00070006),
-    (0x3044, 0xf0e1fb40), (0x305c, 0x00000000), (0x3070, 0x00000000), (0x30b4, 0x00000000),
-    (0x4004, 0x00000000), (0x4048, 0x00000000), (0x403c, 0x00000000), (0x4020, 0x00000000),
-    (0x401c, 0x00000000), (0x4034, 0x00000080), (0x402c, 0x00000000), (0x4040, 0x00000000),
-    (0x4060, 0x00000001), (0x4014, 0x00000000), (0x4000, 0x00000000), (0x4064, 0xaaaadb06),
-    (0x4024, 0x00000000), (0x4028, 0x00000000), (0x405c, 0x00070006), (0x4044, 0x00000000),
-    (0x404c, 0x00010000), (0x4050, 0x000d0003), (0x4054, 0x00000000), (0x4038, 0x02399f80),
-    (0x4058, 0x0000d0c0), (0x4018, 0x00000007), (0x4030, 0x00000007), (0x4010, 0x00000000),
-    (0x400c, 0x10000000), (0x5004, 0x00000000), (0x500c, 0x00000000), (0x5000, 0x00000000),
-    (0x6004, 0x00000000), (0x6000, 0x00000000), (0x600c, 0x00000000), (0x7004, 0x00000000),
-    (0x702c, 0x00000006), (0x7018, 0x0f5ac2e0), (0x700c, 0x00000000), (0x7000, 0x00000000),
-    (0x7010, 0x00000000), (0x7034, 0xaaaadb06), (0x7020, 0x00000020), (0x7028, 0x00010001),
-    (0x7024, 0x00000020), (0x7030, 0x00000000), (0x701c, 0x00000000), (0x7014, 0x00000000),
-]
-
-ENABLE_REGS = [(0x9038, 1), (0x7008, 1), (0x5008, 1), (0x6008, 1), (0x4008, 1), (0x3010, 1)]
-
-
-class reg:
-    GLB_S_INTR_STATUS = 0x100C
-    CDMA_S_CBUF_FLUSH_STATUS = 0x300C
-
-
-DONE_BITS = [
-    ("SDP_DONE", 0),
-    ("CDMA_DONE", 2),
-    ("CSC_DONE", 3),
-    ("CMAC_A_DONE", 4),
-    ("CMAC_B_DONE", 5),
-    ("CACC_DONE", 6),
-    ("BDMA_DONE", 7),
-    ("PDP_DONE", 8),
-    ("CDP_DONE", 9),
-    ("RUBIK_DONE", 10),
-]
-
-
-def script_root():
-    return Path(__file__).resolve().parents[1]
-
-
-def default_tests_root():
-    local = script_root() / "ref" / "vp" / "tests" / "nv_small_tests"
-    if local.exists():
-        return local
-    bundled = Path(__file__).resolve().parent
-    if (bundled / f"{DEFAULT_TEST}.cfg").exists():
-        return bundled
-    return Path("/mnt/nv_small_tests")
-
-
-def available_tests(root, kind):
-    tests = [DEFAULT_TEST] if kind in ("all", "dc") else []
-    if not root.is_dir():
-        return tests
-    for path in root.iterdir():
-        if not path.is_dir() or path.name.startswith("__"):
-            continue
-        if not (path / f"{path.name}.cfg").exists():
-            continue
-        if kind != "all" and not path.name.startswith(f"{kind}_"):
-            continue
-        tests.append(path.name)
-    return sorted(set(tests))
-
-
-def relocate_addr(addr):
-    region = (addr >> 24) & 0xFF
-    if region == 0x80:
-        return addr - UVM_FEATURE_BASE + VP_FEATURE_BASE
-    if region == 0x90:
-        return addr - UVM_WEIGHT_BASE + VP_WEIGHT_BASE
-    if region == 0xA0:
-        return addr - UVM_OUTPUT_BASE + VP_OUTPUT_BASE
-    return addr
-
-
-def load_reg_map():
-    reg_map = {}
-    manual_dir = script_root() / "ref" / "hw" / "outdir" / "nv_small" / "spec" / "manual"
-    for header in manual_dir.glob("NVDLA_*.h"):
-        for line in header.read_text(errors="replace").splitlines():
-            match = re.match(r"#define\s+(NVDLA_\S+_0)\s+.*?_MK_ADDR_CONST\((0x[0-9a-fA-F]+)\)", line)
-            if match:
-                reg_map[match.group(1)] = int(match.group(2), 16)
-    if not reg_map:
-        from nv_small_reg_map import REG_MAP
-        reg_map = REG_MAP
-    return reg_map
-
-
-def cfg_name_to_macro(name):
-    return name.replace(".", "_")
-
-
-def load_nv_small_test(root, name, reg_map):
-    if name == DEFAULT_TEST:
-        return {
-            "name": name,
-            "cfg": "direct",
-            "mem_inits": [(INPUT_ADDR, len(INPUT_DATA)), (WEIGHT_ADDR, len(WEIGHT_DATA)), (OUTPUT_ADDR, OUTPUT_SIZE)],
-            "mem_loads": [(INPUT_ADDR, INPUT_DATA), (WEIGHT_ADDR, WEIGHT_DATA)],
-            "initial_regs": INITIAL_REGS,
-            "enable_regs": ENABLE_REGS,
-            "crc_checks": [(OUTPUT_ADDR, OUTPUT_SIZE, OUTPUT_CRC)],
-        }
-    bundled_cfg = root / f"{name}.cfg"
-    cfg = bundled_cfg if bundled_cfg.exists() else root / name / f"{name}.cfg"
-    text = cfg.read_text()
-    mem_inits = []
-    mem_loads = []
-    initial_regs = []
-    enable_regs = []
-    crc_checks = []
-    saw_cbuf_poll = False
-    enable_phase = False
-    addr_re = re.compile(r"(?:BASE_)?ADDR_(?:LOW|HIGH)|DATAOUT_ADDR")
-
-    for raw in text.splitlines():
-        line = raw.strip()
-        match = re.match(r'mem_init\(pri_mem,\s*(0x[0-9a-fA-F]+),\s*(0x[0-9a-fA-F]+),\s*ALL_ZERO\)', line)
-        if match:
-            mem_inits.append((relocate_addr(int(match.group(1), 16)), int(match.group(2), 16)))
-            continue
-
-        match = re.match(r'mem_load\(pri_mem,\s*(0x[0-9a-fA-F]+),\s*"([^"]+\.dat)"\)', line)
-        if match:
-            mem_loads.append((relocate_addr(int(match.group(1), 16)), cfg.parent / match.group(2)))
-            continue
-
-        if re.match(r"poll_reg_equal\(NVDLA_CDMA\.S_CBUF_FLUSH_STATUS_0", line):
-            saw_cbuf_poll = True
-            continue
-
-        match = re.match(r"reg_write\((\S+),\s*(0x[0-9a-fA-F]+)\)", line)
-        if match:
-            macro = cfg_name_to_macro(match.group(1))
-            value = int(match.group(2), 16)
-            if addr_re.search(macro):
-                value = relocate_addr(value)
-            offset = reg_map.get(macro)
-            if offset is None:
-                raise KeyError(f"unknown register {macro} in {cfg}")
-            enable_phase = enable_phase or macro.endswith("_D_OP_ENABLE_0")
-            write = (offset, value, macro, saw_cbuf_poll)
-            (enable_regs if saw_cbuf_poll or enable_phase else initial_regs).append(write)
-            continue
-
-        match = re.match(r"check_crc\(.*?,\s*\d+,\s*(0x[0-9a-fA-F]+),\s*(0x[0-9a-fA-F]+),\s*(0x[0-9a-fA-F]+)\)", line)
-        if match:
-            crc_checks.append((relocate_addr(int(match.group(1), 16)), int(match.group(2), 16), int(match.group(3), 16)))
-
-    return {
-        "name": name,
-        "cfg": cfg,
-        "mem_inits": mem_inits,
-        "mem_loads": mem_loads,
-        "initial_regs": initial_regs,
-        "enable_regs": enable_regs,
-        "crc_checks": crc_checks,
-    }
-
-
-def build_conv_regs(test):
-    return test["initial_regs"], test["enable_regs"]
-
-
-def parse_dat(path):
-    text = path.read_text(errors="replace")
-    entries = []
-    pattern = r"\{offset:(0x[0-9a-fA-F]+),\s*size:(\d+),\s*payload:((?:0x[0-9a-fA-F]+\s*)+)\}"
-    for match in re.finditer(pattern, text):
-        offset = int(match.group(1), 16)
-        size = int(match.group(2))
-        payload = bytes(int(token, 16) for token in match.group(3).replace("0x", "").split())
-        entries.append((offset, payload[:size]))
-    return entries
-
-
-def map_region(fd, addr, size, prot):
-    page_base = addr & ~0xFFF
-    page_off = addr & 0xFFF
-    map_size = ((page_off + size + 4095) // 4096) * 4096
-    return mmap.mmap(fd, map_size, mmap.MAP_SHARED, prot, offset=page_base), page_off
-
-
-def write32(mm, offset, value):
-    mm[offset:offset + 4] = struct.pack("<I", value & 0xFFFFFFFF)
-
-
-def read32(mm, offset):
-    return struct.unpack("<I", mm[offset:offset + 4])[0]
-
-
-def zero_buffer(fd, mem_init):
-    addr, size = mem_init
-    mm, off = map_region(fd, addr, size, mmap.PROT_READ | mmap.PROT_WRITE)
-    try:
-        mm[off:off + size] = b"\x00" * size
-    finally:
-        mm.close()
-
-
-def load_buffer_dat(fd, mem_load):
-    addr, data = mem_load
-    if isinstance(data, bytes):
-        entries = [(0, data)]
-    else:
-        entries = parse_dat(data)
-        if not entries:
-            return
-    size = max(offset + len(payload) for offset, payload in entries)
-    mm, base_off = map_region(fd, addr, size, mmap.PROT_READ | mmap.PROT_WRITE)
-    try:
-        for offset, payload in entries:
-            mm[base_off + offset:base_off + offset + len(payload)] = payload
-    finally:
-        mm.close()
-
-
-def write_buffers(fd, test):
-    for mem_init in test["mem_inits"]:
-        zero_buffer(fd, mem_init)
-    for mem_load in test["mem_loads"]:
-        load_buffer_dat(fd, mem_load)
-    for addr, size, _expected in test["crc_checks"]:
-        zero_buffer(fd, (addr, size))
-
-
-def write_regs(mmio, regs, dump_regs=False):
-    for reg_write in regs:
-        offset, value = reg_write[:2]
-        if dump_regs:
-            print(f"offset=0x{offset:04x} value=0x{value:08x}")
-        write32(mmio, offset, value)
-
-
-def wait_cbuf_flush(mmio):
-    for _ in range(1_000_000):
-        if read32(mmio, reg.CDMA_S_CBUF_FLUSH_STATUS) & 1:
-            print("CBUF flush done")
-            return
-    print("CBUF flush timeout")
-
-
-def wait_done(mmio):
-    seen = 0
-    extra_wait = 0
-    for _ in range(100_000_000):
-        status = read32(mmio, reg.GLB_S_INTR_STATUS)
-        new_bits = status & ~seen
-        seen |= status
-        for label, bit in DONE_BITS:
-            if new_bits & (1 << bit):
-                print(label, end=" ", flush=True)
-                extra_wait = 10_000
-        if extra_wait > 0:
-            extra_wait -= 1
-            if extra_wait == 0:
-                print()
-                return
-    raise TimeoutError("NVDLA done interrupt timeout")
-
-
-def verify_output(fd, test):
-    failures = 0
-    for idx, (addr, size, expected) in enumerate(test["crc_checks"]):
-        mm, off = map_region(fd, addr, size, mmap.PROT_READ)
-        try:
-            crc = ctypes.c_uint32(binascii.crc32(mm[off:off + size]) & 0xFFFFFFFF)
-        finally:
-            mm.close()
-        ok = crc.value == expected
-        print(f"CRC[{idx}] = 0x{crc.value:08x} expect 0x{expected:08x} {'PASS' if ok else 'FAIL'}")
-        failures += 0 if ok else 1
-    return failures
-
-
-def print_test_summary(test):
-    print(f"test={test['name']}")
-    print(f"cfg={test['cfg']}")
-    print(
-        f"mem_init={len(test['mem_inits'])} "
-        f"mem_load={len(test['mem_loads'])} "
-        f"regs={len(test['initial_regs']) + len(test['enable_regs'])} "
-        f"crc={len(test['crc_checks'])}"
+def pack_net_desc(operation_desc_index, surface_desc_index, dependency_graph_index,
+                  op_head, num_operations, num_addresses, lut_data_index=-1,
+                  roi_array_index=-1, surface_index=-1, stat_list_index=-1,
+                  num_rois=1, num_luts=0, input_layer=0, dynamic_roi=0):
+    return struct.pack(
+        '<8h6h4HhBB',
+        operation_desc_index, surface_desc_index, dependency_graph_index,
+        lut_data_index, roi_array_index, surface_index, stat_list_index, 0,
+        *op_head, num_rois, num_operations, num_luts, num_addresses,
+        input_layer, dynamic_roi, 0,
     )
 
 
-def run_conv_from_cfg(test, dry_run=False, dump_regs=False):
-    print_test_summary(test)
-    if dry_run:
-        return 0
+def pack_consumer(index=-1, event=1):
+    return struct.pack('<hBB', index, event, 0)
 
-    failures = 0
-    fd = os.open("/dev/mem", os.O_RDWR | os.O_SYNC)
-    try:
-        mmio, _ = map_region(fd, NVDLA_MMIO_BASE, NVDLA_MMIO_SIZE, mmap.PROT_READ | mmap.PROT_WRITE)
-        try:
-            initial_regs, enable_regs = build_conv_regs(test)
-            write_buffers(fd, test)
-            print("Programming initial registers")
-            write_regs(mmio, initial_regs, dump_regs=dump_regs)
-            wait_cbuf_flush(mmio)
-            print("Firing OP_ENABLE")
-            write_regs(mmio, enable_regs, dump_regs=dump_regs)
-            wait_done(mmio)
-            failures = verify_output(fd, test)
-            if not test["crc_checks"]:
-                print("No CRC checks in cfg; run completed without output verification")
-        finally:
-            mmio.close()
-    finally:
-        os.close(fd)
-    print(f"Results: {failures} failures")
-    return failures
+
+def pack_common_op(index, op_type, dependency_count, consumers, fused_parent=(-1, 1)):
+    return (
+        struct.pack('<hbBB3x', index, 0, op_type, dependency_count) +
+        b''.join(pack_consumer(*c) for c in consumers) +
+        pack_consumer(*fused_parent)
+    )
+
+
+def pack_cvt(scale=0, truncate=0, enable=0, offset=0):
+    return struct.pack('<hBBi', scale, truncate, enable, offset)
+
+
+def pack_sdp_unit(enable=0, alu_type=0, op_type=0, mode=0, act=0,
+                  shift=0, truncate=0, precision=0, alu_operand=0,
+                  mul_operand=0, alu_cvt=(0, 0, 0, 0), mul_cvt=(0, 0, 0, 0)):
+    return (
+        struct.pack('<BBBBBBBBii', enable, alu_type, op_type, mode, act,
+                    shift, truncate, precision, alu_operand, mul_operand) +
+        pack_cvt(*alu_cvt) + pack_cvt(*mul_cvt)
+    )
+
+
+def pack_sdp_op(src_precision, dst_precision, lut_index=-1, out_cvt=(0, 0, 0, 0),
+                conv_mode=0, batch_num=1, batch_stride=0,
+                x1_op=(), x2_op=(), y_op=()):
+    return (
+        struct.pack('<BBh', src_precision, dst_precision, lut_index) +
+        pack_cvt(*out_cvt) +
+        struct.pack('<BBHI', conv_mode, batch_num, 0, batch_stride) +
+        pack_sdp_unit(*x1_op) + pack_sdp_unit(*x2_op) + pack_sdp_unit(*y_op)
+    )
+
+
+def pack_conv_op():
+    op = (
+        struct.pack('<BBBBBBH', 0, 0, 0, 0, 0, 0, 2) +
+        struct.pack('<BBH', 36, 0, 1) +
+        b'\x00' * 8 +
+        struct.pack('<BBBB', 1, 0, 1, 1) +
+        struct.pack('<I', 0) +
+        struct.pack('<BBH', 0, 0, 5) +
+        struct.pack('<HHHHHHHH', IN_W, IN_H, IN_C, KW, KH, IN_C, OUT_W, OUT_H) +
+        struct.pack('<I', 32) +
+        struct.pack('<hhhh', 0, 0, 0, 0) +
+        struct.pack('<BBBBBBBBB', 0, 1, 1, 0, 0, 0, 0, 1, 1) +
+        b'\x00' * 3 +
+        struct.pack('<BBB', 2, 2, 0) +
+        struct.pack('<h', 0) +
+        pack_cvt(0, 0, 0, 0x01000000) +
+        pack_cvt(0, 1, 0, 0)
+    )
+    return op + b'\x00' * (116 - len(op))
+
+
+def pack_cube(mem_type=0, address=0, size=0, width=0, height=0, channel=0,
+              line_stride=0, surf_stride=0, plane_stride=0):
+    # Direct KMD submit expects the full 32-byte dla_data_cube layout.
+    return struct.pack('<HhIIHHHHIII', mem_type, address, 0, size, width, height,
+                       channel, 0, line_stride, surf_stride, plane_stride)
+
+
+def pack_surface_container(*cubes):
+    data = b''.join(pack_cube(*cube) for cube in cubes)
+    return data + b'\x00' * (644 - len(data))
+
+
+NET_DESC = pack_net_desc(7, 8, 6, [-1, 0, 1, -1, -1, -1], 3, 10)
+DEP_GRAPH = b''.join([
+    pack_common_op(0, 1, 1, [(-1, 1), (-1, 1), (1, 2), (-1, 1), (-1, 1), (-1, 1)]),
+    pack_common_op(1, 2, 1, [(-1, 1), (-1, 1), (2, 1), (-1, 1), (-1, 1), (-1, 1)], fused_parent=(0, 3)),
+    pack_common_op(2, 2, 1, [(-1, 1)] * 6),
+])
+OP_LIST = b''.join([
+    pack_conv_op(),
+    pack_sdp_op(2, 2, out_cvt=(1, 0, 1, 0)),
+    pack_sdp_op(2, 2, out_cvt=(1, 0, 1, 0),
+                x1_op=(1, 2, 0, 0, 1, 0, 0, 2, 0, 1)),
+])
+SURF_LIST = b''.join([
+    pack_surface_container(
+        (0, 1, TOTAL_WEIGHT_BYTES, KW, KH, IN_C, 0, 0, 0),
+        (2, -1, 0, 0, 0, 0, 0, 0, 0),
+        (2, -1, 0, 0, 0, 0, 0, 0, 0),
+        (0, 2, IN_SURF_STRIDE, IN_W, IN_H, IN_C, IN_LINE_STRIDE, IN_SURF_STRIDE, 0),
+        (2, -1, OUT_SURF_STRIDE, OUT_W, OUT_H, OUT_C, OUT_LINE_STRIDE, OUT_SURF_STRIDE, 0),
+    ),
+    pack_surface_container(
+        (2, -1, OUT_SURF_STRIDE, OUT_W, OUT_H, OUT_C, 0, 0, 0),
+        (), (), (),
+        (0, 3, OUT_SURF_STRIDE, OUT_W, OUT_H, OUT_C, OUT_LINE_STRIDE, OUT_SURF_STRIDE, 0),
+    ),
+    pack_surface_container(
+        (0, 3, OUT_SURF_STRIDE, OUT_W, OUT_H, OUT_C, OUT_LINE_STRIDE, OUT_SURF_STRIDE, 0),
+        (), (), (),
+        (0, 4, OUT_SURF_STRIDE, OUT_W, OUT_H, OUT_C, OUT_LINE_STRIDE, OUT_SURF_STRIDE, 0),
+    ),
+])
+assert (len(NET_DESC), len(DEP_GRAPH), len(OP_LIST), len(SURF_LIST)) == (40, 108, 348, 1932)
+
+
+# ---- Build tensor data ----
+
+def build_weight_blob():
+    """2x2x4x6 FP16, all 1.0, in NVDLA weight format.
+    96 values * 2B = 192B, padded to 256B.
+    """
+    data = struct.pack('<96e', *([1.0] * 96))
+    return data + b'\x00' * (TOTAL_WEIGHT_BYTES - len(data))
+
+def build_input_fp16_ncxhwx():
+    """5x5x4 FP16 NCxHWx with pixel values = f(atom, h, w) for verification."""
+    buf = bytearray(IN_SURF_STRIDE)
+    for h in range(IN_H):
+        for w in range(IN_W):
+            for c in range(IN_C):
+                off = h * IN_LINE_STRIDE + w * X * BPE + c * BPE
+                val = float(h * IN_W + w + 1 + c * 100)
+                buf[off:off + BPE] = struct.pack('<e', val)
+    return bytes(buf)
+
+
+# ---- DRM ioctl infrastructure ----
+
+DRM_IOCTL_BASE = ord("d")
+
+def _IOC(d, t, nr, s): return (d << 30) | (s << 16) | (t << 8) | nr
+def _IOWR(t, nr, s): return _IOC(3, t, nr, s)
+
+class nvdla_gem_create(ctypes.Structure):
+    _fields_ = [("handle", ctypes.c_uint32), ("flags", ctypes.c_uint32), ("size", ctypes.c_uint64)]
+class nvdla_gem_map_offset(ctypes.Structure):
+    _fields_ = [("handle", ctypes.c_uint32), ("reserved", ctypes.c_uint32), ("offset", ctypes.c_uint64)]
+class nvdla_gem_destroy(ctypes.Structure):
+    _fields_ = [("handle", ctypes.c_uint32)]
+class drm_prime_handle(ctypes.Structure):
+    _fields_ = [("handle", ctypes.c_uint32), ("flags", ctypes.c_uint32), ("fd", ctypes.c_int32)]
+class nvdla_mem_handle(ctypes.Structure):
+    _fields_ = [("handle", ctypes.c_uint32), ("reserved", ctypes.c_uint32), ("offset", ctypes.c_uint64)]
+class nvdla_ioctl_submit_task(ctypes.Structure):
+    _fields_ = [("num_addresses", ctypes.c_uint32), ("timeout", ctypes.c_uint32), ("address_list", ctypes.c_uint64)]
+class nvdla_submit_args(ctypes.Structure):
+    _fields_ = [("tasks", ctypes.c_uint64), ("num_tasks", ctypes.c_uint16), ("flags", ctypes.c_uint16), ("version", ctypes.c_uint32)]
+
+GEM_CREATE   = _IOWR(DRM_IOCTL_BASE, 0x41, ctypes.sizeof(nvdla_gem_create))
+GEM_MMAP     = _IOWR(DRM_IOCTL_BASE, 0x42, ctypes.sizeof(nvdla_gem_map_offset))
+GEM_DESTROY  = _IOWR(DRM_IOCTL_BASE, 0x43, ctypes.sizeof(nvdla_gem_destroy))
+PRIME_H2F    = _IOWR(DRM_IOCTL_BASE, 0x2d, ctypes.sizeof(drm_prime_handle))
+NVDLA_SUBMIT = _IOWR(DRM_IOCTL_BASE, 0x40, ctypes.sizeof(nvdla_submit_args))
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--tests-root", type=Path, default=default_tests_root())
-    parser.add_argument("--test", default=DEFAULT_TEST)
-    parser.add_argument("--kind", choices=("all", "dc", "sdp", "pdp", "cdp", "img"), default="all")
-    parser.add_argument("--list", action="store_true")
-    parser.add_argument("--all", action="store_true", help="run or dry-run every selected test")
-    parser.add_argument("--dry-run", action="store_true", help="parse and print the selected test without touching /dev/mem")
-    parser.add_argument("--dump-regs", action="store_true", help="print each register write before writing it")
-    args = parser.parse_args()
+    sizes = [4096, 256, 800, 512, 512, 40, 108, 348, 1932, 4096]
+    contents = {
+        1: b'\x00' * 4096,               # scratch
+        2: build_weight_blob(),           # weights (tb-0)
+        3: build_input_fp16_ncxhwx(),     # input
+        4: b'\x00' * 512,                 # intermediate
+        5: b'\x00' * 512,                 # output
+        6: NET_DESC,                      # net_desc
+        7: DEP_GRAPH,                     # dep_graph
+        8: OP_LIST,                       # op_list
+        9: SURF_LIST,                     # surf_list
+        10: b'\x00' * 4096,               # scratch2
+    }
 
-    if args.list:
-        for name in available_tests(args.tests_root, args.kind):
-            print(name)
-        return 0
+    fd = os.open("/dev/dri/renderD128", os.O_RDWR)
+    handles = []
+    maps = []
+    prime_fds = []
 
-    tests = available_tests(args.tests_root, args.kind if args.all else "all")
-    reg_map = load_reg_map()
-    if args.all:
-        failures = 0
-        for name in tests:
-            test = load_nv_small_test(args.tests_root, name, reg_map)
-            failures += run_conv_from_cfg(test, dry_run=args.dry_run, dump_regs=args.dump_regs)
-        return failures
+    try:
+        for i, size in enumerate(sizes):
+            c = nvdla_gem_create(size=size)
+            ioctl(fd, GEM_CREATE, c)
+            mo = nvdla_gem_map_offset(handle=c.handle)
+            ioctl(fd, GEM_MMAP, mo)
+            m = mmap.mmap(fd, (size + 4095) // 4096 * 4096, mmap.MAP_SHARED,
+                          mmap.PROT_READ | mmap.PROT_WRITE, offset=mo.offset)
+            m[:len(contents[i + 1])] = contents[i + 1]
+            p_ = drm_prime_handle(handle=c.handle, flags=0x80000)
+            ioctl(fd, PRIME_H2F, p_)
+            handles.append(c.handle)
+            maps.append(m)
+            prime_fds.append(p_.fd)
 
-    if args.test not in tests:
-        print(f"unknown nv_small test: {args.test}", file=sys.stderr)
-        return 1
+        # Address slots → UMD handle (1-based):
+        # slot 0: net_desc(6)   slot 5: net_desc(dup=6)
+        # slot 1: weights(2)    slot 6: dep_graph(7)
+        # slot 2: input(3)      slot 7: op_list(8)
+        # slot 3: interm(4)     slot 8: surf_list(9)
+        # slot 4: output(5)     slot 9: scratch2(10)
+        umd_handles = [6, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        n = len(umd_handles)
+        addr_arr = (nvdla_mem_handle * n)()
+        for i, uh in enumerate(umd_handles):
+            addr_arr[i].handle = prime_fds[uh - 1]
 
-    test = load_nv_small_test(args.tests_root, args.test, reg_map)
-    return run_conv_from_cfg(test, dry_run=args.dry_run, dump_regs=args.dump_regs)
+        task = nvdla_ioctl_submit_task(
+            num_addresses=n, timeout=0,
+            address_list=ctypes.addressof(addr_arr),
+        )
+        submit = nvdla_submit_args(
+            tasks=ctypes.addressof(task),
+            num_tasks=1, flags=0, version=0,
+        )
+        ioctl(fd, NVDLA_SUBMIT, submit)
+
+        # Read output
+        out_idx = 4  # handle index for output buffer
+        mo2 = nvdla_gem_map_offset(handle=handles[out_idx])
+        ioctl(fd, GEM_MMAP, mo2)
+        m2 = mmap.mmap(fd, (OUT_SURF_STRIDE + 4095) // 4096 * 4096, mmap.MAP_SHARED,
+                       mmap.PROT_READ, offset=mo2.offset)
+        out = bytes(m2[:OUT_SURF_STRIDE])
+        m2.close()
+
+        # Decode FP16 NCxHWx output
+        halfs = struct.unpack_from(f'<{len(out)//2}H', out)
+        nz = [(i, v) for i, v in enumerate(halfs) if v]
+        print(f"CONV+ReLU: {len(nz)} non-zero FP16 values")
+        for pos, val in nz[:12]:
+            h = pos // (OUT_W * X)
+            w = (pos % (OUT_W * X)) // X
+            c = pos % X
+            f = struct.unpack_from('<e', out, pos * BPE)[0]
+            print(f"  [{h},{w},c{c}] = {f}")
+        if len(nz) > 12:
+            print(f"  ... ({len(nz) - 12} more)")
+
+        # Check: kernel=2x2 all ones, stride=1, no padding. Every output
+        # channel receives the same sum across all four input channels.
+        print()
+        print("Expected (for verification):")
+        expected00 = sum((h * IN_W + w + 1 + c * 100)
+                         for h in range(KH) for w in range(KW) for c in range(IN_C))
+        expected10 = sum(((h + 1) * IN_W + w + 1 + c * 100)
+                         for h in range(KH) for w in range(KW) for c in range(IN_C))
+        for c in range(OUT_C):
+            print(f"  output[0,0,c{c}] = {expected00} (FP16)")
+            print(f"  output[1,0,c{c}] = {expected10} (FP16)")
+
+        return 0 if nz else 1
+    finally:
+        for pf in prime_fds:
+            try: os.close(pf)
+            except: pass
+        for m in maps:
+            m.close()
+        for h in handles:
+            try: ioctl(fd, GEM_DESTROY, nvdla_gem_destroy(handle=h))
+            except: pass
+        os.close(fd)
 
 
 if __name__ == "__main__":
