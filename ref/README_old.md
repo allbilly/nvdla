@@ -1,21 +1,3 @@
-# NVDLA
-This repo aims do pure registers programming on the NVDLA NPU. 
-
-## 1. Quick start
-
-Run test case in VP
-```
-cd examples
-SC_SIGNAL_WRITE_CHECK=DISABLE ./vp/aarch64_toplevel --conf ./vp/aarch64_nvdla.lua > vp.log 2>&1 &
-ssh -p 6667 root@localhost 'ls -la /mnt/vp/vp/portable-python/python/bin/python3.10'
-ssh -p 6667 root@127.0.0.1
-
-
-# Login: root / nvdla
-mount -t 9p -o trans=virtio r /mnt && cd /mnt
-./dc_1x1x8_1x1x8x1_int8_0_test
-```
-
 # 1. Compile with ONNC
 
 Old vp image was built on ubuntu 14.04 with no arm supprot, so you must run on x86_64
@@ -153,15 +135,3 @@ mount -t 9p -o trans=virtio r /mnt && cd /mnt
 cd /mnt/nv_small_tests/dc_1x1x8_1x1x8x1_int8_0
 ./dc_1x1x8_1x1x8x1_int8_0_test
 ```
-
-# 3. Parse nvdla loadable
-https://zhuanlan.zhihu.com/p/378122624
-
-# reference
-https://github.com/nvdla/vp
-https://github.com/ONNC/onnc-tutorial/blob/master/lab_1_Environment_Setup/lab_1.md
-https://zhuanlan.zhihu.com/p/630822241
-https://zhuanlan.zhihu.com/p/378122624
-https://github.com/LeiWang1999/nvdla-parser
-https://nvdla.org/hw/v2/environment_setup_guide.html
-https://github.com/prasshantg/personal

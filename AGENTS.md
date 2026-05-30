@@ -1,4 +1,4 @@
-read README.md
+always read README.md before u do anything
 use podman if docker is not found
 
 look for refernce in ref/*

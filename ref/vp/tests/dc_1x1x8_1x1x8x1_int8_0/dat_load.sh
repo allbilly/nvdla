@@ -1,4 +1,0 @@
-#!/bin/sh
-
-devmem 0xc0000000 32 0x6f000000
-devmem 0xc0000004 32 0x1000

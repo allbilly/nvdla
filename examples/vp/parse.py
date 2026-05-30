@@ -13,7 +13,6 @@ BLOB_SUBIF = {0: "NONE", 1: "ADDR0", 2: "DEPS", 3: "OPS", 4: "SURFS", 5: "LUTS"}
 EVENT_TYPE = {0: "EVENTTYPE0", 1: "EVENTTYPE1", 2: "EVENTTYPE2"}
 EVENT_OP = {0: "WAIT", 1: "SIGNAL"}
 OP_TYPE = {0: "BDMA", 1: "CONV", 2: "SDP", 3: "PDP", 4: "CDP", 5: "RUBIK"}
-OP_LABEL = {0: "BDMA", 1: "Convolution", 2: "SDP", 3: "PDP", 4: "CDP", 5: "RUBIK"}
 
 DATA_CUBE_SIZE = 32
 DATA_CUBE_COMPACT_SIZE = 28
@@ -63,28 +62,6 @@ SDP_REGS = {
     "D_CVT_SCALE": 0xB0C4,
     "D_CVT_SHIFT": 0xB0C8,
 }
-
-
-def pack_lo_hi(lo, hi):
-    return ((hi & 0xFFFF) << 16) | (lo & 0xFFFF)
-
-
-def cfg_reg(block, name, value):
-    return (f"NVDLA_{block}.{name}", value & 0xFFFFFFFF)
-
-
-def cfg_line(name, value):
-    return f"reg_write({name}, 0x{value & 0xFFFFFFFF:08x});"
-
-
-def format_cfg_groups(groups):
-    lines = []
-    for group in groups:
-        lines.append(f"// {group['label']} operation index {group['index']} ROI {group['roi']} dep_count {group['dep_count']}")
-        for name, value in group["writes"]:
-            lines.append(cfg_line(name, value))
-        lines.append("")
-    return "\n".join(lines)
 
 
 def need(buf, off, size, what):
@@ -277,230 +254,11 @@ def parse_sdp_op_desc(data, idx):
             "y_op": parse_sdp_op_unit(data, off + 84)}
 
 
-def parse_conv_surface(data, idx):
-    names = ("weight_data", "wmb_data", "wgs_data", "src_data", "dst_data")
-    if len(data) % SURFACE_CONTAINER_SIZE == 0 or len(data) == SURFACE_CONTAINER_SIZE:
-        off = idx * SURFACE_CONTAINER_SIZE
-        cubes = {name: parse_cube_compact(data, off + i * DATA_CUBE_COMPACT_SIZE) for i, name in enumerate(names)}
-        cubes["offset_u"] = struct.unpack_from("<q", data, off + DATA_CUBE_COMPACT_SIZE * 5)[0]
-        cubes["in_line_uv_stride"] = struct.unpack_from("<I", data, off + DATA_CUBE_COMPACT_SIZE * 5 + 8)[0]
-        return cubes
-    off = idx * SURFACE_CONTAINER_SIZE
-    if off + DATA_CUBE_SIZE * 5 > len(data):
-        raise ParseError("CONV surface descriptor array too small")
-    cubes = {name: parse_cube(data, off + i * DATA_CUBE_SIZE) for i, name in enumerate(names)}
-    cubes["offset_u"] = struct.unpack_from("<q", data, off + DATA_CUBE_SIZE * 5)[0]
-    cubes["in_line_uv_stride"] = struct.unpack_from("<I", data, off + DATA_CUBE_SIZE * 5 + 8)[0]
-    return cubes
-
-
-def parse_conv_op_desc(data, idx):
-    off = idx * SDP_OP_SIZE if len(data) % SDP_OP_SIZE == 0 else idx * OP_CONTAINER_SIZE
-    if off + 92 > len(data):
-        raise ParseError("CONV op descriptor array too small")
-    d = {}
-    (d["conv_mode"], d["data_reuse"], d["weight_reuse"], d["skip_data_rls"],
-     d["skip_weight_rls"], _reserved0, d["entry_per_slice"]) = struct.unpack_from("<BBBBBBH", data, off)
-    d["data_format"], d["pixel_mapping"], d["fetch_grain"] = struct.unpack_from("<BBH", data, off + 8)
-    d["batch"], d["weight_format"], d["data_bank"], d["weight_bank"] = struct.unpack_from("<BBBB", data, off + 20)
-    d["batch_stride"] = struct.unpack_from("<I", data, off + 24)[0]
-    d["post_extension"], d["pixel_override"], d["release"] = struct.unpack_from("<BBH", data, off + 28)
-    (d["input_width_csc"], d["input_height_csc"], d["input_channel_csc"],
-     d["kernel_width_csc"], d["kernel_height_csc"], d["kernel_channel_csc"],
-     d["input_width_cmac"], d["input_height_cmac"]) = struct.unpack_from("<8H", data, off + 32)
-    d["bytes_per_kernel"] = struct.unpack_from("<I", data, off + 48)[0]
-    d["mean_ry"], d["mean_gu"], d["mean_bv"], d["mean_ax"] = struct.unpack_from("<4h", data, off + 52)
-    (d["mean_format"], d["conv_stride_x"], d["conv_stride_y"], d["pad_x_left"],
-     d["pad_x_right"], d["pad_y_top"], d["pad_y_bottom"], d["dilation_x"],
-     d["dilation_y"]) = struct.unpack_from("<9B", data, off + 60)
-    d["pra_truncate"] = struct.unpack_from("<B", data, off + 71)[0]
-    d["in_precision"], d["out_precision"], d["pad_val"] = struct.unpack_from("<BBh", data, off + 72)
-    d["in_cvt"] = parse_cvt_param(data, off + 76)
-    d["out_cvt"] = parse_cvt_param(data, off + 84)
-    return d
-
-
 def sdp_cfg(op):
     bypass = 0 if op["enable"] else 1
     alu_bypass = 0 if op["type"] in (2, 3) else 1
     mul_bypass = 0 if op["type"] in (1, 3) else 1
     return bypass | (alu_bypass << 1) | (op["alu_type"] << 2) | (mul_bypass << 4) | ((1 if op["act"] else 0) << 6)
-
-
-def kmd_bypass(condition):
-    return 0 if condition else 1
-
-
-def sdp_kmd_cfg(op, ew=False):
-    reg = kmd_bypass(op["enable"])
-    reg |= kmd_bypass(op["type"] != 1 and op["type"] != 0) << 1
-    reg |= op["alu_type"] << 2
-    reg |= kmd_bypass(op["type"] != 2 and op["type"] != 0) << 4
-    reg |= (1 if op["act"] == 3 else 0) << 5
-    reg |= kmd_bypass(op["act"] == (2 if ew else 1)) << 6
-    return reg
-
-
-def sdp_rdma_feature(surface, op):
-    src = surface["src_data"]
-    fly = 1 if src["type"] == 2 else 0
-    proc_precision = op["dst_precision"]
-    return fly | ((1 if op["conv_mode"] == 1 else 0) << 1) | (op["src_precision"] << 2) | (op["dst_precision"] << 4) | (proc_precision << 6) | ((op["batch_num"] - 1) << 8)
-
-
-def sdp_kmd_regs(surface, op):
-    src = surface["src_data"]
-    dst = surface["dst_data"]
-    regs = []
-    add = lambda name, value: regs.append(cfg_reg("SDP", name, value))
-
-    add("D_DATA_CUBE_WIDTH_0", src["width"] - 1)
-    add("D_DATA_CUBE_HEIGHT_0", src["height"] - 1)
-    add("D_DATA_CUBE_CHANNEL_0", src["channel"] - 1)
-    if dst["type"] != 2:
-        add("D_DST_BASE_ADDR_HIGH_0", 0)
-        add("D_DST_BASE_ADDR_LOW_0", dst["offset"])
-        add("D_DST_LINE_STRIDE_0", dst["line_stride"])
-        add("D_DST_SURFACE_STRIDE_0", dst["surf_stride"])
-
-    for unit, name, ew in ((op["x1_op"], "D_DP_BS_CFG_0", False),
-                           (op["x2_op"], "D_DP_BN_CFG_0", False),
-                           (op["y_op"], "D_DP_EW_CFG_0", True)):
-        add(name, sdp_kmd_cfg(unit, ew))
-
-    x1 = op["x1_op"]
-    if x1["enable"]:
-        if x1["type"] in (2, 3):
-            add("D_DP_BS_ALU_CFG_0", ((1 if x1["mode"] == 0 else 0) << 0) | (x1["shift_value"] << 16))
-        if x1["mode"] == 0:
-            add("D_DP_BS_ALU_SRC_VALUE_0", x1["alu_operand"])
-            add("D_DP_BS_MUL_SRC_VALUE_0", x1["mul_operand"])
-        add("D_DP_BS_MUL_CFG_0", ((1 if x1["mode"] == 0 else 0) << 0) | (x1["truncate"] << 16))
-
-    x2 = op["x2_op"]
-    if x2["enable"]:
-        if x2["type"] in (2, 3):
-            add("D_DP_BN_ALU_CFG_0", ((1 if x2["mode"] == 0 else 0) << 0) | (x2["shift_value"] << 16))
-        if x2["mode"] == 0:
-            add("D_DP_BN_ALU_SRC_VALUE_0", x2["alu_operand"])
-            add("D_DP_BN_MUL_SRC_VALUE_0", x2["mul_operand"])
-        add("D_DP_BN_MUL_CFG_0", ((1 if x2["mode"] == 0 else 0) << 0) | (x2["truncate"] << 16))
-
-    y = op["y_op"]
-    if y["enable"]:
-        if y["type"] in (2, 3):
-            add("D_DP_EW_ALU_CFG_0", ((1 if y["mode"] == 0 else 0) << 0) | (kmd_bypass(y["alu_cvt"]["enable"]) << 1))
-            if y["mode"] == 0:
-                add("D_DP_EW_ALU_SRC_VALUE_0", y["alu_operand"])
-            else:
-                add("D_DP_EW_ALU_CVT_OFFSET_VALUE_0", y["alu_cvt"]["offset"])
-                add("D_DP_EW_ALU_CVT_SCALE_VALUE_0", y["alu_cvt"]["scale"])
-                add("D_DP_EW_ALU_CVT_TRUNCATE_VALUE_0", y["alu_cvt"]["truncate"])
-        if y["type"] in (1, 3):
-            add("D_DP_EW_MUL_CFG_0", ((1 if y["mode"] == 0 else 0) << 0) | (kmd_bypass(y["mul_cvt"]["enable"]) << 1))
-            if y["mode"] == 0:
-                add("D_DP_EW_MUL_SRC_VALUE_0", y["mul_operand"])
-            else:
-                add("D_DP_EW_MUL_CVT_OFFSET_VALUE_0", y["mul_cvt"]["offset"])
-                add("D_DP_EW_MUL_CVT_SCALE_VALUE_0", y["mul_cvt"]["scale"])
-                add("D_DP_EW_MUL_CVT_TRUNCATE_VALUE_0", y["mul_cvt"]["truncate"])
-        add("D_DP_EW_TRUNCATE_VALUE_0", y["truncate"])
-
-    feature = (1 if src["type"] == 2 else 0) | ((1 if dst["type"] == 2 else 0) << 1) | ((1 if op["conv_mode"] == 1 else 0) << 2) | ((op["batch_num"] - 1) << 8)
-    add("D_FEATURE_MODE_CFG_0", feature)
-    add("D_DST_DMA_CFG_0", 0 if dst["type"] == 0 else dst["type"])
-    if op["batch_num"] > 1:
-        add("D_DST_BATCH_STRIDE_0", op["batch_stride"])
-    add("D_DATA_FORMAT_0", op["dst_precision"] | (op["dst_precision"] << 2))
-    add("D_CVT_OFFSET_0", op["out_cvt"]["offset"])
-    add("D_CVT_SCALE_0", op["out_cvt"]["scale"])
-    add("D_CVT_SHIFT_0", op["out_cvt"]["truncate"])
-    return regs
-
-
-def conv_kmd_regs(surface, op):
-    dst = surface["dst_data"]
-    src = surface["src_data"]
-    weight = surface["weight_data"]
-    regs = []
-    add = lambda block, name, value: regs.append(cfg_reg(block, name, value))
-
-    cacc_misc = (op["conv_mode"] << 0) | (op["out_precision"] << 12)
-    add("CACC", "D_MISC_CFG_0", cacc_misc)
-    add("CACC", "D_DATAOUT_SIZE_0_0", pack_lo_hi(dst["width"] - 1, dst["height"] - 1))
-    add("CACC", "D_DATAOUT_SIZE_1_0", dst["channel"] - 1)
-    add("CACC", "D_DATAOUT_ADDR_0", dst["offset"])
-    add("CACC", "D_BATCH_NUMBER_0", op["batch"] - 1)
-    add("CACC", "D_LINE_STRIDE_0", dst["line_stride"])
-    add("CACC", "D_SURF_STRIDE_0", dst["surf_stride"])
-    add("CACC", "D_DATAOUT_MAP_0", 3 if dst["width"] == 1 and dst["height"] == 1 else 0)
-    add("CACC", "D_CLIP_CFG_0", op["out_cvt"]["truncate"])
-
-    cmac_misc = (op["conv_mode"] << 0) | (op["out_precision"] << 12)
-    add("CMAC_A", "D_MISC_CFG_0", cmac_misc)
-    add("CMAC_B", "D_MISC_CFG_0", cmac_misc)
-
-    cc_misc = (op["conv_mode"] << 0) | (op["out_precision"] << 8) | (op["out_precision"] << 12) | (op["data_reuse"] << 16) | (op["weight_reuse"] << 17) | (op["skip_data_rls"] << 18) | (op["skip_weight_rls"] << 19)
-    add("CSC", "D_MISC_CFG_0", cc_misc)
-    add("CSC", "D_DATAIN_FORMAT_0", 0)
-    add("CSC", "D_DATAIN_SIZE_EXT_0_0", pack_lo_hi(op["input_width_csc"] - 1, op["input_height_csc"] - 1))
-    add("CSC", "D_DATAIN_SIZE_EXT_1_0", op["input_channel_csc"] - 1)
-    add("CSC", "D_BATCH_NUMBER_0", op["batch"] - 1)
-    add("CSC", "D_POST_Y_EXTENSION_0", op["post_extension"])
-    add("CSC", "D_ENTRY_PER_SLICE_0", op["entry_per_slice"] - 1)
-    add("CSC", "D_WEIGHT_FORMAT_0", op["weight_format"])
-    add("CSC", "D_WEIGHT_SIZE_EXT_0_0", pack_lo_hi(op["kernel_width_csc"] - 1, op["kernel_height_csc"] - 1))
-    add("CSC", "D_WEIGHT_SIZE_EXT_1_0", ((dst["channel"] - 1) << 16) | ((op["kernel_channel_csc"] - 1) & 0xFFFF))
-    add("CSC", "D_WEIGHT_BYTES_0", weight["size"])
-    add("CSC", "D_WMB_BYTES_0", surface["wmb_data"]["size"])
-    add("CSC", "D_DATAOUT_SIZE_0_0", pack_lo_hi(op["input_width_cmac"] - 1, op["input_height_cmac"] - 1))
-    add("CSC", "D_DATAOUT_SIZE_1_0", dst["channel"] - 1)
-    add("CSC", "D_ATOMICS_0", dst["width"] * dst["height"] - 1)
-    add("CSC", "D_RELEASE_0", op["release"] - 1)
-    stride_x = op["conv_stride_x"] - 1 if op["conv_mode"] == 0 else 0
-    stride_y = op["conv_stride_y"] - 1 if op["conv_mode"] == 0 else 0
-    pad_x = op["pad_x_left"] if op["conv_mode"] == 0 else 0
-    pad_y = op["pad_y_top"] if op["conv_mode"] == 0 else 0
-    add("CSC", "D_CONV_STRIDE_EXT_0", pack_lo_hi(stride_x, stride_y))
-    add("CSC", "D_DILATION_EXT_0", pack_lo_hi(op["dilation_x"] - 1, op["dilation_y"] - 1))
-    add("CSC", "D_ZERO_PADDING_0", pad_x | (pad_y << 16))
-    add("CSC", "D_ZERO_PADDING_VALUE_0", op["pad_val"])
-    add("CSC", "D_BANK_0", ((op["weight_bank"] - 1) << 16) | (op["data_bank"] - 1))
-    add("CSC", "D_PRA_CFG_0", op["pra_truncate"])
-
-    cdma_misc = (op["conv_mode"] << 0) | (op["in_precision"] << 8) | (op["out_precision"] << 12) | (op["data_reuse"] << 16) | (op["weight_reuse"] << 17) | (op["skip_data_rls"] << 18) | (op["skip_weight_rls"] << 19)
-    add("CDMA", "D_MISC_CFG_0", cdma_misc)
-    add("CDMA", "D_DATAIN_FORMAT_0", 0)
-    add("CDMA", "D_DATAIN_SIZE_0_0", pack_lo_hi(src["width"] - 1, src["height"] - 1))
-    add("CDMA", "D_DATAIN_SIZE_1_0", src["channel"] - 1)
-    add("CDMA", "D_DATAIN_SIZE_EXT_0_0", pack_lo_hi(op["input_width_csc"] - 1, op["input_height_csc"] - 1))
-    add("CDMA", "D_DAIN_RAM_TYPE_0", 0 if src["type"] == 0 else src["type"])
-    add("CDMA", "D_DAIN_ADDR_HIGH_0_0", 0)
-    add("CDMA", "D_DAIN_ADDR_LOW_0_0", src["offset"])
-    add("CDMA", "D_DAIN_ADDR_HIGH_1_0", 0)
-    add("CDMA", "D_DAIN_ADDR_LOW_1_0", src["offset"] + surface["offset_u"])
-    add("CDMA", "D_LINE_STRIDE_0", src["line_stride"])
-    add("CDMA", "D_SURF_STRIDE_0", src["surf_stride"])
-    add("CDMA", "D_LINE_UV_STRIDE_0", surface["in_line_uv_stride"])
-    add("CDMA", "D_DAIN_MAP_0", 0)
-    add("CDMA", "D_BATCH_NUMBER_0", op["batch"] - 1)
-    add("CDMA", "D_BATCH_STRIDE_0", op["batch_stride"])
-    add("CDMA", "D_ENTRY_PER_SLICE_0", op["entry_per_slice"] - 1)
-    add("CDMA", "D_FETCH_GRAIN_0", op["fetch_grain"] - 1)
-    add("CDMA", "D_WEIGHT_FORMAT_0", op["weight_format"])
-    add("CDMA", "D_WEIGHT_SIZE_0_0", op["bytes_per_kernel"] - 1)
-    add("CDMA", "D_WEIGHT_SIZE_1_0", dst["channel"] - 1)
-    add("CDMA", "D_WEIGHT_RAM_TYPE_0", 1 if weight["type"] == 0 else weight["type"])
-    add("CDMA", "D_WEIGHT_ADDR_HIGH_0", 0)
-    add("CDMA", "D_WEIGHT_ADDR_LOW_0", weight["offset"])
-    add("CDMA", "D_WEIGHT_BYTES_0", weight["size"])
-    add("CDMA", "D_MEAN_FORMAT_0", op["mean_format"])
-    add("CDMA", "D_CVT_CFG_0", 0 if not op["in_cvt"]["enable"] else (1 | (op["in_cvt"]["truncate"] << 16)))
-    add("CDMA", "D_CONV_STRIDE_0", pack_lo_hi(op["conv_stride_x"] - 1, op["conv_stride_y"] - 1))
-    add("CDMA", "D_ZERO_PADDING_0", op["pad_x_left"] | (op["pad_x_right"] << 8) | (op["pad_y_top"] << 16) | (op["pad_y_bottom"] << 24))
-    add("CDMA", "D_ZERO_PADDING_VALUE_0", op["pad_val"])
-    add("CDMA", "D_BANK_0", ((op["weight_bank"] - 1) << 16) | (op["data_bank"] - 1))
-    return regs
 
 
 def sdp_op_regs(surface, op):
@@ -682,77 +440,15 @@ def print_regs(l):
                 print(f"    NVDLA_SDP_{name}_0 @ 0x{SDP_REGS[name]:04x} = 0x{value & 0xFFFFFFFF:08x} ({value})")
 
 
-def loadable_cfg_groups(l):
-    groups = []
-    for task in l["task_list"]:
-        if task["interface"] != 1:
-            continue
-        ctx = descriptor_context(l, task)
-        if not ctx or not (ctx["common_blob"] and ctx["surface_blob"] and ctx["operation_blob"]):
-            continue
-        net = ctx["network"]
-        for i in range(net["num_operations"]):
-            common = parse_common_op(ctx["common_blob"]["data"], i)
-            writes = []
-            op_type = common["op_type"]
-            if op_type == 1:
-                for block in ("CACC", "CMAC_A", "CMAC_B", "CSC", "CDMA"):
-                    writes.append(cfg_reg(block, "S_POINTER_0", 0))
-                surface = parse_conv_surface(ctx["surface_blob"]["data"], common["index"])
-                op = parse_conv_op_desc(ctx["operation_blob"]["data"], common["index"])
-                writes.extend(conv_kmd_regs(surface, op))
-            elif op_type == 2:
-                writes.append(cfg_reg("SDP", "S_POINTER_0", 0))
-                writes.append(cfg_reg("SDP_RDMA", "S_POINTER_0", 0))
-                writes.append(cfg_reg("GLB", "S_INTR_MASK_0", 0))
-                writes.append(cfg_reg("SDP_RDMA", "D_FEATURE_MODE_CFG_0", 0))
-                writes.append(cfg_reg("SDP_RDMA", "D_BRDMA_CFG_0", 0))
-                writes.append(cfg_reg("SDP_RDMA", "D_NRDMA_CFG_0", 0))
-                writes.append(cfg_reg("SDP_RDMA", "D_ERDMA_CFG_0", 0))
-                surface = parse_sdp_surface(ctx["surface_blob"]["data"], common["index"])
-                op = parse_sdp_op_desc(ctx["operation_blob"]["data"], common["index"])
-                writes.append(cfg_reg("SDP_RDMA", "D_FEATURE_MODE_CFG_0", sdp_rdma_feature(surface, op)))
-                writes.extend(sdp_kmd_regs(surface, op))
-                writes.append(cfg_reg("SDP", "S_POINTER_0", 0))
-                writes.append(cfg_reg("SDP_RDMA", "S_POINTER_0", 0))
-                writes.append(cfg_reg("SDP", "D_OP_ENABLE_0", 1))
-                if common["fused_parent"]["index"] >= 0:
-                    for block in ("CACC", "CMAC_A", "CMAC_B", "CSC", "CDMA"):
-                        writes.append(cfg_reg(block, "S_POINTER_0", 0))
-                    for block in ("CACC", "CMAC_A", "CMAC_B", "CSC", "CDMA"):
-                        writes.append(cfg_reg(block, "D_OP_ENABLE_0", 1))
-            else:
-                continue
-            groups.append({"label": OP_LABEL.get(op_type, str(op_type)),
-                           "index": common["index"],
-                           "roi": common["roi_index"],
-                           "dep_count": common["dependency_count"],
-                           "writes": writes})
-    return groups
-
-
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python parse.py [--cfg-writes] <loadable_file>", file=sys.stderr)
+        print("Usage: python parse.py <loadable_file>", file=sys.stderr)
         return 1
-    cfg_writes = False
-    args = []
-    for arg in sys.argv[1:]:
-        if arg == "--cfg-writes":
-            cfg_writes = True
-        else:
-            args.append(arg)
-    if not args:
-        print("Error: no loadable file specified", file=sys.stderr)
-        return 1
-    loadable_file = args[0]
+    loadable_file = sys.argv[1]
     try:
         with open(loadable_file, "rb") as f:
             loadable = parse_loadable(f.read())
-        if cfg_writes:
-            print(format_cfg_groups(loadable_cfg_groups(loadable)))
-        else:
-            print_regs(loadable)
+        print_regs(loadable)
     except (OSError, ParseError, struct.error) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1

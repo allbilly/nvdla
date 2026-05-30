@@ -1,3 +1,0 @@
-#!/bin/sh
-
-devmem 0xc0000400 32 0x1

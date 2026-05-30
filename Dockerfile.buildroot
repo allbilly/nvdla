@@ -1,0 +1,27 @@
+FROM ubuntu:18.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    autoconf \
+    automake \
+    libtool \
+    pkg-config \
+    bc \
+    cpio \
+    wget \
+    unzip \
+    python \
+    git \
+    sed \
+    patch \
+    rsync \
+    xz-utils \
+    libncurses5-dev \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /nvdla
+
+CMD ["bash"]
