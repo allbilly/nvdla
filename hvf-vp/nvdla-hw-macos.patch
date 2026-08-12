@@ -1,0 +1,33 @@
+diff --git a/cmod/hls/include/ac_fixed.h b/cmod/hls/include/ac_fixed.h
+index 0c6f110..736418d 100644
+--- a/cmod/hls/include/ac_fixed.h
++++ b/cmod/hls/include/ac_fixed.h
+@@ -410 +410 @@ public:
+-  inline ac_int<AC_MAX(I,1),S> to_ac_int() const { return ((ac_fixed<AC_MAX(I,1),AC_MAX(I,1),S>) *this).slc<AC_MAX(I,1)>(0); }
++  inline ac_int<AC_MAX(I,1),S> to_ac_int() const { return ((ac_fixed<AC_MAX(I,1),AC_MAX(I,1),S>) *this).template slc<AC_MAX(I,1)>(0); }
+diff --git a/cmod/hls/include/ac_int.h b/cmod/hls/include/ac_int.h
+index 5660cc0..f9fc602 100644
+--- a/cmod/hls/include/ac_int.h
++++ b/cmod/hls/include/ac_int.h
+@@ -389,0 +390,12 @@ namespace ac_private {
++
++  template<int N, bool DoExtend = (N > 0)>
++  struct iv_extend_if {
++    static inline void call(int *r, int ext) {
++      iv_extend<N>(r, ext);
++    }
++  };
++
++  template<int N>
++  struct iv_extend_if<N, false> {
++    static inline void call(int * /*r*/, int /*ext*/) { }
++  };
+@@ -1085 +1097 @@ namespace ac_private {
+-      iv_extend<ishift>(r, 0);
++      iv_extend_if<ishift>::call(r, 0);
+@@ -1096 +1108 @@ namespace ac_private {
+-          iv_extend<Nr-M1-1>(r+M1+1, r[M1] < 0 ? ~0 : 0);
++          iv_extend_if<Nr-M1-1>::call(r+M1+1, r[M1] < 0 ? ~0 : 0);
+@@ -1101 +1113 @@ namespace ac_private {
+-        iv_extend<Nr-M1>(r+M1, r[M1-1] < 0 ? -1 : 0);
++        iv_extend_if<Nr-M1>::call(r+M1, r[M1-1] < 0 ? -1 : 0);

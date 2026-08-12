@@ -1,0 +1,38 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index a91bbe22..2f7536b0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -470,0 +471,3 @@ add_subdirectory(systemc-components)
++if(NVDLA_QBOX_COMPONENT_DIR)
++    add_subdirectory(${NVDLA_QBOX_COMPONENT_DIR} qbox-nvdla)
++endif()
+diff --git a/platforms/CMakeLists.txt b/platforms/CMakeLists.txt
+index f1b3f4e1..55f6fd0e 100644
+--- a/platforms/CMakeLists.txt
++++ b/platforms/CMakeLists.txt
+@@ -20,0 +21,12 @@ target_link_libraries(platforms-vp
++# QEMU's HVF accelerator needs the Hypervisor.framework entitlement on macOS.
++if(APPLE)
++    add_custom_command(
++        TARGET platforms-vp
++        POST_BUILD
++        COMMAND codesign
++            --entitlements ${libqemu_SOURCE_DIR}/accel/hvf/entitlements.plist
++            --force -s - $<TARGET_FILE:platforms-vp>
++        COMMENT "Applying HVF entitlements to $<TARGET_FILE:platforms-vp>"
++    )
++endif()
++
+diff --git a/platforms/src/main.cc b/platforms/src/main.cc
+index b2fd5302..ee217fc7 100644
+--- a/platforms/src/main.cc
++++ b/platforms/src/main.cc
+@@ -53 +53 @@ int sc_main(int argc, char* argv[])
+-                                        .logLevel(scp::log::DBGTRACE) // set log level to DBGTRACE = TRACEALL
++                                        .logLevel(scp::log::INFO)
+diff --git a/qemu-components/irq-ctrl/arm_gicv2/include/arm-gicv2.h b/qemu-components/irq-ctrl/arm_gicv2/include/arm-gicv2.h
+index 4a98a6e8..ede04516 100644
+--- a/qemu-components/irq-ctrl/arm_gicv2/include/arm-gicv2.h
++++ b/qemu-components/irq-ctrl/arm_gicv2/include/arm-gicv2.h
+@@ -62,0 +63 @@ public:
++        QemuDevice::set_sysbus_as_parent_bus();

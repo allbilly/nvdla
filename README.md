@@ -1,5 +1,10 @@
 # NVDLA
-This repo aims do pure registers programming on the NVDLA NPU. 
+
+Apple Silicon users can run the VP with native macOS HVF acceleration using
+[`hvf-vp/README.md`](hvf-vp/README.md). This avoids running the ARM guest through
+TCG inside an emulated x86 container.
+
+This repository programs the NVDLA NPU directly through its registers.
 
 ## 1. Quick start
 
@@ -17,7 +22,7 @@ docker run -it --rm -p 6667:6667 -d \
 
 ssh -p 6667 root@127.0.0.1
 
-mount -t 9p -o trans=virtio r /mnt 
+mount -t 9p -o trans=virtio r /mnt
 cd /mnt && insmod drm.ko && insmod opendla.ko
 
 ./nvdla_runtime --loadable test_Add.nvdla --image input1x5x7.pgm --rawdump
