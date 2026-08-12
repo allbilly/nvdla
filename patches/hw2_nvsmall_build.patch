@@ -1,0 +1,42 @@
+diff --git a/cmod/bdma/gen/bdma_reg_model.cpp b/cmod/bdma/gen/bdma_reg_model.cpp
+index 303c15e..e2574fe 100644
+--- a/cmod/bdma/gen/bdma_reg_model.cpp
++++ b/cmod/bdma/gen/bdma_reg_model.cpp
+@@ -129,7 +129,7 @@ void bdma_reg_model::BdmaUpdateVariables(CNVDLA_BDMA_REGSET *reg_group_ptr) {
+         bdma_config_class->cfg_cmd_src_ram_type_ = reg_group_ptr->rCFG_CMD.uSRC_RAM_TYPE();
+         bdma_config_class->cfg_cmd_dst_ram_type_ = reg_group_ptr->rCFG_CMD.uDST_RAM_TYPE();
+         bdma_config_class->cfg_line_repeat_number_ = reg_group_ptr->rCFG_LINE_REPEAT.uNUMBER();
+-        bdma_config_class->cfg_src_line_stride_ = reg_group_ptr->rCFG_SRC_LINE.uSTRIDE();
++        bdma_config_class->cfg_src_line_stride_ = 0;
+         bdma_config_class->cfg_dst_line_stride_ = reg_group_ptr->rCFG_DST_LINE.uSTRIDE();
+         bdma_config_class->cfg_surf_repeat_number_ = reg_group_ptr->rCFG_SURF_REPEAT.uNUMBER();
+         bdma_config_class->cfg_src_surf_stride_ = reg_group_ptr->rCFG_SRC_SURF.uSTRIDE();
+diff --git a/cmod/hls/include/ac_fixed.h b/cmod/hls/include/ac_fixed.h
+index 0c6f110..736418d 100644
+--- a/cmod/hls/include/ac_fixed.h
++++ b/cmod/hls/include/ac_fixed.h
+@@ -407,7 +407,7 @@ public:
+ #endif
+ 
+   // Explicit conversion functions to ac_int that captures all integer bits (bits are truncated)
+-  inline ac_int<AC_MAX(I,1),S> to_ac_int() const { return ((ac_fixed<AC_MAX(I,1),AC_MAX(I,1),S>) *this).slc<AC_MAX(I,1)>(0); }
++  inline ac_int<AC_MAX(I,1),S> to_ac_int() const { return ((ac_fixed<AC_MAX(I,1),AC_MAX(I,1),S>) *this).template slc<AC_MAX(I,1)>(0); }
+ 
+   // Explicit conversion functions to C built-in types -------------
+   inline int to_int() const { return ((I-W) >= 32) ? 0 : (signed int) to_ac_int(); } 
+diff --git a/cmod/hls/include/ac_int.h b/cmod/hls/include/ac_int.h
+index 5660cc0..2556401 100644
+--- a/cmod/hls/include/ac_int.h
++++ b/cmod/hls/include/ac_int.h
+@@ -1081,9 +1081,9 @@ namespace ac_private {
+     }
+     else {
+       const unsigned s31 = B & 31;
+-      const unsigned ishift = (unsigned) (((B >> 5) > Nr) ? Nr : (B >> 5));
++      const int ishift = ((B >> 5) > Nr) ? Nr : (B >> 5);
+       iv_extend<ishift>(r, 0);
+-      const unsigned M1 = AC_MIN(N+ishift,Nr);
++      const int M1 = AC_MIN(N+ishift,Nr);
+       if(s31) {
+         unsigned lw = 0;
+         for(unsigned i=ishift; i < M1; i++) {

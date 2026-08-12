@@ -9,8 +9,6 @@ use flop;
 use pipe;
 use retime;
 use assert;
-use fifo;
-use ram;
  
 sub vprintl {
   my @list = @_;

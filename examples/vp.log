@@ -1,0 +1,1806 @@
+
+             SystemC 2.3.0-ASI --- May 25 2026 00:51:50
+        Copyright (c) 1996-2012 by all Contributors,
+        ALL RIGHTS RESERVED
+
+No sc_log specified, will use the default setting
+verbosity_level = SC_MEDIUM
+DMI mode enable
+RAM base address: 0xc0000000
+bridge: tlm2c_elaborate..
+
+Info: nvdla.irq_adaptor: configured IRQ line 176
+[    0.000000] Booting Linux on physical CPU 0x0
+[    0.000000] Linux version 4.13.3 (root@493457e98b58) (gcc version 6.4.1 20170707 (Linaro GCC 6.4-2017.08)) #1 SMP PREEMPT Thu May 28 21:53:25 UTC 2026
+[    0.000000] Boot CPU: AArch64 Processor [411fd070]
+[    0.000000] Machine model: linux,dummy-virt
+[    0.000000] efi: Getting EFI parameters from FDT:
+[    0.000000] efi: UEFI not found.
+[    0.000000] cma: Reserved 16 MiB at 0x000000007f000000
+[    0.000000] NUMA: No NUMA configuration found
+[    0.000000] NUMA: Faking a node at [mem 0x0000000000000000-0x000000007fffffff]
+[    0.000000] NUMA: NODE_DATA [mem 0x7efe8900-0x7efea3ff]
+[    0.000000] Zone ranges:
+[    0.000000]   DMA      [mem 0x0000000040000000-0x000000007fffffff]
+[    0.000000]   Normal   empty
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000040000000-0x000000007fffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000040000000-0x000000007fffffff]
+[    0.000000] psci: probing for conduit method from DT.
+[    0.000000] psci: PSCIv0.2 detected in firmware.
+[    0.000000] psci: Using standard PSCI v0.2 function IDs
+[    0.000000] psci: Trusted OS migration not required
+[    0.000000] percpu: Embedded 26 pages/cpu @ffff80003efcb000 s67352 r8192 d30952 u106496
+[    0.000000] Detected PIPT I-cache on CPU0
+[    0.000000] CPU features: enabling workaround for ARM erratum 832075
+[    0.000000] CPU features: enabling workaround for ARM erratum 834220
+[    0.000000] Built 1 zonelists in Node order, mobility grouping on.  Total pages: 258048
+[    0.000000] Policy zone: DMA
+[    0.000000] Kernel command line: "root=/dev/vda"
+[    0.000000] PID hash table entries: 4096 (order: 3, 32768 bytes)
+[    0.000000] Memory: 999232K/1048576K available (9404K kernel code, 1130K rwdata, 4164K rodata, 1088K init, 400K bss, 32960K reserved, 16384K cma-reserved)
+[    0.000000] Virtual kernel memory layout:
+[    0.000000]     modules : 0xffff000000000000 - 0xffff000008000000   (   128 MB)
+[    0.000000]     vmalloc : 0xffff000008000000 - 0xffff7dffbfff0000   (129022 GB)
+[    0.000000]       .text : 0xffff000008080000 - 0xffff0000089b0000   (  9408 KB)
+[    0.000000]     .rodata : 0xffff0000089b0000 - 0xffff000008dd0000   (  4224 KB)
+[    0.000000]       .init : 0xffff000008dd0000 - 0xffff000008ee0000   (  1088 KB)
+[    0.000000]       .data : 0xffff000008ee0000 - 0xffff000008ffaa00   (  1131 KB)
+[    0.000000]        .bss : 0xffff000008ffaa00 - 0xffff00000905ed60   (   401 KB)
+[    0.000000]     fixed   : 0xffff7dfffe7fd000 - 0xffff7dfffec00000   (  4108 KB)
+[    0.000000]     PCI I/O : 0xffff7dfffee00000 - 0xffff7dffffe00000   (    16 MB)
+[    0.000000]     vmemmap : 0xffff7e0000000000 - 0xffff800000000000   (  2048 GB maximum)
+[    0.000000]               0xffff7e0000000000 - 0xffff7e0001000000   (    16 MB actual)
+[    0.000000]     memory  : 0xffff800000000000 - 0xffff800040000000   (  1024 MB)
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+[    0.000000] Preemptible hierarchical RCU implementation.
+[    0.000000] 	RCU restricting CPUs from NR_CPUS=64 to nr_cpu_ids=1.
+[    0.000000] RCU: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=1
+[    0.000000] NR_IRQS: 64, nr_irqs: 64, preallocated irqs: 0
+[    0.000000] GICv2m: range[mem 0x08020000-0x08020fff], SPI[80:143]
+[    0.000000] arch_timer: cp15 timer(s) running at 62.50MHz (virt).
+[    0.000000] clocksource: arch_sys_counter: mask: 0xffffffffffffff max_cycles: 0x1cd42e208c, max_idle_ns: 881590405314 ns
+[    0.000088] sched_clock: 56 bits at 62MHz, resolution 16ns, wraps every 4398046511096ns
+[    0.002252] Console: colour dummy device 80x25
+[    0.005470] console [tty0] enabled
+[    0.006171] Calibrating delay loop (skipped), value calculated using timer frequency.. 125.00 BogoMIPS (lpj=250000)
+[    0.006308] pid_max: default: 32768 minimum: 301
+[    0.006950] Security Framework initialized
+[    0.008333] Dentry cache hash table entries: 131072 (order: 8, 1048576 bytes)
+[    0.009063] Inode-cache hash table entries: 65536 (order: 7, 524288 bytes)
+[    0.009209] Mount-cache hash table entries: 2048 (order: 2, 16384 bytes)
+[    0.009285] Mountpoint-cache hash table entries: 2048 (order: 2, 16384 bytes)
+[    0.039863] ASID allocator initialised with 65536 entries
+[    0.047264] Hierarchical SRCU implementation.
+[    0.057987] EFI services will not be available.
+[    0.064094] smp: Bringing up secondary CPUs ...
+[    0.064224] smp: Brought up 1 node, 1 CPU
+[    0.064262] SMP: Total of 1 processors activated.
+[    0.064344] CPU features: detected feature: 32-bit EL0 Support
+[    0.065136] CPU: All CPU(s) started at EL1
+[    0.065538] alternatives: patching kernel code
+[    0.073483] devtmpfs: initialized
+[    0.082362] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns
+[    0.082517] futex hash table entries: 256 (order: 3, 32768 bytes)
+[    0.084165] pinctrl core: initialized pinctrl subsystem
+[    0.098378] random: fast init done
+[    0.099815] DMI not present or invalid.
+[    0.103561] NET: Registered protocol family 16
+[    0.119400] cpuidle: using governor menu
+[    0.120402] vdso: 2 pages (1 code @ ffff0000089b6000, 1 data @ ffff000008ee5000)
+[    0.120579] hw-breakpoint: found 6 breakpoint and 4 watchpoint registers.
+[    0.124672] DMA: preallocated 256 KiB pool for atomic allocations
+[    0.127860] Serial: AMBA PL011 UART driver
+[    0.164187] 9000000.pl011: ttyAMA0 at MMIO 0x9000000 (irq = 40, base_baud = 0) is a PL011 rev1
+[    0.184006] console [ttyAMA0] enabled
+[    0.270502] HugeTLB registered 2.00 MiB page size, pre-allocated 0 pages
+[    0.282781] ACPI: Interpreter disabled.
+[    0.286312] vgaarb: loaded
+[    0.287755] SCSI subsystem initialized
+[    0.292630] usbcore: registered new interface driver usbfs
+[    0.293171] usbcore: registered new interface driver hub
+[    0.293639] usbcore: registered new device driver usb
+[    0.297760] pps_core: LinuxPPS API ver. 1 registered
+[    0.297991] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    0.298977] PTP clock support registered
+[    0.300503] EDAC MC: Ver: 3.0.0
+[    0.308744] dmi: Firmware registration failed.
+[    0.310259] Advanced Linux Sound Architecture Driver Initialized.
+[    0.320570] clocksource: Switched to clocksource arch_sys_counter
+[    0.322326] VFS: Disk quotas dquot_6.6.0
+[    0.322709] VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+[    0.326276] pnp: PnP ACPI: disabled
+[    0.365285] NET: Registered protocol family 2
+[    0.369508] TCP established hash table entries: 8192 (order: 4, 65536 bytes)
+[    0.370043] TCP bind hash table entries: 8192 (order: 5, 131072 bytes)
+[    0.370416] TCP: Hash tables configured (established 8192 bind 8192)
+[    0.371428] UDP hash table entries: 512 (order: 2, 16384 bytes)
+[    0.371754] UDP-Lite hash table entries: 512 (order: 2, 16384 bytes)
+[    0.373176] NET: Registered protocol family 1
+[    0.383417] RPC: Registered named UNIX socket transport module.
+[    0.383714] RPC: Registered udp transport module.
+[    0.383910] RPC: Registered tcp transport module.
+[    0.384077] RPC: Registered tcp NFSv4.1 backchannel transport module.
+[    0.387842] hw perfevents: enabled with armv8_pmuv3 PMU driver, 1 counters available
+[    0.388894] kvm [1]: HYP mode not available
+[    0.397343] audit: initializing netlink subsys (disabled)
+[    0.400215] audit: type=2000 audit(0.378:1): state=initialized audit_enabled=0 res=1
+[    0.401935] workingset: timestamp_bits=44 max_order=18 bucket_order=0
+[    0.433767] squashfs: version 4.0 (2009/01/31) Phillip Lougher
+[    0.442661] NFS: Registering the id_resolver key type
+[    0.443388] Key type id_resolver registered
+[    0.443566] Key type id_legacy registered
+[    0.443846] nfs4filelayout_init: NFSv4 File Layout Driver Registering...
+[    0.445627] 9p: Installing v9fs 9p2000 file system support
+[    0.455182] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 247)
+[    0.455583] io scheduler noop registered
+[    0.456402] io scheduler cfq registered (default)
+[    0.457194] io scheduler mq-deadline registered
+[    0.457400] io scheduler kyber registered
+[    0.481758] pl061_gpio 9030000.pl061: PL061 GPIO chip @0x0000000009030000 registered
+[    0.486315] OF: PCI: host bridge /pcie@10000000 ranges:
+[    0.486782] OF: PCI:    IO 0x3eff0000..0x3effffff -> 0x00000000
+[    0.487169] OF: PCI:   MEM 0x10000000..0x3efeffff -> 0x10000000
+[    0.487393] OF: PCI:   MEM 0x8000000000..0xffffffffff -> 0x8000000000
+[    0.487967] pci-host-generic 3f000000.pcie: ECAM at [mem 0x3f000000-0x3fffffff] for [bus 00-0f]
+[    0.491107] pci-host-generic 3f000000.pcie: PCI host bridge to bus 0000:00
+[    0.491544] pci_bus 0000:00: root bus resource [bus 00-0f]
+[    0.491826] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+[    0.492074] pci_bus 0000:00: root bus resource [mem 0x10000000-0x3efeffff]
+[    0.492340] pci_bus 0000:00: root bus resource [mem 0x8000000000-0xffffffffff]
+[    0.543256] Serial: 8250/16550 driver, 4 ports, IRQ sharing enabled
+[    0.550934] SuperH (H)SCI(F) driver initialized
+[    0.554190] msm_serial: driver initialized
+[    0.556859] cacheinfo: Unable to detect cache hierarchy for CPU 0
+[    0.577769] loop: module loaded
+[    0.606807] hisi_sas: driver version v1.6
+[    0.621426] libphy: Fixed MDIO Bus: probed
+[    0.625385] tun: Universal TUN/TAP device driver, 1.6
+[    0.634598] e1000e: Intel(R) PRO/1000 Network Driver - 3.2.6-k
+[    0.634879] e1000e: Copyright(c) 1999 - 2015 Intel Corporation.
+[    0.636386] igb: Intel(R) Gigabit Ethernet Network Driver - version 5.4.0-k
+[    0.637346] igb: Copyright (c) 2007-2014 Intel Corporation.
+[    0.637986] igbvf: Intel(R) Gigabit Virtual Function Network Driver - version 2.4.0-k
+[    0.638304] igbvf: Copyright (c) 2009 - 2012 Intel Corporation.
+[    0.639751] sky2: driver version 1.30
+[    0.642152] VFIO - User Level meta-driver version: 0.3
+[    0.648156] ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
+[    0.648462] ehci-pci: EHCI PCI platform driver
+[    0.650479] ehci-platform: EHCI generic platform driver
+[    0.651227] ehci-orion: EHCI orion driver
+[    0.651720] ehci-exynos: EHCI EXYNOS driver
+[    0.652214] ehci-msm: Qualcomm On-Chip EHCI Host Controller
+[    0.653250] ohci_hcd: USB 1.1 'Open' Host Controller (OHCI) Driver
+[    0.653600] ohci-pci: OHCI PCI platform driver
+[    0.654486] ohci-platform: OHCI generic platform driver
+[    0.655351] ohci-exynos: OHCI EXYNOS driver
+[    0.657978] usbcore: registered new interface driver usb-storage
+[    0.669073] rtc-pl031 9010000.pl031: rtc core: registered pl031 as rtc0
+[    0.671420] i2c /dev entries driver
+[    0.686843] sdhci: Secure Digital Host Controller Interface driver
+[    0.687113] sdhci: Copyright(c) Pierre Ossman
+[    0.688247] Synopsys Designware Multimedia Card Interface Driver
+[    0.692217] sdhci-pltfm: SDHCI platform and OF driver helper
+[    0.698626] ledtrig-cpu: registered to indicate activity on CPUs
+[    0.703373] usbcore: registered new interface driver usbhid
+[    0.703622] usbhid: USB HID core driver
+[    0.715600] NET: Registered protocol family 17
+[    0.716470] 9pnet: Installing 9P2000 support
+[    0.718582] Key type dns_resolver registered
+[    0.720900] registered taskstats version 1
+[    0.726403] input: gpio-keys as /devices/platform/gpio-keys/input/input0
+[    0.729079] rtc-pl031 9010000.pl031: setting system clock to 2026-05-29 14:07:54 UTC (1780063674)
+[    0.729961] ALSA device list:
+[    0.730102]   No soundcards found.
+[    0.732006] uart-pl011 9000000.pl011: no DMA platform data
+[    0.737072] EXT4-fs (vda): couldn't mount as ext3 due to feature incompatibilities
+[    0.739875] EXT4-fs (vda): INFO: recovery required on readonly filesystem
+[    0.740166] EXT4-fs (vda): write access will be enabled during recovery
+[    0.786094] EXT4-fs (vda): recovery complete
+[    0.792093] EXT4-fs (vda): mounted filesystem with ordered data mode. Opts: (null)
+[    0.792840] VFS: Mounted root (ext4 filesystem) readonly on device 254:0.
+[    0.795265] devtmpfs: mounted
+[    0.844230] Freeing unused kernel memory: 1088K
+[    0.945552] EXT4-fs (vda): re-mounted. Opts: data=ordered
+Starting logging: OK
+Initializing random number generator... done.
+Starting network: udhcpc: started, v1.27.2
+udhcpc: sending discover
+udhcpc: sending select for 10.0.2.15
+udhcpc: lease of 10.0.2.15 obtained, lease time 86400
+deleting routers
+adding dns 10.0.2.3
+OK
+Starting sshd: /etc/ssh/sshd_config line 83: Unsupported option UsePAM
+/etc/ssh/sshd_config line 120: Unsupported option UsePAM
+[    2.038756] NET: Registered protocol family 10
+[    2.054907] Segment Routing with IPv6
+OK
+
+Welcome to Buildroot
+buildroot login: [   33.958525] opendla: loading out-of-tree module taints kernel.
+[   33.962055] Probe NVDLA config nvidia,nv_small
+[   33.962600] 0 . 12 . 5
+[   33.962781] reset engine done
+[   33.966574] [drm] Initialized nvdla 0.0.0 20171017 for 10200000.nvdla on minor 0
+[   34.823404] nvdla_gem_create handle=1 size=4096
+[   34.831558] nvdla_gem_create handle=2 size=1120
+[   34.835687] nvdla_gem_create handle=3 size=40
+[   34.840101] nvdla_gem_create handle=4 size=36
+[   34.844198] nvdla_gem_create handle=5 size=116
+[   34.848321] nvdla_gem_create handle=6 size=644
+[   34.852471] nvdla_gem_create handle=7 size=4096
+[   34.856455] nvdla_gem_create handle=8 size=1120
+[   34.861199] nvdla_gem_create handle=9 size=1120
+[   34.863674] nvdla_submit args tasks=0xffffb067f808 num_tasks=1 flags=0x0000 version=0
+[   34.864075] nvdla_submit_task num_addresses=9 timeout=0x00000000 address_list=0xffffb086b9c0
+[   34.864398] nvdla_address[0] handle=9 reserved=0 offset=0x0
+[   34.865563] nvdla_address[1] handle=19 reserved=0 offset=0x0
+[   34.865780] nvdla_address[2] handle=7 reserved=0 offset=0x0
+[   34.865976] nvdla_address[3] handle=21 reserved=0 offset=0x0
+[   34.866162] nvdla_address[4] handle=9 reserved=0 offset=0x0
+[   34.866342] nvdla_address[5] handle=11 reserved=0 offset=0x0
+[   34.866557] nvdla_address[6] handle=13 reserved=0 offset=0x0
+[   34.866759] nvdla_address[7] handle=15 reserved=0 offset=0x0
+[   34.866981] nvdla_address[8] handle=17 reserved=0 offset=0x0
+[   34.867323] nvdla_blob[0] prime_fd=9 handle=3 size=4096 dma=0xc0002000 full_4096_bytes:
+[   34.867824] nvdla_blob 00000000: 06 00 07 00 05 00 ff ff ff ff ff ff ff ff 00 00
+[   34.868115] nvdla_blob 00000010: ff ff ff ff 00 00 ff ff ff ff ff ff 01 00 01 00
+[   34.868403] nvdla_blob 00000020: 00 00 09 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.870277] nvdla_blob 00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.870601] nvdla_blob 00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.870896] nvdla_blob 00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.871176] nvdla_blob 00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.871459] nvdla_blob 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.871708] nvdla_blob 00000080: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.871965] nvdla_blob 00000090: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.872214] nvdla_blob 000000a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.872467] nvdla_blob 000000b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.873709] nvdla_blob 000000c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.874037] nvdla_blob 000000d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.874324] nvdla_blob 000000e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.874612] nvdla_blob 000000f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.874903] nvdla_blob 00000100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.875208] nvdla_blob 00000110: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.875496] nvdla_blob 00000120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.875799] nvdla_blob 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.876093] nvdla_blob 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.876384] nvdla_blob 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.877750] nvdla_blob 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.878087] nvdla_blob 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.878371] nvdla_blob 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.878653] nvdla_blob 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.878951] nvdla_blob 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.879242] nvdla_blob 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.879534] nvdla_blob 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.879831] nvdla_blob 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.880120] nvdla_blob 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.880407] nvdla_blob 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.881677] nvdla_blob 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.882004] nvdla_blob 00000210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.882289] nvdla_blob 00000220: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.882571] nvdla_blob 00000230: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.882861] nvdla_blob 00000240: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.883149] nvdla_blob 00000250: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.883431] nvdla_blob 00000260: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.883713] nvdla_blob 00000270: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.884007] nvdla_blob 00000280: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.884295] nvdla_blob 00000290: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.885653] nvdla_blob 000002a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.885986] nvdla_blob 000002b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.886276] nvdla_blob 000002c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.886555] nvdla_blob 000002d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.886844] nvdla_blob 000002e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.887132] nvdla_blob 000002f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.887420] nvdla_blob 00000300: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.887710] nvdla_blob 00000310: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.888005] nvdla_blob 00000320: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.888295] nvdla_blob 00000330: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.889636] nvdla_blob 00000340: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.889969] nvdla_blob 00000350: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.890263] nvdla_blob 00000360: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.890555] nvdla_blob 00000370: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.890852] nvdla_blob 00000380: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.891142] nvdla_blob 00000390: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.891427] nvdla_blob 000003a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.891721] nvdla_blob 000003b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.892017] nvdla_blob 000003c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.892307] nvdla_blob 000003d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.893551] nvdla_blob 000003e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.893884] nvdla_blob 000003f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.894175] nvdla_blob 00000400: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.894488] nvdla_blob 00000410: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.894787] nvdla_blob 00000420: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.895090] nvdla_blob 00000430: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.895377] nvdla_blob 00000440: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.895668] nvdla_blob 00000450: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.895963] nvdla_blob 00000460: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.896259] nvdla_blob 00000470: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.897506] nvdla_blob 00000480: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.897843] nvdla_blob 00000490: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.898143] nvdla_blob 000004a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.898434] nvdla_blob 000004b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.898728] nvdla_blob 000004c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.899025] nvdla_blob 000004d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.899313] nvdla_blob 000004e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.899605] nvdla_blob 000004f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.899911] nvdla_blob 00000500: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.900209] nvdla_blob 00000510: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.900508] nvdla_blob 00000520: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.902051] nvdla_blob 00000530: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.902392] nvdla_blob 00000540: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.902683] nvdla_blob 00000550: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.902986] nvdla_blob 00000560: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.903277] nvdla_blob 00000570: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.903566] nvdla_blob 00000580: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.903833] nvdla_blob 00000590: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.904089] nvdla_blob 000005a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.904347] nvdla_blob 000005b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.905689] nvdla_blob 000005c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.906037] nvdla_blob 000005d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.906337] nvdla_blob 000005e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.906638] nvdla_blob 000005f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.906942] nvdla_blob 00000600: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.907238] nvdla_blob 00000610: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.907537] nvdla_blob 00000620: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.907850] nvdla_blob 00000630: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.908173] nvdla_blob 00000640: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.908470] nvdla_blob 00000650: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.909761] nvdla_blob 00000660: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.910107] nvdla_blob 00000670: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.910402] nvdla_blob 00000680: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.910699] nvdla_blob 00000690: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.910998] nvdla_blob 000006a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.911296] nvdla_blob 000006b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.911597] nvdla_blob 000006c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.911902] nvdla_blob 000006d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.912202] nvdla_blob 000006e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.913615] nvdla_blob 000006f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.914012] nvdla_blob 00000700: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.914328] nvdla_blob 00000710: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.914625] nvdla_blob 00000720: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.914928] nvdla_blob 00000730: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.915222] nvdla_blob 00000740: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.915515] nvdla_blob 00000750: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.915817] nvdla_blob 00000760: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.916113] nvdla_blob 00000770: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.916411] nvdla_blob 00000780: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.917978] nvdla_blob 00000790: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.918320] nvdla_blob 000007a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.918619] nvdla_blob 000007b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.918918] nvdla_blob 000007c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.919216] nvdla_blob 000007d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.919506] nvdla_blob 000007e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.919767] nvdla_blob 000007f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.920033] nvdla_blob 00000800: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.920295] nvdla_blob 00000810: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.921471] nvdla_blob 00000820: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.921822] nvdla_blob 00000830: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.922115] nvdla_blob 00000840: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.922406] nvdla_blob 00000850: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.922700] nvdla_blob 00000860: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.923002] nvdla_blob 00000870: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.923296] nvdla_blob 00000880: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.923590] nvdla_blob 00000890: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.923914] nvdla_blob 000008a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.924213] nvdla_blob 000008b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.924514] nvdla_blob 000008c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.925787] nvdla_blob 000008d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.926129] nvdla_blob 000008e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.926425] nvdla_blob 000008f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.926720] nvdla_blob 00000900: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.927031] nvdla_blob 00000910: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.927332] nvdla_blob 00000920: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.927635] nvdla_blob 00000930: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.927946] nvdla_blob 00000940: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.928252] nvdla_blob 00000950: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.930041] nvdla_blob 00000960: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.930430] nvdla_blob 00000970: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.930727] nvdla_blob 00000980: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.931034] nvdla_blob 00000990: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.931325] nvdla_blob 000009a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.931622] nvdla_blob 000009b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.931894] nvdla_blob 000009c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.932150] nvdla_blob 000009d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.932410] nvdla_blob 000009e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.933854] nvdla_blob 000009f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.934194] nvdla_blob 00000a00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.934488] nvdla_blob 00000a10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.934817] nvdla_blob 00000a20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.935113] nvdla_blob 00000a30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.935406] nvdla_blob 00000a40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.935698] nvdla_blob 00000a50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.935995] nvdla_blob 00000a60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.936299] nvdla_blob 00000a70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.937524] nvdla_blob 00000a80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.937878] nvdla_blob 00000a90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.938180] nvdla_blob 00000aa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.938481] nvdla_blob 00000ab0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.938778] nvdla_blob 00000ac0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.939091] nvdla_blob 00000ad0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.939384] nvdla_blob 00000ae0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.939679] nvdla_blob 00000af0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.939981] nvdla_blob 00000b00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.940283] nvdla_blob 00000b10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.941833] nvdla_blob 00000b20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.942172] nvdla_blob 00000b30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.942478] nvdla_blob 00000b40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.942783] nvdla_blob 00000b50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.943092] nvdla_blob 00000b60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.943384] nvdla_blob 00000b70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.943674] nvdla_blob 00000b80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.943972] nvdla_blob 00000b90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.944271] nvdla_blob 00000ba0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.945572] nvdla_blob 00000bb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.945920] nvdla_blob 00000bc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.946220] nvdla_blob 00000bd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.946519] nvdla_blob 00000be0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.946830] nvdla_blob 00000bf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.947125] nvdla_blob 00000c00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.947416] nvdla_blob 00000c10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.947707] nvdla_blob 00000c20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.948013] nvdla_blob 00000c30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.948312] nvdla_blob 00000c40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.949569] nvdla_blob 00000c50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.949911] nvdla_blob 00000c60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.950212] nvdla_blob 00000c70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.950509] nvdla_blob 00000c80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.950813] nvdla_blob 00000c90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.951104] nvdla_blob 00000ca0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.951394] nvdla_blob 00000cb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.951686] nvdla_blob 00000cc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.951996] nvdla_blob 00000cd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.952294] nvdla_blob 00000ce0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.953577] nvdla_blob 00000cf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.953920] nvdla_blob 00000d00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.954219] nvdla_blob 00000d10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.954531] nvdla_blob 00000d20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.954841] nvdla_blob 00000d30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.955236] nvdla_blob 00000d40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.955526] nvdla_blob 00000d50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.955837] nvdla_blob 00000d60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.956133] nvdla_blob 00000d70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.956419] nvdla_blob 00000d80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.958241] nvdla_blob 00000d90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.958624] nvdla_blob 00000da0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.958902] nvdla_blob 00000db0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.959166] nvdla_blob 00000dc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.959430] nvdla_blob 00000dd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.959685] nvdla_blob 00000de0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.959988] nvdla_blob 00000df0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.960282] nvdla_blob 00000e00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.961752] nvdla_blob 00000e10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.962103] nvdla_blob 00000e20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.962403] nvdla_blob 00000e30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.962704] nvdla_blob 00000e40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.963008] nvdla_blob 00000e50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.963301] nvdla_blob 00000e60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.963594] nvdla_blob 00000e70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.963900] nvdla_blob 00000e80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.964196] nvdla_blob 00000e90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.965409] nvdla_blob 00000ea0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.965756] nvdla_blob 00000eb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.966077] nvdla_blob 00000ec0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.966369] nvdla_blob 00000ed0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.966659] nvdla_blob 00000ee0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.966958] nvdla_blob 00000ef0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.967253] nvdla_blob 00000f00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.967550] nvdla_blob 00000f10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.967858] nvdla_blob 00000f20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.968159] nvdla_blob 00000f30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.968457] nvdla_blob 00000f40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.969840] nvdla_blob 00000f50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.970173] nvdla_blob 00000f60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.970475] nvdla_blob 00000f70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.970776] nvdla_blob 00000f80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.971079] nvdla_blob 00000f90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.971367] nvdla_blob 00000fa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.971657] nvdla_blob 00000fb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.971960] nvdla_blob 00000fc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.972250] nvdla_blob 00000fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.973595] nvdla_blob 00000fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.973969] nvdla_blob 00000ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.974353] nvdla_blob[1] prime_fd=19 handle=8 size=4096 dma=0xc0007000 full_4096_bytes:
+[   34.974691] nvdla_blob 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.975013] nvdla_blob 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.975307] nvdla_blob 00000020: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.975600] nvdla_blob 00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.975904] nvdla_blob 00000040: 00 40 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.976194] nvdla_blob 00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.976493] nvdla_blob 00000060: 00 42 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.978025] nvdla_blob 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.978361] nvdla_blob 00000080: 00 44 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.978659] nvdla_blob 00000090: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.978970] nvdla_blob 000000a0: 00 45 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.979270] nvdla_blob 000000b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.979569] nvdla_blob 000000c0: 00 46 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.979880] nvdla_blob 000000d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.980180] nvdla_blob 000000e0: 00 47 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.980481] nvdla_blob 000000f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.981687] nvdla_blob 00000100: 00 48 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.982032] nvdla_blob 00000110: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.982332] nvdla_blob 00000120: 80 48 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.982629] nvdla_blob 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.982936] nvdla_blob 00000140: 00 49 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.983236] nvdla_blob 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.983535] nvdla_blob 00000160: 80 49 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.983844] nvdla_blob 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.984139] nvdla_blob 00000180: 00 4a 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.984438] nvdla_blob 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.986026] nvdla_blob 000001a0: 80 4a 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.986369] nvdla_blob 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.986661] nvdla_blob 000001c0: 00 4b 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.987316] nvdla_blob 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.988152] nvdla_blob 000001e0: 80 4b 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.989695] nvdla_blob 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.990054] nvdla_blob 00000200: 00 4c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.990365] nvdla_blob 00000210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.990683] nvdla_blob 00000220: 40 4c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.991014] nvdla_blob 00000230: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.991330] nvdla_blob 00000240: 80 4c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.991654] nvdla_blob 00000250: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.991989] nvdla_blob 00000260: c0 4c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.992316] nvdla_blob 00000270: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.993599] nvdla_blob 00000280: 00 4d 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.993971] nvdla_blob 00000290: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.994298] nvdla_blob 000002a0: 40 4d 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.994621] nvdla_blob 000002b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.994958] nvdla_blob 000002c0: 80 4d 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.995285] nvdla_blob 000002d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.995614] nvdla_blob 000002e0: c0 4d 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.995953] nvdla_blob 000002f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.996278] nvdla_blob 00000300: 00 4e 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.997511] nvdla_blob 00000310: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.997879] nvdla_blob 00000320: 40 4e 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.998195] nvdla_blob 00000330: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.998514] nvdla_blob 00000340: 80 4e 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.998844] nvdla_blob 00000350: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.999170] nvdla_blob 00000360: c0 4e 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.999493] nvdla_blob 00000370: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   34.999835] nvdla_blob 00000380: 00 4f 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.000153] nvdla_blob 00000390: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.000480] nvdla_blob 000003a0: 40 4f 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.001986] nvdla_blob 000003b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.002360] nvdla_blob 000003c0: 80 4f 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.002679] nvdla_blob 000003d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.003008] nvdla_blob 000003e0: c0 4f 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.003321] nvdla_blob 000003f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.003637] nvdla_blob 00000400: 00 50 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.003968] nvdla_blob 00000410: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.004294] nvdla_blob 00000420: 20 50 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.005579] nvdla_blob 00000430: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.005956] nvdla_blob 00000440: 40 50 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.006284] nvdla_blob 00000450: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.006609] nvdla_blob 00000460: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.006952] nvdla_blob 00000470: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.007283] nvdla_blob 00000480: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.007605] nvdla_blob 00000490: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.007935] nvdla_blob 000004a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.008262] nvdla_blob 000004b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.009442] nvdla_blob 000004c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.009814] nvdla_blob 000004d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.010130] nvdla_blob 000004e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.010448] nvdla_blob 000004f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.010766] nvdla_blob 00000500: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.011090] nvdla_blob 00000510: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.011408] nvdla_blob 00000520: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.011733] nvdla_blob 00000530: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.012058] nvdla_blob 00000540: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.012386] nvdla_blob 00000550: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.013695] nvdla_blob 00000560: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.014068] nvdla_blob 00000570: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.014396] nvdla_blob 00000580: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.014720] nvdla_blob 00000590: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.015055] nvdla_blob 000005a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.015381] nvdla_blob 000005b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.015701] nvdla_blob 000005c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.016027] nvdla_blob 000005d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.016352] nvdla_blob 000005e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.017844] nvdla_blob 000005f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.018246] nvdla_blob 00000600: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.018582] nvdla_blob 00000610: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.018903] nvdla_blob 00000620: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.019215] nvdla_blob 00000630: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.019532] nvdla_blob 00000640: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.019858] nvdla_blob 00000650: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.020175] nvdla_blob 00000660: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.020550] nvdla_blob 00000670: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.021858] nvdla_blob 00000680: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.022180] nvdla_blob 00000690: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.022497] nvdla_blob 000006a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.022814] nvdla_blob 000006b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.023078] nvdla_blob 000006c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.023338] nvdla_blob 000006d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.023593] nvdla_blob 000006e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.023896] nvdla_blob 000006f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.024219] nvdla_blob 00000700: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.025509] nvdla_blob 00000710: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.025888] nvdla_blob 00000720: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.026206] nvdla_blob 00000730: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.026537] nvdla_blob 00000740: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.026872] nvdla_blob 00000750: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.027192] nvdla_blob 00000760: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.027525] nvdla_blob 00000770: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.027858] nvdla_blob 00000780: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.028185] nvdla_blob 00000790: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.028519] nvdla_blob 000007a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.029844] nvdla_blob 000007b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.030203] nvdla_blob 000007c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.030526] nvdla_blob 000007d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.030863] nvdla_blob 000007e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.031187] nvdla_blob 000007f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.031513] nvdla_blob 00000800: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.031847] nvdla_blob 00000810: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.032181] nvdla_blob 00000820: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.032505] nvdla_blob 00000830: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.033718] nvdla_blob 00000840: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.034090] nvdla_blob 00000850: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.034418] nvdla_blob 00000860: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.034751] nvdla_blob 00000870: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.035092] nvdla_blob 00000880: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.035416] nvdla_blob 00000890: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.035742] nvdla_blob 000008a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.036075] nvdla_blob 000008b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.036403] nvdla_blob 000008c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.037615] nvdla_blob 000008d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.037994] nvdla_blob 000008e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.038326] nvdla_blob 000008f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.038649] nvdla_blob 00000900: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.038996] nvdla_blob 00000910: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.039325] nvdla_blob 00000920: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.039641] nvdla_blob 00000930: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.039970] nvdla_blob 00000940: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.040283] nvdla_blob 00000950: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.041885] nvdla_blob 00000960: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.042292] nvdla_blob 00000970: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.042609] nvdla_blob 00000980: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.042940] nvdla_blob 00000990: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.043252] nvdla_blob 000009a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.043564] nvdla_blob 000009b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.043892] nvdla_blob 000009c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.044205] nvdla_blob 000009d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.045565] nvdla_blob 000009e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.045953] nvdla_blob 000009f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.046268] nvdla_blob 00000a00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.046582] nvdla_blob 00000a10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.046906] nvdla_blob 00000a20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.047218] nvdla_blob 00000a30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.047539] nvdla_blob 00000a40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.047860] nvdla_blob 00000a50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.048188] nvdla_blob 00000a60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.049438] nvdla_blob 00000a70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.049817] nvdla_blob 00000a80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.050134] nvdla_blob 00000a90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.050445] nvdla_blob 00000aa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.050760] nvdla_blob 00000ab0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.051092] nvdla_blob 00000ac0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.051407] nvdla_blob 00000ad0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.051722] nvdla_blob 00000ae0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.052063] nvdla_blob 00000af0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.052393] nvdla_blob 00000b00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.053650] nvdla_blob 00000b10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.054026] nvdla_blob 00000b20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.054353] nvdla_blob 00000b30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.054683] nvdla_blob 00000b40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.055020] nvdla_blob 00000b50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.055464] nvdla_blob 00000b60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.055782] nvdla_blob 00000b70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.056117] nvdla_blob 00000b80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.056416] nvdla_blob 00000b90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.057819] nvdla_blob 00000ba0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.058176] nvdla_blob 00000bb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.058500] nvdla_blob 00000bc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.058823] nvdla_blob 00000bd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.059142] nvdla_blob 00000be0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.059458] nvdla_blob 00000bf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.059775] nvdla_blob 00000c00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.060102] nvdla_blob 00000c10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.060440] nvdla_blob 00000c20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.061714] nvdla_blob 00000c30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.062084] nvdla_blob 00000c40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.062410] nvdla_blob 00000c50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.062736] nvdla_blob 00000c60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.063062] nvdla_blob 00000c70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.063389] nvdla_blob 00000c80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.063716] nvdla_blob 00000c90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.064058] nvdla_blob 00000ca0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.064383] nvdla_blob 00000cb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.065610] nvdla_blob 00000cc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.065981] nvdla_blob 00000cd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.066304] nvdla_blob 00000ce0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.066631] nvdla_blob 00000cf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.066967] nvdla_blob 00000d00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.067297] nvdla_blob 00000d10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.067626] nvdla_blob 00000d20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.067965] nvdla_blob 00000d30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.068292] nvdla_blob 00000d40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.069581] nvdla_blob 00000d50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.069988] nvdla_blob 00000d60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.070317] nvdla_blob 00000d70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.070645] nvdla_blob 00000d80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.070979] nvdla_blob 00000d90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.071303] nvdla_blob 00000da0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.071623] nvdla_blob 00000db0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.071963] nvdla_blob 00000dc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.072289] nvdla_blob 00000dd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.073583] nvdla_blob 00000de0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.073956] nvdla_blob 00000df0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.074283] nvdla_blob 00000e00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.074603] nvdla_blob 00000e10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.074941] nvdla_blob 00000e20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.075273] nvdla_blob 00000e30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.075599] nvdla_blob 00000e40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.075947] nvdla_blob 00000e50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.076270] nvdla_blob 00000e60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.077480] nvdla_blob 00000e70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.077845] nvdla_blob 00000e80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.078181] nvdla_blob 00000e90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.078506] nvdla_blob 00000ea0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.078833] nvdla_blob 00000eb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.079160] nvdla_blob 00000ec0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.079481] nvdla_blob 00000ed0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.079811] nvdla_blob 00000ee0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.080142] nvdla_blob 00000ef0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.080464] nvdla_blob 00000f00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.081735] nvdla_blob 00000f10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.082130] nvdla_blob 00000f20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.082452] nvdla_blob 00000f30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.082771] nvdla_blob 00000f40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.083109] nvdla_blob 00000f50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.083433] nvdla_blob 00000f60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.083753] nvdla_blob 00000f70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.084093] nvdla_blob 00000f80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.084418] nvdla_blob 00000f90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.085743] nvdla_blob 00000fa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.086127] nvdla_blob 00000fb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.086453] nvdla_blob 00000fc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.086781] nvdla_blob 00000fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.087106] nvdla_blob 00000fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.087429] nvdla_blob 00000ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.087757] nvdla_blob[2] prime_fd=7 handle=2 size=4096 dma=0xc0001000 full_4096_bytes:
+[   35.088127] nvdla_blob 00000000: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.088458] nvdla_blob 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.089994] nvdla_blob 00000020: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.090357] nvdla_blob 00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.090682] nvdla_blob 00000040: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.091021] nvdla_blob 00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.091348] nvdla_blob 00000060: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.091678] nvdla_blob 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.092012] nvdla_blob 00000080: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.092339] nvdla_blob 00000090: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.093536] nvdla_blob 000000a0: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.093903] nvdla_blob 000000b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.094225] nvdla_blob 000000c0: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.094546] nvdla_blob 000000d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.094884] nvdla_blob 000000e0: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.095208] nvdla_blob 000000f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.095533] nvdla_blob 00000100: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.095868] nvdla_blob 00000110: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.096193] nvdla_blob 00000120: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.097461] nvdla_blob 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.097843] nvdla_blob 00000140: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.098171] nvdla_blob 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.098488] nvdla_blob 00000160: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.098818] nvdla_blob 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.099089] nvdla_blob 00000180: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.099354] nvdla_blob 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.099607] nvdla_blob 000001a0: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.099884] nvdla_blob 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.100203] nvdla_blob 000001c0: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.101450] nvdla_blob 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.101837] nvdla_blob 000001e0: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.102102] nvdla_blob 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.102364] nvdla_blob 00000200: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.102652] nvdla_blob 00000210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.102936] nvdla_blob 00000220: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.103199] nvdla_blob 00000230: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.103463] nvdla_blob 00000240: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.103729] nvdla_blob 00000250: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.104051] nvdla_blob 00000260: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.104375] nvdla_blob 00000270: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.105923] nvdla_blob 00000280: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.106291] nvdla_blob 00000290: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.106612] nvdla_blob 000002a0: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.106940] nvdla_blob 000002b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.107256] nvdla_blob 000002c0: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.107570] nvdla_blob 000002d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.107901] nvdla_blob 000002e0: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.108216] nvdla_blob 000002f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.109491] nvdla_blob 00000300: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.109872] nvdla_blob 00000310: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.110142] nvdla_blob 00000320: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.110410] nvdla_blob 00000330: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.110679] nvdla_blob 00000340: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.110966] nvdla_blob 00000350: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.111235] nvdla_blob 00000360: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.111502] nvdla_blob 00000370: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.111769] nvdla_blob 00000380: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.112085] nvdla_blob 00000390: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.112411] nvdla_blob 000003a0: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.113783] nvdla_blob 000003b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.114166] nvdla_blob 000003c0: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.114490] nvdla_blob 000003d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.114821] nvdla_blob 000003e0: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.115157] nvdla_blob 000003f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.115474] nvdla_blob 00000400: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.115827] nvdla_blob 00000410: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.116172] nvdla_blob 00000420: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.116490] nvdla_blob 00000430: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.117728] nvdla_blob 00000440: 00 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.118099] nvdla_blob 00000450: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.118430] nvdla_blob 00000460: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.118759] nvdla_blob 00000470: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.119086] nvdla_blob 00000480: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.119409] nvdla_blob 00000490: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.119735] nvdla_blob 000004a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.120065] nvdla_blob 000004b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.120386] nvdla_blob 000004c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.121598] nvdla_blob 000004d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.121969] nvdla_blob 000004e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.122300] nvdla_blob 000004f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.122630] nvdla_blob 00000500: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.122981] nvdla_blob 00000510: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.123311] nvdla_blob 00000520: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.123631] nvdla_blob 00000530: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.123969] nvdla_blob 00000540: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.124285] nvdla_blob 00000550: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.124606] nvdla_blob 00000560: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.126240] nvdla_blob 00000570: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.126605] nvdla_blob 00000580: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.126933] nvdla_blob 00000590: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.127249] nvdla_blob 000005a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.127558] nvdla_blob 000005b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.127884] nvdla_blob 000005c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.128196] nvdla_blob 000005d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.129368] nvdla_blob 000005e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.129737] nvdla_blob 000005f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.130079] nvdla_blob 00000600: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.130406] nvdla_blob 00000610: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.130732] nvdla_blob 00000620: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.131075] nvdla_blob 00000630: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.131396] nvdla_blob 00000640: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.131718] nvdla_blob 00000650: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.132057] nvdla_blob 00000660: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.132383] nvdla_blob 00000670: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.133724] nvdla_blob 00000680: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.134096] nvdla_blob 00000690: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.134427] nvdla_blob 000006a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.134748] nvdla_blob 000006b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.135092] nvdla_blob 000006c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.135422] nvdla_blob 000006d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.135752] nvdla_blob 000006e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.136093] nvdla_blob 000006f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.136418] nvdla_blob 00000700: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.137673] nvdla_blob 00000710: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.138048] nvdla_blob 00000720: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.138374] nvdla_blob 00000730: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.138700] nvdla_blob 00000740: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.139042] nvdla_blob 00000750: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.139365] nvdla_blob 00000760: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.139688] nvdla_blob 00000770: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.140025] nvdla_blob 00000780: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.140353] nvdla_blob 00000790: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.140678] nvdla_blob 000007a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.141016] nvdla_blob 000007b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.143095] nvdla_blob 000007c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.143561] nvdla_blob 000007d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.143896] nvdla_blob 000007e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.144157] nvdla_blob 000007f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.144417] nvdla_blob 00000800: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.146015] nvdla_blob 00000810: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.146436] nvdla_blob 00000820: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.146754] nvdla_blob 00000830: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.147086] nvdla_blob 00000840: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.147411] nvdla_blob 00000850: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.147733] nvdla_blob 00000860: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.148076] nvdla_blob 00000870: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.148401] nvdla_blob 00000880: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.150171] nvdla_blob 00000890: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.150599] nvdla_blob 000008a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.150954] nvdla_blob 000008b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.151241] nvdla_blob 000008c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.151518] nvdla_blob 000008d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.151817] nvdla_blob 000008e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.152121] nvdla_blob 000008f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.152448] nvdla_blob 00000900: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.154182] nvdla_blob 00000910: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.154613] nvdla_blob 00000920: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.154973] nvdla_blob 00000930: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.155852] nvdla_blob 00000940: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.156184] nvdla_blob 00000950: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.157902] nvdla_blob 00000960: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.158291] nvdla_blob 00000970: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.158553] nvdla_blob 00000980: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.158833] nvdla_blob 00000990: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.159157] nvdla_blob 000009a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.159508] nvdla_blob 000009b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.159876] nvdla_blob 000009c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.160201] nvdla_blob 000009d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.161846] nvdla_blob 000009e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.162241] nvdla_blob 000009f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.162554] nvdla_blob 00000a00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.162883] nvdla_blob 00000a10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.163160] nvdla_blob 00000a20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.163422] nvdla_blob 00000a30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.163683] nvdla_blob 00000a40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.163957] nvdla_blob 00000a50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.164278] nvdla_blob 00000a60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.165641] nvdla_blob 00000a70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.166016] nvdla_blob 00000a80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.166338] nvdla_blob 00000a90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.166658] nvdla_blob 00000aa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.166980] nvdla_blob 00000ab0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.167252] nvdla_blob 00000ac0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.167513] nvdla_blob 00000ad0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.167779] nvdla_blob 00000ae0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.168069] nvdla_blob 00000af0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.168393] nvdla_blob 00000b00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.168731] nvdla_blob 00000b10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.169063] nvdla_blob 00000b20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.169401] nvdla_blob 00000b30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.171824] nvdla_blob 00000b40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.172195] nvdla_blob 00000b50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.172458] nvdla_blob 00000b60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.173744] nvdla_blob 00000b70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.174161] nvdla_blob 00000b80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.174429] nvdla_blob 00000b90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.174695] nvdla_blob 00000ba0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.174984] nvdla_blob 00000bb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.175310] nvdla_blob 00000bc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.175637] nvdla_blob 00000bd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.175975] nvdla_blob 00000be0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.176296] nvdla_blob 00000bf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.177904] nvdla_blob 00000c00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.178314] nvdla_blob 00000c10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.178635] nvdla_blob 00000c20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.178974] nvdla_blob 00000c30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.179228] nvdla_blob 00000c40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.179492] nvdla_blob 00000c50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.179747] nvdla_blob 00000c60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.180065] nvdla_blob 00000c70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.180404] nvdla_blob 00000c80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.182044] nvdla_blob 00000c90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.182430] nvdla_blob 00000ca0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.182755] nvdla_blob 00000cb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.183083] nvdla_blob 00000cc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.183349] nvdla_blob 00000cd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.183617] nvdla_blob 00000ce0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.183887] nvdla_blob 00000cf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.184154] nvdla_blob 00000d00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.184422] nvdla_blob 00000d10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.186148] nvdla_blob 00000d20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.186559] nvdla_blob 00000d30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.186892] nvdla_blob 00000d40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.187211] nvdla_blob 00000d50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.187527] nvdla_blob 00000d60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.187853] nvdla_blob 00000d70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.188166] nvdla_blob 00000d80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.188484] nvdla_blob 00000d90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.189968] nvdla_blob 00000da0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.190333] nvdla_blob 00000db0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.190654] nvdla_blob 00000dc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.190993] nvdla_blob 00000dd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.191315] nvdla_blob 00000de0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.191634] nvdla_blob 00000df0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.191966] nvdla_blob 00000e00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.192295] nvdla_blob 00000e10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.192647] nvdla_blob 00000e20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.194177] nvdla_blob 00000e30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.194539] nvdla_blob 00000e40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.194862] nvdla_blob 00000e50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.195182] nvdla_blob 00000e60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.195504] nvdla_blob 00000e70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.195836] nvdla_blob 00000e80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.196159] nvdla_blob 00000e90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.196477] nvdla_blob 00000ea0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.197651] nvdla_blob 00000eb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.198022] nvdla_blob 00000ec0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.198352] nvdla_blob 00000ed0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.198675] nvdla_blob 00000ee0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.199015] nvdla_blob 00000ef0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.199343] nvdla_blob 00000f00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.199664] nvdla_blob 00000f10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.199990] nvdla_blob 00000f20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.200319] nvdla_blob 00000f30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.201805] nvdla_blob 00000f40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.202185] nvdla_blob 00000f50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.202505] nvdla_blob 00000f60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.202842] nvdla_blob 00000f70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.203174] nvdla_blob 00000f80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.203510] nvdla_blob 00000f90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.203856] nvdla_blob 00000fa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.204190] nvdla_blob 00000fb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.205674] nvdla_blob 00000fc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.206074] nvdla_blob 00000fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.206336] nvdla_blob 00000fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.206601] nvdla_blob 00000ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.206890] nvdla_blob[3] prime_fd=21 handle=9 size=4096 dma=0xc0008000 full_4096_bytes:
+[   35.207198] nvdla_blob 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.207523] nvdla_blob 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.207869] nvdla_blob 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.208201] nvdla_blob 00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.209443] nvdla_blob 00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.209820] nvdla_blob 00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.210132] nvdla_blob 00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.210447] nvdla_blob 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.210761] nvdla_blob 00000080: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.211068] nvdla_blob 00000090: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.211384] nvdla_blob 000000a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.211699] nvdla_blob 000000b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.212035] nvdla_blob 000000c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.212362] nvdla_blob 000000d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.213883] nvdla_blob 000000e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.214239] nvdla_blob 000000f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.214503] nvdla_blob 00000100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.214785] nvdla_blob 00000110: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.215063] nvdla_blob 00000120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.215375] nvdla_blob 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.215687] nvdla_blob 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.215957] nvdla_blob 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.216229] nvdla_blob 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.216546] nvdla_blob 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.218232] nvdla_blob 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.218552] nvdla_blob 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.218877] nvdla_blob 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.219164] nvdla_blob 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.219431] nvdla_blob 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.219697] nvdla_blob 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.219996] nvdla_blob 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.220317] nvdla_blob 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.221523] nvdla_blob 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.221894] nvdla_blob 00000210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.222227] nvdla_blob 00000220: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.222556] nvdla_blob 00000230: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.222887] nvdla_blob 00000240: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.223212] nvdla_blob 00000250: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.223540] nvdla_blob 00000260: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.223875] nvdla_blob 00000270: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.224199] nvdla_blob 00000280: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.225417] nvdla_blob 00000290: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.225777] nvdla_blob 000002a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.226112] nvdla_blob 000002b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.226430] nvdla_blob 000002c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.226747] nvdla_blob 000002d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.227084] nvdla_blob 000002e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.227399] nvdla_blob 000002f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.227720] nvdla_blob 00000300: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.228038] nvdla_blob 00000310: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.228370] nvdla_blob 00000320: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.229900] nvdla_blob 00000330: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.230274] nvdla_blob 00000340: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.230589] nvdla_blob 00000350: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.230917] nvdla_blob 00000360: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.231212] nvdla_blob 00000370: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.231480] nvdla_blob 00000380: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.231740] nvdla_blob 00000390: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.232014] nvdla_blob 000003a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.232310] nvdla_blob 000003b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.233969] nvdla_blob 000003c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.234293] nvdla_blob 000003d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.234553] nvdla_blob 000003e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.234825] nvdla_blob 000003f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.235095] nvdla_blob 00000400: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.235434] nvdla_blob 00000410: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.235749] nvdla_blob 00000420: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.236074] nvdla_blob 00000430: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.236404] nvdla_blob 00000440: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.237897] nvdla_blob 00000450: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.238267] nvdla_blob 00000460: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.238581] nvdla_blob 00000470: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.238907] nvdla_blob 00000480: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.239230] nvdla_blob 00000490: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.239549] nvdla_blob 000004a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.239873] nvdla_blob 000004b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.240191] nvdla_blob 000004c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.241484] nvdla_blob 000004d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.241867] nvdla_blob 000004e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.242184] nvdla_blob 000004f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.242503] nvdla_blob 00000500: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.242828] nvdla_blob 00000510: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.243151] nvdla_blob 00000520: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.243480] nvdla_blob 00000530: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.243845] nvdla_blob 00000540: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.244169] nvdla_blob 00000550: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.244494] nvdla_blob 00000560: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.245841] nvdla_blob 00000570: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.246201] nvdla_blob 00000580: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.246471] nvdla_blob 00000590: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.246735] nvdla_blob 000005a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.247016] nvdla_blob 000005b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.247309] nvdla_blob 000005c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.247632] nvdla_blob 000005d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.247965] nvdla_blob 000005e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.248294] nvdla_blob 000005f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.249539] nvdla_blob 00000600: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.249902] nvdla_blob 00000610: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.250236] nvdla_blob 00000620: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.250565] nvdla_blob 00000630: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.250899] nvdla_blob 00000640: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.251233] nvdla_blob 00000650: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.251559] nvdla_blob 00000660: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.251884] nvdla_blob 00000670: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.252209] nvdla_blob 00000680: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.253395] nvdla_blob 00000690: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.253749] nvdla_blob 000006a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.254071] nvdla_blob 000006b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.254401] nvdla_blob 000006c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.254723] nvdla_blob 000006d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.255055] nvdla_blob 000006e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.255342] nvdla_blob 000006f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.255656] nvdla_blob 00000700: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.256080] nvdla_blob 00000710: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.256406] nvdla_blob 00000720: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.257944] nvdla_blob 00000730: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.258307] nvdla_blob 00000740: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.258618] nvdla_blob 00000750: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.258945] nvdla_blob 00000760: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.259245] nvdla_blob 00000770: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.259512] nvdla_blob 00000780: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.259775] nvdla_blob 00000790: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.260052] nvdla_blob 000007a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.260373] nvdla_blob 000007b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.261597] nvdla_blob 000007c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.261961] nvdla_blob 000007d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.262293] nvdla_blob 000007e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.262617] nvdla_blob 000007f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.262951] nvdla_blob 00000800: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.263276] nvdla_blob 00000810: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.263604] nvdla_blob 00000820: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.263946] nvdla_blob 00000830: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.264280] nvdla_blob 00000840: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.265535] nvdla_blob 00000850: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.265910] nvdla_blob 00000860: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.266241] nvdla_blob 00000870: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.266564] nvdla_blob 00000880: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.266904] nvdla_blob 00000890: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.267236] nvdla_blob 000008a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.267565] nvdla_blob 000008b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.267905] nvdla_blob 000008c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.268236] nvdla_blob 000008d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.269442] nvdla_blob 000008e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.269810] nvdla_blob 000008f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.270134] nvdla_blob 00000900: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.270449] nvdla_blob 00000910: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.270762] nvdla_blob 00000920: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.271085] nvdla_blob 00000930: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.271400] nvdla_blob 00000940: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.271707] nvdla_blob 00000950: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.272036] nvdla_blob 00000960: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.272369] nvdla_blob 00000970: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.273841] nvdla_blob 00000980: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.274214] nvdla_blob 00000990: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.274530] nvdla_blob 000009a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.274867] nvdla_blob 000009b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.275193] nvdla_blob 000009c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.275464] nvdla_blob 000009d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.275733] nvdla_blob 000009e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.276009] nvdla_blob 000009f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.276284] nvdla_blob 00000a00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.277611] nvdla_blob 00000a10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.278001] nvdla_blob 00000a20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.278315] nvdla_blob 00000a30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.278637] nvdla_blob 00000a40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.278961] nvdla_blob 00000a50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.279280] nvdla_blob 00000a60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.279599] nvdla_blob 00000a70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.279926] nvdla_blob 00000a80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.280255] nvdla_blob 00000a90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.281472] nvdla_blob 00000aa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.281853] nvdla_blob 00000ab0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.282179] nvdla_blob 00000ac0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.282512] nvdla_blob 00000ad0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.282857] nvdla_blob 00000ae0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.283182] nvdla_blob 00000af0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.283507] nvdla_blob 00000b00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.283847] nvdla_blob 00000b10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.284173] nvdla_blob 00000b20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.284502] nvdla_blob 00000b30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.285833] nvdla_blob 00000b40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.286202] nvdla_blob 00000b50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.286530] nvdla_blob 00000b60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.286863] nvdla_blob 00000b70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.287187] nvdla_blob 00000b80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.287455] nvdla_blob 00000b90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.287722] nvdla_blob 00000ba0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.288000] nvdla_blob 00000bb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.288270] nvdla_blob 00000bc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.289549] nvdla_blob 00000bd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.289924] nvdla_blob 00000be0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.290256] nvdla_blob 00000bf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.290587] nvdla_blob 00000c00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.290921] nvdla_blob 00000c10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.291247] nvdla_blob 00000c20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.291572] nvdla_blob 00000c30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.291906] nvdla_blob 00000c40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.292230] nvdla_blob 00000c50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.293522] nvdla_blob 00000c60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.293895] nvdla_blob 00000c70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.294223] nvdla_blob 00000c80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.294560] nvdla_blob 00000c90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.294899] nvdla_blob 00000ca0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.295225] nvdla_blob 00000cb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.295555] nvdla_blob 00000cc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.295891] nvdla_blob 00000cd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.296218] nvdla_blob 00000ce0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.297648] nvdla_blob 00000cf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.298027] nvdla_blob 00000d00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.298380] nvdla_blob 00000d10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.298698] nvdla_blob 00000d20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.299033] nvdla_blob 00000d30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.299351] nvdla_blob 00000d40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.299671] nvdla_blob 00000d50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.300006] nvdla_blob 00000d60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.300330] nvdla_blob 00000d70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.301630] nvdla_blob 00000d80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.302004] nvdla_blob 00000d90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.302342] nvdla_blob 00000da0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.302672] nvdla_blob 00000db0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.303015] nvdla_blob 00000dc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.303341] nvdla_blob 00000dd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.303668] nvdla_blob 00000de0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.304003] nvdla_blob 00000df0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.304335] nvdla_blob 00000e00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.305639] nvdla_blob 00000e10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.306022] nvdla_blob 00000e20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.306350] nvdla_blob 00000e30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.306676] nvdla_blob 00000e40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.307013] nvdla_blob 00000e50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.307343] nvdla_blob 00000e60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.307675] nvdla_blob 00000e70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.308031] nvdla_blob 00000e80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.308361] nvdla_blob 00000e90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.309629] nvdla_blob 00000ea0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.310013] nvdla_blob 00000eb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.310328] nvdla_blob 00000ec0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.310642] nvdla_blob 00000ed0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.310970] nvdla_blob 00000ee0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.311282] nvdla_blob 00000ef0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.311610] nvdla_blob 00000f00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.311948] nvdla_blob 00000f10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.312280] nvdla_blob 00000f20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.313670] nvdla_blob 00000f30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.314048] nvdla_blob 00000f40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.314384] nvdla_blob 00000f50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.314713] nvdla_blob 00000f60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.315045] nvdla_blob 00000f70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.315375] nvdla_blob 00000f80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.315704] nvdla_blob 00000f90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.316039] nvdla_blob 00000fa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.316366] nvdla_blob 00000fb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.317714] nvdla_blob 00000fc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.318122] nvdla_blob 00000fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.318453] nvdla_blob 00000fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.318772] nvdla_blob 00000ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.319118] nvdla_blob[7] prime_fd=15 handle=6 size=4096 dma=0xc0005000 full_4096_bytes:
+[   35.319483] nvdla_blob 00000000: 00 00 01 00 00 00 00 00 60 04 00 00 07 00 05 00
+[   35.319830] nvdla_blob 00000010: 01 00 00 00 e0 00 00 00 60 04 00 00 00 00 00 00
+[   35.320158] nvdla_blob 00000020: 00 00 02 00 00 00 00 00 60 04 00 00 07 00 05 00
+[   35.320486] nvdla_blob 00000030: 01 00 00 00 e0 00 00 00 60 04 00 00 00 00 00 00
+[   35.322094] nvdla_blob 00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.322482] nvdla_blob 00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.322818] nvdla_blob 00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.323143] nvdla_blob 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.323474] nvdla_blob 00000080: 00 00 03 00 00 00 00 00 60 04 00 00 07 00 05 00
+[   35.323812] nvdla_blob 00000090: 01 00 00 00 e0 00 00 00 60 04 00 00 00 00 00 00
+[   35.324147] nvdla_blob 000000a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.324453] nvdla_blob 000000b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.326655] nvdla_blob 000000c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.327296] nvdla_blob 000000d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.327619] nvdla_blob 000000e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.327930] nvdla_blob 000000f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.328253] nvdla_blob 00000100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.329455] nvdla_blob 00000110: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.329822] nvdla_blob 00000120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.330138] nvdla_blob 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.330433] nvdla_blob 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.330704] nvdla_blob 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.330984] nvdla_blob 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.331261] nvdla_blob 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.331586] nvdla_blob 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.331914] nvdla_blob 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.332244] nvdla_blob 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.333630] nvdla_blob 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.334005] nvdla_blob 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.334331] nvdla_blob 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.334653] nvdla_blob 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.334988] nvdla_blob 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.335318] nvdla_blob 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.335641] nvdla_blob 00000210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.335974] nvdla_blob 00000220: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.336303] nvdla_blob 00000230: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.337544] nvdla_blob 00000240: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.337917] nvdla_blob 00000250: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.338246] nvdla_blob 00000260: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.338571] nvdla_blob 00000270: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.338905] nvdla_blob 00000280: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.339236] nvdla_blob 00000290: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.339556] nvdla_blob 000002a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.339894] nvdla_blob 000002b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.340218] nvdla_blob 000002c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.341458] nvdla_blob 000002d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.341765] nvdla_blob 000002e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.342046] nvdla_blob 000002f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.342314] nvdla_blob 00000300: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.342606] nvdla_blob 00000310: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.342890] nvdla_blob 00000320: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.343164] nvdla_blob 00000330: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.343463] nvdla_blob 00000340: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.343782] nvdla_blob 00000350: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.344114] nvdla_blob 00000360: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.344437] nvdla_blob 00000370: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.346040] nvdla_blob 00000380: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.346408] nvdla_blob 00000390: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.346719] nvdla_blob 000003a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.347048] nvdla_blob 000003b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.347365] nvdla_blob 000003c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.347622] nvdla_blob 000003d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.347898] nvdla_blob 000003e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.348156] nvdla_blob 000003f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.348429] nvdla_blob 00000400: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.349650] nvdla_blob 00000410: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.350021] nvdla_blob 00000420: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.350350] nvdla_blob 00000430: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.350676] nvdla_blob 00000440: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.351011] nvdla_blob 00000450: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.351341] nvdla_blob 00000460: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.351668] nvdla_blob 00000470: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.352002] nvdla_blob 00000480: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.352331] nvdla_blob 00000490: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.353522] nvdla_blob 000004a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.353893] nvdla_blob 000004b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.354223] nvdla_blob 000004c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.354557] nvdla_blob 000004d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.354893] nvdla_blob 000004e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.355220] nvdla_blob 000004f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.355547] nvdla_blob 00000500: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.355884] nvdla_blob 00000510: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.356335] nvdla_blob 00000520: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.357633] nvdla_blob 00000530: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.358010] nvdla_blob 00000540: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.358326] nvdla_blob 00000550: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.358638] nvdla_blob 00000560: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.358959] nvdla_blob 00000570: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.359271] nvdla_blob 00000580: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.359590] nvdla_blob 00000590: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.359913] nvdla_blob 000005a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.360238] nvdla_blob 000005b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.361504] nvdla_blob 000005c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.361885] nvdla_blob 000005d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.362208] nvdla_blob 000005e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.362533] nvdla_blob 000005f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.362871] nvdla_blob 00000600: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.363217] nvdla_blob 00000610: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.363542] nvdla_blob 00000620: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.363867] nvdla_blob 00000630: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.364190] nvdla_blob 00000640: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.365481] nvdla_blob 00000650: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.365872] nvdla_blob 00000660: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.366200] nvdla_blob 00000670: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.366522] nvdla_blob 00000680: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.366861] nvdla_blob 00000690: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.367192] nvdla_blob 000006a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.367523] nvdla_blob 000006b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.367851] nvdla_blob 000006c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.368185] nvdla_blob 000006d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.369399] nvdla_blob 000006e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.369768] nvdla_blob 000006f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.370110] nvdla_blob 00000700: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.370441] nvdla_blob 00000710: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.370770] nvdla_blob 00000720: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.371122] nvdla_blob 00000730: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.371438] nvdla_blob 00000740: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.371754] nvdla_blob 00000750: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.372092] nvdla_blob 00000760: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.372424] nvdla_blob 00000770: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.373771] nvdla_blob 00000780: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.374145] nvdla_blob 00000790: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.374477] nvdla_blob 000007a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.374810] nvdla_blob 000007b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.375136] nvdla_blob 000007c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.375458] nvdla_blob 000007d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.375781] nvdla_blob 000007e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.376111] nvdla_blob 000007f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.376429] nvdla_blob 00000800: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.377935] nvdla_blob 00000810: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.378309] nvdla_blob 00000820: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.378630] nvdla_blob 00000830: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.378963] nvdla_blob 00000840: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.379293] nvdla_blob 00000850: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.379624] nvdla_blob 00000860: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.379960] nvdla_blob 00000870: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.380282] nvdla_blob 00000880: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.381726] nvdla_blob 00000890: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.382106] nvdla_blob 000008a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.382437] nvdla_blob 000008b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.382765] nvdla_blob 000008c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.383091] nvdla_blob 000008d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.383422] nvdla_blob 000008e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.383747] nvdla_blob 000008f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.384085] nvdla_blob 00000900: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.384424] nvdla_blob 00000910: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.385717] nvdla_blob 00000920: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.386094] nvdla_blob 00000930: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.386423] nvdla_blob 00000940: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.386743] nvdla_blob 00000950: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.387086] nvdla_blob 00000960: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.387420] nvdla_blob 00000970: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.387751] nvdla_blob 00000980: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.388084] nvdla_blob 00000990: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.388413] nvdla_blob 000009a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.389659] nvdla_blob 000009b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.390026] nvdla_blob 000009c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.390353] nvdla_blob 000009d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.390682] nvdla_blob 000009e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.391021] nvdla_blob 000009f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.391348] nvdla_blob 00000a00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.391673] nvdla_blob 00000a10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.392014] nvdla_blob 00000a20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.392346] nvdla_blob 00000a30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.393712] nvdla_blob 00000a40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.394099] nvdla_blob 00000a50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.394429] nvdla_blob 00000a60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.394762] nvdla_blob 00000a70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.395098] nvdla_blob 00000a80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.395429] nvdla_blob 00000a90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.395754] nvdla_blob 00000aa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.396091] nvdla_blob 00000ab0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.396414] nvdla_blob 00000ac0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.397937] nvdla_blob 00000ad0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.398303] nvdla_blob 00000ae0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.398623] nvdla_blob 00000af0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.398950] nvdla_blob 00000b00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.399261] nvdla_blob 00000b10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.399544] nvdla_blob 00000b20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.399819] nvdla_blob 00000b30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.400088] nvdla_blob 00000b40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.400359] nvdla_blob 00000b50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.401624] nvdla_blob 00000b60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.402002] nvdla_blob 00000b70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.402329] nvdla_blob 00000b80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.402656] nvdla_blob 00000b90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.402996] nvdla_blob 00000ba0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.403321] nvdla_blob 00000bb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.403647] nvdla_blob 00000bc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.403979] nvdla_blob 00000bd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.404303] nvdla_blob 00000be0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.405569] nvdla_blob 00000bf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.405970] nvdla_blob 00000c00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.406318] nvdla_blob 00000c10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.406625] nvdla_blob 00000c20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.406953] nvdla_blob 00000c30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.407271] nvdla_blob 00000c40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.407591] nvdla_blob 00000c50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.407910] nvdla_blob 00000c60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.408235] nvdla_blob 00000c70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.409702] nvdla_blob 00000c80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.410084] nvdla_blob 00000c90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.410414] nvdla_blob 00000ca0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.410747] nvdla_blob 00000cb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.411087] nvdla_blob 00000cc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.411415] nvdla_blob 00000cd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.411741] nvdla_blob 00000ce0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.412078] nvdla_blob 00000cf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.412408] nvdla_blob 00000d00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.414240] nvdla_blob 00000d10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.414625] nvdla_blob 00000d20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.414954] nvdla_blob 00000d30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.415273] nvdla_blob 00000d40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.415573] nvdla_blob 00000d50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.415843] nvdla_blob 00000d60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.416109] nvdla_blob 00000d70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.416375] nvdla_blob 00000d80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.417746] nvdla_blob 00000d90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.418069] nvdla_blob 00000da0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.418332] nvdla_blob 00000db0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.418605] nvdla_blob 00000dc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.418930] nvdla_blob 00000dd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.419247] nvdla_blob 00000de0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.419559] nvdla_blob 00000df0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.419910] nvdla_blob 00000e00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.420237] nvdla_blob 00000e10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.421570] nvdla_blob 00000e20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.421941] nvdla_blob 00000e30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.422265] nvdla_blob 00000e40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.422589] nvdla_blob 00000e50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.422912] nvdla_blob 00000e60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.423235] nvdla_blob 00000e70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.423553] nvdla_blob 00000e80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.423875] nvdla_blob 00000e90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.424196] nvdla_blob 00000ea0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.425996] nvdla_blob 00000eb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.426412] nvdla_blob 00000ec0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.426721] nvdla_blob 00000ed0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.427051] nvdla_blob 00000ee0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.427366] nvdla_blob 00000ef0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.427649] nvdla_blob 00000f00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.427972] nvdla_blob 00000f10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.428272] nvdla_blob 00000f20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.429760] nvdla_blob 00000f30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.430140] nvdla_blob 00000f40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.430471] nvdla_blob 00000f50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.430800] nvdla_blob 00000f60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.431134] nvdla_blob 00000f70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.431450] nvdla_blob 00000f80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.431770] nvdla_blob 00000f90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.432101] nvdla_blob 00000fa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.432429] nvdla_blob 00000fb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.433713] nvdla_blob 00000fc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.434089] nvdla_blob 00000fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.434419] nvdla_blob 00000fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.434745] nvdla_blob 00000ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.435087] nvdla_blob[8] prime_fd=17 handle=7 size=4096 dma=0xc0006000 full_4096_bytes:
+[   35.435447] nvdla_blob 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.435777] nvdla_blob 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.436114] nvdla_blob 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.436424] nvdla_blob 00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.437634] nvdla_blob 00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.438001] nvdla_blob 00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.438319] nvdla_blob 00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.438633] nvdla_blob 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.438954] nvdla_blob 00000080: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.439274] nvdla_blob 00000090: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.439603] nvdla_blob 000000a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.439929] nvdla_blob 000000b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.440242] nvdla_blob 000000c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.441956] nvdla_blob 000000d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.442364] nvdla_blob 000000e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.442662] nvdla_blob 000000f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.442951] nvdla_blob 00000100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.443225] nvdla_blob 00000110: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.443496] nvdla_blob 00000120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.443825] nvdla_blob 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.444147] nvdla_blob 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.444458] nvdla_blob 00000150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.446099] nvdla_blob 00000160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.446476] nvdla_blob 00000170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.446773] nvdla_blob 00000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.447054] nvdla_blob 00000190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.447329] nvdla_blob 000001a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.447616] nvdla_blob 000001b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.447889] nvdla_blob 000001c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.448151] nvdla_blob 000001d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.448412] nvdla_blob 000001e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.449586] nvdla_blob 000001f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.449947] nvdla_blob 00000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.450285] nvdla_blob 00000210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.450616] nvdla_blob 00000220: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.450952] nvdla_blob 00000230: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.451281] nvdla_blob 00000240: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.451605] nvdla_blob 00000250: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.451947] nvdla_blob 00000260: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.452275] nvdla_blob 00000270: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.453478] nvdla_blob 00000280: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.453850] nvdla_blob 00000290: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.454184] nvdla_blob 000002a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.454510] nvdla_blob 000002b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.454865] nvdla_blob 000002c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.455197] nvdla_blob 000002d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.455529] nvdla_blob 000002e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.455862] nvdla_blob 000002f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.456186] nvdla_blob 00000300: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.457592] nvdla_blob 00000310: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.457969] nvdla_blob 00000320: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.458280] nvdla_blob 00000330: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.458596] nvdla_blob 00000340: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.458940] nvdla_blob 00000350: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.459248] nvdla_blob 00000360: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.459568] nvdla_blob 00000370: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.459897] nvdla_blob 00000380: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.460217] nvdla_blob 00000390: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.461937] nvdla_blob 000003a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.462338] nvdla_blob 000003b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.462672] nvdla_blob 000003c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.463016] nvdla_blob 000003d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.463344] nvdla_blob 000003e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.463665] nvdla_blob 000003f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.463998] nvdla_blob 00000400: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.464325] nvdla_blob 00000410: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.465763] nvdla_blob 00000420: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.466138] nvdla_blob 00000430: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.466466] nvdla_blob 00000440: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.466799] nvdla_blob 00000450: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.467120] nvdla_blob 00000460: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.467435] nvdla_blob 00000470: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.467749] nvdla_blob 00000480: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.468075] nvdla_blob 00000490: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.468402] nvdla_blob 000004a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.469599] nvdla_blob 000004b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.469977] nvdla_blob 000004c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.470308] nvdla_blob 000004d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.470638] nvdla_blob 000004e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.470994] nvdla_blob 000004f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.471322] nvdla_blob 00000500: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.471672] nvdla_blob 00000510: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.472003] nvdla_blob 00000520: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.472327] nvdla_blob 00000530: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.473642] nvdla_blob 00000540: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.474017] nvdla_blob 00000550: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.474346] nvdla_blob 00000560: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.474678] nvdla_blob 00000570: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.475014] nvdla_blob 00000580: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.475339] nvdla_blob 00000590: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.475670] nvdla_blob 000005a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.476005] nvdla_blob 000005b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.476326] nvdla_blob 000005c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.477780] nvdla_blob 000005d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.478206] nvdla_blob 000005e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.478514] nvdla_blob 000005f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.478835] nvdla_blob 00000600: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.479151] nvdla_blob 00000610: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.479467] nvdla_blob 00000620: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.479811] nvdla_blob 00000630: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.480139] nvdla_blob 00000640: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.480463] nvdla_blob 00000650: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.482065] nvdla_blob 00000660: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.482432] nvdla_blob 00000670: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.482749] nvdla_blob 00000680: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.483071] nvdla_blob 00000690: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.483394] nvdla_blob 000006a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.483718] nvdla_blob 000006b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.484054] nvdla_blob 000006c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.484383] nvdla_blob 000006d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.485543] nvdla_blob 000006e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.485910] nvdla_blob 000006f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.486234] nvdla_blob 00000700: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.486556] nvdla_blob 00000710: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.486891] nvdla_blob 00000720: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.487217] nvdla_blob 00000730: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.487544] nvdla_blob 00000740: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.487875] nvdla_blob 00000750: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.488197] nvdla_blob 00000760: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.489478] nvdla_blob 00000770: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.489869] nvdla_blob 00000780: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.490195] nvdla_blob 00000790: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.490516] nvdla_blob 000007a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.490849] nvdla_blob 000007b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.491165] nvdla_blob 000007c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.491490] nvdla_blob 000007d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.491834] nvdla_blob 000007e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.492161] nvdla_blob 000007f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.492546] nvdla_blob 00000800: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.494129] nvdla_blob 00000810: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.494443] nvdla_blob 00000820: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.494762] nvdla_blob 00000830: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.495090] nvdla_blob 00000840: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.495402] nvdla_blob 00000850: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.495721] nvdla_blob 00000860: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.496046] nvdla_blob 00000870: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.496377] nvdla_blob 00000880: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.497549] nvdla_blob 00000890: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.497926] nvdla_blob 000008a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.498257] nvdla_blob 000008b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.498582] nvdla_blob 000008c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.498921] nvdla_blob 000008d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.499247] nvdla_blob 000008e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.499575] nvdla_blob 000008f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.499931] nvdla_blob 00000900: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.500255] nvdla_blob 00000910: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.501547] nvdla_blob 00000920: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.501940] nvdla_blob 00000930: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.502272] nvdla_blob 00000940: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.502604] nvdla_blob 00000950: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.502945] nvdla_blob 00000960: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.503275] nvdla_blob 00000970: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.503607] nvdla_blob 00000980: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.503939] nvdla_blob 00000990: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.504270] nvdla_blob 000009a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.505526] nvdla_blob 000009b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.505895] nvdla_blob 000009c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.506218] nvdla_blob 000009d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.506543] nvdla_blob 000009e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.506885] nvdla_blob 000009f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.507201] nvdla_blob 00000a00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.507522] nvdla_blob 00000a10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.507864] nvdla_blob 00000a20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.508192] nvdla_blob 00000a30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.509772] nvdla_blob 00000a40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.510229] nvdla_blob 00000a50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.510557] nvdla_blob 00000a60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.510884] nvdla_blob 00000a70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.511196] nvdla_blob 00000a80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.511505] nvdla_blob 00000a90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.511833] nvdla_blob 00000aa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.512146] nvdla_blob 00000ab0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.512473] nvdla_blob 00000ac0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.513998] nvdla_blob 00000ad0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.514359] nvdla_blob 00000ae0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.514684] nvdla_blob 00000af0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.515013] nvdla_blob 00000b00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.515360] nvdla_blob 00000b10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.515689] nvdla_blob 00000b20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.516036] nvdla_blob 00000b30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.516360] nvdla_blob 00000b40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.517684] nvdla_blob 00000b50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.518062] nvdla_blob 00000b60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.518387] nvdla_blob 00000b70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.518710] nvdla_blob 00000b80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.519037] nvdla_blob 00000b90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.519362] nvdla_blob 00000ba0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.519693] nvdla_blob 00000bb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.520021] nvdla_blob 00000bc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.520352] nvdla_blob 00000bd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.521596] nvdla_blob 00000be0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.521970] nvdla_blob 00000bf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.522301] nvdla_blob 00000c00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.522626] nvdla_blob 00000c10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.522958] nvdla_blob 00000c20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.523223] nvdla_blob 00000c30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.523534] nvdla_blob 00000c40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.523864] nvdla_blob 00000c50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.524179] nvdla_blob 00000c60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.525830] nvdla_blob 00000c70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.526259] nvdla_blob 00000c80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.526584] nvdla_blob 00000c90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.526910] nvdla_blob 00000ca0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.527229] nvdla_blob 00000cb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.527535] nvdla_blob 00000cc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.527861] nvdla_blob 00000cd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.528182] nvdla_blob 00000ce0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.529771] nvdla_blob 00000cf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.530179] nvdla_blob 00000d00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.530507] nvdla_blob 00000d10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.530840] nvdla_blob 00000d20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.531166] nvdla_blob 00000d30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.531498] nvdla_blob 00000d40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.531832] nvdla_blob 00000d50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.532179] nvdla_blob 00000d60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.533506] nvdla_blob 00000d70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.533890] nvdla_blob 00000d80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.534205] nvdla_blob 00000d90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.534519] nvdla_blob 00000da0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.534842] nvdla_blob 00000db0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.535170] nvdla_blob 00000dc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.535492] nvdla_blob 00000dd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.535835] nvdla_blob 00000de0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.536165] nvdla_blob 00000df0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.536532] nvdla_blob 00000e00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.537825] nvdla_blob 00000e10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.538147] nvdla_blob 00000e20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.538461] nvdla_blob 00000e30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.538785] nvdla_blob 00000e40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.539123] nvdla_blob 00000e50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.539450] nvdla_blob 00000e60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.539777] nvdla_blob 00000e70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.540116] nvdla_blob 00000e80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.540443] nvdla_blob 00000e90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.541718] nvdla_blob 00000ea0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.542090] nvdla_blob 00000eb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.542407] nvdla_blob 00000ec0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.542723] nvdla_blob 00000ed0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.543052] nvdla_blob 00000ee0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.543366] nvdla_blob 00000ef0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.543699] nvdla_blob 00000f00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.544032] nvdla_blob 00000f10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.544356] nvdla_blob 00000f20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.546057] nvdla_blob 00000f30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.546402] nvdla_blob 00000f40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.546675] nvdla_blob 00000f50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.547013] nvdla_blob 00000f60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.547339] nvdla_blob 00000f70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.547670] nvdla_blob 00000f80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.548004] nvdla_blob 00000f90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.548328] nvdla_blob 00000fa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.549821] nvdla_blob 00000fb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.550191] nvdla_blob 00000fc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.550518] nvdla_blob 00000fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.550855] nvdla_blob 00000fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.551191] nvdla_blob 00000ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[   35.551608] Enter:dla_read_network_config
+[   35.552113] Exit:dla_read_network_config status=0
+[   35.552327] Enter: dla_initiate_processors
+[   35.553523] Enter: dla_submit_operation
+[   35.553749] Prepare SDP operation index 0 ROI 0 dep_count 0
+[   35.553993] Enter: dla_prepare_operation
+[   35.554500] processor:SDP group:0, rdma_group:0 available
+[   35.554766] Enter: dla_read_config
+[   35.555080] Exit: dla_read_config
+[   35.555257] Exit: dla_prepare_operation status=0
+[   35.555480] Enter: dla_program_operation
+[   35.555653] Program SDP operation index 0 ROI 0 Group[0]
+[   35.555907] nvdla_reg_write offset=0x0000b004 value=0x00000000
+[   35.556202] nvdla_reg_write offset=0x0000a004 value=0x00000000
+
+Fatal: NV_NVDLA_csb_master.cpp: 211:NV_NVDLA_csb_master::nvdla2csb_b_transport: Receiving an invalid csb address to nvdla sub-units. payload->pd.csb2xx_16m_secure_be_lvl.addr = 0x4, base_addr=0x0
+In file: ../cmod/csb_master/gen/NV_NVDLA_csb_master.cpp:211
+In process: CPU.do_io @ 35500 ms

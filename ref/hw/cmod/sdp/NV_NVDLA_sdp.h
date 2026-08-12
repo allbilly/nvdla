@@ -27,32 +27,29 @@
 #include "sdp_rdma_reg_model.h"
 
 #include "sdp_hls_wrapper.h"
-#include "NvdlaPacker.h"
-#include "nvdla_config.h"
 
-#define ATOM_CUBE_SIZE          (DLA_ATOM_SIZE)
-#define SDP_RDMA_BUFFER_SIZE    9*256
+#define MEM_BUSWIDTH_IN_BIT 64
+#define ATOM_CUBE_SIZE   32
+#define SDP_RDMA_BUFFER_SIZE 9*256
+#define SDP_CC2PP_BUFFER_SIZE 9*256
+#define SDP_WDMA_BUFFER_SIZE 2*256
 
-#define DMA_TRANSACTION_SIZE    (DMAIF_WIDTH)
+#define MAX_MEM_TRANSACTION_SIZE    256
+#define MAX_DMA_TRANSACTION_SIZE    32*8192
+#define DMA_TRANSACTION_SIZE        64
 
 #define DATA_FORMAT_IS_INT8                 0
 #define DATA_FORMAT_IS_INT16                1
 #define DATA_FORMAT_IS_FP16                 2
-#define ELEMENT_PER_GROUP_INT8              (NVDLA_MEMORY_ATOMIC_SIZE)
-#define ELEMENT_PER_GROUP_INT16             (NVDLA_MEMORY_ATOMIC_SIZE)
-#define ELEMENT_PER_GROUP_FP16              (NVDLA_MEMORY_ATOMIC_SIZE)
-#define ELEMENT_PER_ATOM_INT8               (NVDLA_MEMORY_ATOMIC_SIZE)
-#define ELEMENT_PER_ATOM_INT16              (NVDLA_MEMORY_ATOMIC_SIZE)
-#define ELEMENT_PER_ATOM_FP16               (NVDLA_MEMORY_ATOMIC_SIZE)
+#define ELEMENT_PER_GROUP_INT8              32
+#define ELEMENT_PER_GROUP_INT16             16
+#define ELEMENT_PER_GROUP_FP16              16
+#define ELEMENT_PER_ATOM_INT8               32
+#define ELEMENT_PER_ATOM_INT16              16
+#define ELEMENT_PER_ATOM_FP16               16
 #define WINOGRAD_HORI_ATOM_NUM              2
 #define WINOGRAD_VERT_ATOM_NUM              4
-#define SDP_PARALLEL_PROC_NUM               (SDP_MAX_THROUGHPUT)
-#define DMA_MAX_ATOM_NUM                    (DMAIF_WIDTH/DLA_ATOM_SIZE)
-#define ATOM_PROC_ITER_NUM                  (NVDLA_MEMORY_ATOMIC_SIZE/SDP_MAX_THROUGHPUT)
-#if ATOM_PROC_ITER_NUM == 0
-#undef ATOM_PROC_ITER_NUM
-#define ATOM_PROC_ITER_NUM                  1
-#endif
+#define SDP_PARALLEL_PROC_NUM               16
 
 SCSIM_NAMESPACE_START(clib)
 // clib class forward declaration
@@ -61,16 +58,14 @@ SCSIM_NAMESPACE_END()
 SCSIM_NAMESPACE_START(cmod)
 // Register class forward declaration
 
-#define CC2PP_PAYLOAD_SIZE              (SDP_MAX_THROUGHPUT)
-#define LOW_ADDRESS_SHIFT               (NVDLA_SDP_RDMA_D_SRC_BASE_ADDR_LOW_0_SRC_BASE_ADDR_LOW_SHIFT)
+#define CC2PP_PAYLOAD_SIZE 16
 
 typedef enum {
     SDP_RDMA_INPUT,
     SDP_RDMA_X1_INPUT,
     SDP_RDMA_X2_INPUT,
     SDP_RDMA_Y_INPUT,
-    SDP_WDMA,
-    SDP_DMA_NUM,
+    SDP_RDMA_NUM,
 } te_rdma_type;
 
 class SdpConfig {
@@ -116,8 +111,7 @@ class NV_NVDLA_sdp:
 
     private:
         sc_core::sc_fifo          <SdpConfig *> *sdp_config_fifo_;
-        SdpConfig                 sdp_cfg_;
-        
+        SdpConfig           sdp_cfg_;
         // HLS module
         sdp_hls_wrapper sdp_hls_wrapper_;
 
@@ -139,14 +133,14 @@ class NV_NVDLA_sdp:
 
 
         // buffers
-        int32_t     hls_data_in_[SDP_MAX_THROUGHPUT];
+        int32_t     hls_data_in_[16];
         // round, proc, element
-        int16_t     hls_x1_alu_op_[2][ATOM_PROC_ITER_NUM][SDP_MAX_THROUGHPUT];
-        int16_t     hls_x1_mul_op_[2][ATOM_PROC_ITER_NUM][SDP_MAX_THROUGHPUT];
-        int16_t     hls_x2_alu_op_[2][ATOM_PROC_ITER_NUM][SDP_MAX_THROUGHPUT];
-        int16_t     hls_x2_mul_op_[2][ATOM_PROC_ITER_NUM][SDP_MAX_THROUGHPUT];
-        int16_t     hls_y_alu_op_ [2][ATOM_PROC_ITER_NUM][SDP_MAX_THROUGHPUT];
-        int16_t     hls_y_mul_op_ [2][ATOM_PROC_ITER_NUM][SDP_MAX_THROUGHPUT];
+        int16_t     hls_x1_alu_op_[2][2][16];
+        int16_t     hls_x1_mul_op_[2][2][16];
+        int16_t     hls_x2_alu_op_[2][2][16];
+        int16_t     hls_x2_mul_op_[2][2][16];
+        int16_t     hls_y_alu_op_[2][2][16];
+        int16_t     hls_y_mul_op_[2][2][16];
 
         // Events
         sc_event sdp_rdma_kickoff_;
@@ -179,14 +173,12 @@ class NV_NVDLA_sdp:
 
         sc_core::sc_fifo <int32_t *>      *cc2pp_fifo_;
         sc_core::sc_fifo <ack_info *>     *sdp_ack_fifo_;
-        uint8_t                     *sdp_internal_buf_[SDP_DMA_NUM];
-        uint32_t                    sdp_buf_wr_ptr_[SDP_DMA_NUM];
-        uint32_t                    sdp_buf_rd_ptr_[SDP_DMA_NUM];
-        uint32_t                    sdp_buf_width_iter_[SDP_DMA_NUM];
-        uint32_t                    rdma_atom_total_[SDP_DMA_NUM];
-        uint32_t                    rdma_atom_recieved_[SDP_DMA_NUM];
-
-        NvdlaPacker                 dma_packers_[SDP_DMA_NUM];
+        uint8_t                     *sdp_internal_buf_[SDP_RDMA_NUM];
+        uint32_t                    sdp_buf_wr_ptr_[SDP_RDMA_NUM];
+        uint32_t                    sdp_buf_rd_ptr_[SDP_RDMA_NUM];
+        uint32_t                    sdp_buf_width_iter_[SDP_RDMA_NUM];
+        uint32_t                    rdma_atom_total_[SDP_RDMA_NUM];
+        uint32_t                    rdma_atom_recieved_[SDP_RDMA_NUM];
 
         // Function declaration 
         // # Threads

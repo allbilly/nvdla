@@ -5,8 +5,6 @@
 // NVDLA Open Hardware License; Check "LICENSE" which comes with 
 // this distribution for more information.
 // ================================================================
-// 
-// File Name: cmacros.uh
 
 #if !defined(CMACROS_UH)
 #define CMACROS_UH

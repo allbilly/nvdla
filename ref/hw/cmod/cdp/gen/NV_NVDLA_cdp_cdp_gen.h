@@ -8,8 +8,8 @@
 
 // File Name: NV_NVDLA_cdp_cdp_gen.h
 
-#include "NV_NVDLA_cdp.h"
 #include "log.h"
+#include "NV_NVDLA_cdp.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 

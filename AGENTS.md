@@ -1,5 +1,6 @@
-always read README.md before u do anything
-use podman if docker is not found
+- always read README.md before u do anything
+- use podman if docker is not found
+- no need remove pycache
 
 look for refernce in ref/*
 - ref/hw

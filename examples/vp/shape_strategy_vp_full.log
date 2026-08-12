@@ -1,0 +1,252 @@
+START pointwise_y_tile_hardcoded conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1_nv_small.nvdla input28x28.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 28 28
+pgm2dimg 1 28 28 1 32 896 896
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=153632 pointwise_y_tile_hardcoded conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1_nv_small.nvdla input28x28.pgm
+START pointwise_y_tile_hardcoded conv2d_b1_c192_h28_w28_oc32_wic192_k1x1_g1_nv_small.nvdla input28x28.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 28 28
+pgm2dimg 1 28 28 1 32 896 896
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=155291 pointwise_y_tile_hardcoded conv2d_b1_c192_h28_w28_oc32_wic192_k1x1_g1_nv_small.nvdla input28x28.pgm
+START pointwise_oc_tile_related conv2d_b1_c96_h56_w56_oc24_wic96_k1x1_g1_nv_small.nvdla input56x56.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 56 56
+pgm2dimg 1 56 56 1 64 3584 3584
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=462397 pointwise_oc_tile_related conv2d_b1_c96_h56_w56_oc24_wic96_k1x1_g1_nv_small.nvdla input56x56.pgm
+START pointwise_oc_tile_related conv2d_b1_c144_h56_w56_oc24_wic144_k1x1_g1_nv_small.nvdla input56x56.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 56 56
+pgm2dimg 1 56 56 1 64 3584 3584
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=449371 pointwise_oc_tile_related conv2d_b1_c144_h56_w56_oc24_wic144_k1x1_g1_nv_small.nvdla input56x56.pgm
+START pointwise_oc_tile_related conv2d_b1_c192_h28_w28_oc16_wic192_k1x1_g1_nv_small.nvdla input28x28.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 28 28
+pgm2dimg 1 28 28 1 32 896 896
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=78636 pointwise_oc_tile_related conv2d_b1_c192_h28_w28_oc16_wic192_k1x1_g1_nv_small.nvdla input28x28.pgm
+START pointwise_oc_tile_related conv2d_b1_c256_h28_w28_oc32_wic256_k1x1_g1_nv_small.nvdla input28x28.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 28 28
+pgm2dimg 1 28 28 1 32 896 896
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=156165 pointwise_oc_tile_related conv2d_b1_c256_h28_w28_oc32_wic256_k1x1_g1_nv_small.nvdla input28x28.pgm
+START spatial_im2col b1_c160_h14_w14_oc320_wic160_k3x3_g1_s1_pvalid_nv_small.nvdla input14x14.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 14 14
+pgm2dimg 1 14 14 1 32 448 448
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=320583 spatial_im2col b1_c160_h14_w14_oc320_wic160_k3x3_g1_s1_pvalid_nv_small.nvdla input14x14.pgm
+START spatial_im2col b1_c160_h7_w7_oc320_wic160_k3x3_g1_s1_pvalid_nv_small.nvdla input7x7.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 7 7
+pgm2dimg 1 7 7 1 32 224 224
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=57033 spatial_im2col b1_c160_h7_w7_oc320_wic160_k3x3_g1_s1_pvalid_nv_small.nvdla input7x7.pgm
+START spatial_im2col b1_c192_h7_w7_oc384_wic192_k3x3_g1_s1_pvalid_nv_small.nvdla input7x7.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 7 7
+pgm2dimg 1 7 7 1 32 224 224
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=68444 spatial_im2col b1_c192_h7_w7_oc384_wic192_k3x3_g1_s1_pvalid_nv_small.nvdla input7x7.pgm
+START spatial_im2col b1_c256_h10_w10_oc512_wic256_k3x3_g1_s1_pvalid_nv_small.nvdla input10x10.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 10 10
+pgm2dimg 1 10 10 1 32 320 320
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=227854 spatial_im2col b1_c256_h10_w10_oc512_wic256_k3x3_g1_s1_pvalid_nv_small.nvdla input10x10.pgm
+START spatial_im2col b1_c128_h5_w5_oc256_wic128_k3x3_g1_s1_pvalid_nv_small.nvdla input5x5.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 5 5
+pgm2dimg 1 5 5 1 32 160 160
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=15483 spatial_im2col b1_c128_h5_w5_oc256_wic128_k3x3_g1_s1_pvalid_nv_small.nvdla input5x5.pgm
+START spatial_im2col b1_c128_h3_w3_oc256_wic128_k3x3_g1_s1_pvalid_nv_small.nvdla input3x3.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 3 3
+pgm2dimg 1 3 3 1 32 96 96
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=1807 spatial_im2col b1_c128_h3_w3_oc256_wic128_k3x3_g1_s1_pvalid_nv_small.nvdla input3x3.pgm
+START spatial_im2col b1_c3_h320_w320_oc32_wic3_k3x3_g1_s1_pvalid_nv_small.nvdla input320x320.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 320 320
+pgm2dimg 1 320 320 1 320 102400 102400
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=23072621 spatial_im2col b1_c3_h320_w320_oc32_wic3_k3x3_g1_s1_pvalid_nv_small.nvdla input320x320.pgm
+START spatial_im2col b1_c16_h160_w160_oc128_wic16_k3x3_g1_s1_pvalid_nv_small.nvdla input160x160.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 160 160
+pgm2dimg 1 160 160 1 160 25600 25600
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=23290748 spatial_im2col b1_c16_h160_w160_oc128_wic16_k3x3_g1_s1_pvalid_nv_small.nvdla input160x160.pgm
+START spatial_im2col b1_c16_h80_w80_oc128_wic16_k5x5_g1_s1_pvalid_nv_small.nvdla input80x80.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 80 80
+pgm2dimg 1 80 80 1 96 7680 7680
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=5287804 spatial_im2col b1_c16_h80_w80_oc128_wic16_k5x5_g1_s1_pvalid_nv_small.nvdla input80x80.pgm
+START spatial_im2col b1_c40_h40_w40_oc160_wic40_k3x3_g1_s1_pvalid_nv_small.nvdla input40x40.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 40 40
+pgm2dimg 1 40 40 1 64 2560 2560
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=1688288 spatial_im2col b1_c40_h40_w40_oc160_wic40_k3x3_g1_s1_pvalid_nv_small.nvdla input40x40.pgm
+START spatial_im2col b1_c72_h20_w20_oc288_wic72_k3x3_g1_s1_pvalid_nv_small.nvdla input20x20.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 20 20
+pgm2dimg 1 20 20 1 32 640 640
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=674965 spatial_im2col b1_c72_h20_w20_oc288_wic72_k3x3_g1_s1_pvalid_nv_small.nvdla input20x20.pgm
+START fallback_flat_y_tile conv2d_b1_c3_h52_w52_oc6_wic3_k1x1_g1_nv_small.nvdla input52x52.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 52 52
+pgm2dimg 1 52 52 1 64 3328 3328
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=102410 fallback_flat_y_tile conv2d_b1_c3_h52_w52_oc6_wic3_k1x1_g1_nv_small.nvdla input52x52.pgm
+START fallback_flat_y_tile conv2d_1x3_54x54_k1_nv_small.nvdla input54x54.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 54 54
+pgm2dimg 1 54 54 1 64 3456 3456
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=110444 fallback_flat_y_tile conv2d_1x3_54x54_k1_nv_small.nvdla input54x54.pgm
+START fallback_flat_y_tile conv2d_1x3_56x56_k1_nv_small.nvdla input56x56.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 56 56
+pgm2dimg 1 56 56 1 64 3584 3584
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=118768 fallback_flat_y_tile conv2d_1x3_56x56_k1_nv_small.nvdla input56x56.pgm
+START fallback_flat_y_tile conv2d_1x3_58x58_k1_nv_small.nvdla input58x58.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 58 58
+pgm2dimg 1 58 58 1 64 3712 3712
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=127402 fallback_flat_y_tile conv2d_1x3_58x58_k1_nv_small.nvdla input58x58.pgm
+START fallback_flat_y_tile conv2d_1x3_60x60_k1_nv_small.nvdla input60x60.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 60 60
+pgm2dimg 1 60 60 1 64 3840 3840
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=136337 fallback_flat_y_tile conv2d_1x3_60x60_k1_nv_small.nvdla input60x60.pgm
+START fallback_flat_y_tile conv2d_1x3_62x62_k1_nv_small.nvdla input62x62.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 62 62
+pgm2dimg 1 62 62 1 64 3968 3968
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=145582 fallback_flat_y_tile conv2d_1x3_62x62_k1_nv_small.nvdla input62x62.pgm
+START fallback_flat_y_tile conv2d_1x3_64x64_k1_nv_small.nvdla input64x64.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 64 64
+pgm2dimg 1 64 64 1 64 4096 4096
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=155120 fallback_flat_y_tile conv2d_1x3_64x64_k1_nv_small.nvdla input64x64.pgm
+START fallback_flat_y_tile conv2d_1x3_66x66_k1_nv_small.nvdla input66x66.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 66 66
+pgm2dimg 1 66 66 1 96 6336 6336
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=164972 fallback_flat_y_tile conv2d_1x3_66x66_k1_nv_small.nvdla input66x66.pgm
+START fallback_flat_y_tile conv2d_1x3_68x68_k1_nv_small.nvdla input68x68.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 68 68
+pgm2dimg 1 68 68 1 96 6528 6528
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=175119 fallback_flat_y_tile conv2d_1x3_68x68_k1_nv_small.nvdla input68x68.pgm
+START fallback_flat_y_tile conv2d_1x3_70x70_k1_nv_small.nvdla input70x70.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 70 70
+pgm2dimg 1 70 70 1 96 6720 6720
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=185568 fallback_flat_y_tile conv2d_1x3_70x70_k1_nv_small.nvdla input70x70.pgm
+START fallback_flat_y_tile conv2d_1x3_72x72_k1_nv_small.nvdla input72x72.pgm
+creating new runtime context...
+Emulator starting
+ppgminfo 1 72 72
+pgm2dimg 1 72 72 1 96 6912 6912
+submitting tasks...
+Shutdown signal received, exiting
+Test pass
+RESULT PASS rc=0 output_bytes=196322 fallback_flat_y_tile conv2d_1x3_72x72_k1_nv_small.nvdla input72x72.pgm

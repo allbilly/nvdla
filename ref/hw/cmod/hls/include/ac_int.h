@@ -375,18 +375,6 @@ namespace ac_private {
     r[0] = ext;
     r[1] = ext;
   } 
-
-  template<int N, bool DoExtend = (N > 0)>
-  struct iv_extend_if {
-    static inline void call(int *r, int ext) {
-      iv_extend<N>(r, ext);
-    }
-  };
-
-  template<int N>
-  struct iv_extend_if<N, false> {
-    static inline void call(int * /*r*/, int /*ext*/) { }
-  };
   
   template<int Nr>
   inline void iv_assign_int64(int *r, Slong l) {
@@ -1093,9 +1081,9 @@ namespace ac_private {
     }
     else {
       const unsigned s31 = B & 31;
-      const unsigned ishift = (unsigned) (((B >> 5) > Nr) ? Nr : (B >> 5));
-      iv_extend_if<ishift>::call(r, 0);
-      const unsigned M1 = AC_MIN(N+ishift,Nr);
+      const int ishift = ((B >> 5) > Nr) ? Nr : (B >> 5);
+      iv_extend<ishift>(r, 0);
+      const int M1 = AC_MIN(N+ishift,Nr);
       if(s31) {
         unsigned lw = 0;
         for(unsigned i=ishift; i < M1; i++) {
@@ -1105,12 +1093,12 @@ namespace ac_private {
         }
         if(Nr > M1) {
           r[M1] = (signed) lw >> ((32-s31)&31);  // &31 is to quiet compilers 
-          iv_extend_if<Nr-M1-1>::call(r+M1+1, r[M1] < 0 ? ~0 : 0);
+          iv_extend<Nr-M1-1>(r+M1+1, r[M1] < 0 ? ~0 : 0);
         }
       } else {
         for(unsigned i=ishift; i < M1 ; i++)
           r[i] = op1[i-ishift];
-        iv_extend_if<Nr-M1>::call(r+M1, r[M1-1] < 0 ? -1 : 0);
+        iv_extend<Nr-M1>(r+M1, r[M1-1] < 0 ? -1 : 0);
       }
     }
   }

@@ -9,7 +9,7 @@
 // File Name: pdp_hls_wrapper.cpp
 
 #include <systemc.h>
-#include "opendla.h"
+#include "arnvdla.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 

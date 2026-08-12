@@ -134,10 +134,10 @@ def prepare_vp_assets(shapes, models_dir, vp_dir):
     with open(manifest_path, "w") as manifest:
         for shape in shapes:
             name = shape["name"]
-            src = os.path.join(models_dir, name, "out_nv_small.nvdla")
+            src = os.path.join(models_dir, name, "out.nvdla")
             if not os.path.exists(src):
                 raise SystemExit("missing compiled loadable: {}".format(src))
-            loadable_name = "{}_nv_small.nvdla".format(name)
+            loadable_name = "{}.nvdla".format(name)
             dst = os.path.join(vp_dir, loadable_name)
             shutil.copyfile(src, dst)
 

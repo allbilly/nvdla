@@ -50,16 +50,16 @@ output  [4:0] reg2dp_batches;
 output  [4:0] reg2dp_clip_truncate;
 output        reg2dp_conv_mode;
 output [31:0] reg2dp_cya;
-output [31:0] reg2dp_dataout_addr;
+output [26:0] reg2dp_dataout_addr;
 output [12:0] reg2dp_dataout_channel;
 output [12:0] reg2dp_dataout_height;
 output [12:0] reg2dp_dataout_width;
 output        reg2dp_line_packed;
-output [23:0] reg2dp_line_stride;
+output [18:0] reg2dp_line_stride;
 output        reg2dp_op_en;
 output  [1:0] reg2dp_proc_precision;
 output        reg2dp_surf_packed;
-output [23:0] reg2dp_surf_stride;
+output [18:0] reg2dp_surf_stride;
 output  [6:0] slcg_op_en;
 wire          csb_rresp_error;
 wire   [33:0] csb_rresp_pd_w;
@@ -80,30 +80,30 @@ wire    [4:0] reg2dp_d0_batches;
 wire    [4:0] reg2dp_d0_clip_truncate;
 wire          reg2dp_d0_conv_mode;
 wire   [31:0] reg2dp_d0_cya;
-wire   [31:0] reg2dp_d0_dataout_addr;
+wire   [26:0] reg2dp_d0_dataout_addr;
 wire   [12:0] reg2dp_d0_dataout_channel;
 wire   [12:0] reg2dp_d0_dataout_height;
 wire   [12:0] reg2dp_d0_dataout_width;
 wire          reg2dp_d0_line_packed;
-wire   [23:0] reg2dp_d0_line_stride;
+wire   [18:0] reg2dp_d0_line_stride;
 wire          reg2dp_d0_op_en_trigger;
 wire    [1:0] reg2dp_d0_proc_precision;
 wire          reg2dp_d0_surf_packed;
-wire   [23:0] reg2dp_d0_surf_stride;
+wire   [18:0] reg2dp_d0_surf_stride;
 wire    [4:0] reg2dp_d1_batches;
 wire    [4:0] reg2dp_d1_clip_truncate;
 wire          reg2dp_d1_conv_mode;
 wire   [31:0] reg2dp_d1_cya;
-wire   [31:0] reg2dp_d1_dataout_addr;
+wire   [26:0] reg2dp_d1_dataout_addr;
 wire   [12:0] reg2dp_d1_dataout_channel;
 wire   [12:0] reg2dp_d1_dataout_height;
 wire   [12:0] reg2dp_d1_dataout_width;
 wire          reg2dp_d1_line_packed;
-wire   [23:0] reg2dp_d1_line_stride;
+wire   [18:0] reg2dp_d1_line_stride;
 wire          reg2dp_d1_op_en_trigger;
 wire    [1:0] reg2dp_d1_proc_precision;
 wire          reg2dp_d1_surf_packed;
-wire   [23:0] reg2dp_d1_surf_stride;
+wire   [18:0] reg2dp_d1_surf_stride;
 wire    [2:0] reg2dp_op_en_reg_w;
 wire          reg2dp_producer;
 wire   [23:0] reg_offset;
@@ -149,17 +149,17 @@ reg           reg2dp_d0_op_en;
 reg           reg2dp_d0_op_en_w;
 reg           reg2dp_d1_op_en;
 reg           reg2dp_d1_op_en_w;
-reg    [31:0] reg2dp_dataout_addr;
+reg    [26:0] reg2dp_dataout_addr;
 reg    [12:0] reg2dp_dataout_channel;
 reg    [12:0] reg2dp_dataout_height;
 reg    [12:0] reg2dp_dataout_width;
 reg           reg2dp_line_packed;
-reg    [23:0] reg2dp_line_stride;
+reg    [18:0] reg2dp_line_stride;
 reg           reg2dp_op_en_ori;
 reg     [2:0] reg2dp_op_en_reg;
 reg     [1:0] reg2dp_proc_precision;
 reg           reg2dp_surf_packed;
-reg    [23:0] reg2dp_surf_stride;
+reg    [18:0] reg2dp_surf_stride;
 reg    [62:0] req_pd;
 reg           req_pvld;
 reg     [6:0] slcg_op_en_d1;
@@ -193,17 +193,17 @@ NV_NVDLA_CACC_dual_reg u_dual_reg_d0 (
   ,.batches         (reg2dp_d0_batches[4:0])          //|> w
   ,.clip_truncate   (reg2dp_d0_clip_truncate[4:0])    //|> w
   ,.cya             (reg2dp_d0_cya[31:0])             //|> w
-  ,.dataout_addr    (reg2dp_d0_dataout_addr[31:0])    //|> w
+  ,.dataout_addr    (reg2dp_d0_dataout_addr[26:0])    //|> w
   ,.line_packed     (reg2dp_d0_line_packed)           //|> w
   ,.surf_packed     (reg2dp_d0_surf_packed)           //|> w
   ,.dataout_height  (reg2dp_d0_dataout_height[12:0])  //|> w
   ,.dataout_width   (reg2dp_d0_dataout_width[12:0])   //|> w
   ,.dataout_channel (reg2dp_d0_dataout_channel[12:0]) //|> w
-  ,.line_stride     (reg2dp_d0_line_stride[23:0])     //|> w
+  ,.line_stride     (reg2dp_d0_line_stride[18:0])     //|> w
   ,.conv_mode       (reg2dp_d0_conv_mode)             //|> w
   ,.proc_precision  (reg2dp_d0_proc_precision[1:0])   //|> w
   ,.op_en_trigger   (reg2dp_d0_op_en_trigger)         //|> w
-  ,.surf_stride     (reg2dp_d0_surf_stride[23:0])     //|> w
+  ,.surf_stride     (reg2dp_d0_surf_stride[18:0])     //|> w
   ,.op_en           (reg2dp_d0_op_en)                 //|< r
   ,.sat_count       (dp2reg_d0_sat_count[31:0])       //|< r
   );
@@ -218,17 +218,17 @@ NV_NVDLA_CACC_dual_reg u_dual_reg_d1 (
   ,.batches         (reg2dp_d1_batches[4:0])          //|> w
   ,.clip_truncate   (reg2dp_d1_clip_truncate[4:0])    //|> w
   ,.cya             (reg2dp_d1_cya[31:0])             //|> w
-  ,.dataout_addr    (reg2dp_d1_dataout_addr[31:0])    //|> w
+  ,.dataout_addr    (reg2dp_d1_dataout_addr[26:0])    //|> w
   ,.line_packed     (reg2dp_d1_line_packed)           //|> w
   ,.surf_packed     (reg2dp_d1_surf_packed)           //|> w
   ,.dataout_height  (reg2dp_d1_dataout_height[12:0])  //|> w
   ,.dataout_width   (reg2dp_d1_dataout_width[12:0])   //|> w
   ,.dataout_channel (reg2dp_d1_dataout_channel[12:0]) //|> w
-  ,.line_stride     (reg2dp_d1_line_stride[23:0])     //|> w
+  ,.line_stride     (reg2dp_d1_line_stride[18:0])     //|> w
   ,.conv_mode       (reg2dp_d1_conv_mode)             //|> w
   ,.proc_precision  (reg2dp_d1_proc_precision[1:0])   //|> w
   ,.op_en_trigger   (reg2dp_d1_op_en_trigger)         //|> w
-  ,.surf_stride     (reg2dp_d1_surf_stride[23:0])     //|> w
+  ,.surf_stride     (reg2dp_d1_surf_stride[18:0])     //|> w
   ,.op_en           (reg2dp_d1_op_en)                 //|< r
   ,.sat_count       (dp2reg_d1_sat_count[31:0])       //|< r
   );

@@ -11,18 +11,14 @@
 module NV_NVDLA_RUBIK_dma (
    nvdla_core_clk               //|< i
   ,nvdla_core_rstn              //|< i
-  #ifdef NVDLA_SECONDARY_MEMIF_ENABLE
   ,cvif2rbk_rd_rsp_pd           //|< i
   ,cvif2rbk_rd_rsp_valid        //|< i
   ,cvif2rbk_wr_rsp_complete     //|< i
-  #endif
   ,mcif2rbk_rd_rsp_pd           //|< i
   ,mcif2rbk_rd_rsp_valid        //|< i
   ,mcif2rbk_wr_rsp_complete     //|< i
-  #ifdef NVDLA_SECONDARY_MEMIF_ENABLE
   ,rbk2cvif_rd_req_ready        //|< i
   ,rbk2cvif_wr_req_ready        //|< i
-  #endif
   ,rbk2mcif_rd_req_ready        //|< i
   ,rbk2mcif_wr_req_ready        //|< i
   ,rd_cdt_lat_fifo_pop          //|< i
@@ -33,15 +29,13 @@ module NV_NVDLA_RUBIK_dma (
   ,wr_req_pd                    //|< i
   ,wr_req_type                  //|< i
   ,wr_req_vld                   //|< i
-  ,mcif2rbk_rd_rsp_ready        //|> o
-  #ifdef NVDLA_SECONDARY_MEMIF_ENABLE
   ,cvif2rbk_rd_rsp_ready        //|> o
+  ,mcif2rbk_rd_rsp_ready        //|> o
   ,rbk2cvif_rd_cdt_lat_fifo_pop //|> o
   ,rbk2cvif_rd_req_pd           //|> o
   ,rbk2cvif_rd_req_valid        //|> o
   ,rbk2cvif_wr_req_pd           //|> o
   ,rbk2cvif_wr_req_valid        //|> o
-  #endif
   ,rbk2mcif_rd_cdt_lat_fifo_pop //|> o
   ,rbk2mcif_rd_req_pd           //|> o
   ,rbk2mcif_rd_req_valid        //|> o
@@ -55,18 +49,14 @@ module NV_NVDLA_RUBIK_dma (
   );
 input          nvdla_core_clk;
 input          nvdla_core_rstn;
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 input  [513:0] cvif2rbk_rd_rsp_pd;
 input          cvif2rbk_rd_rsp_valid;
 input          cvif2rbk_wr_rsp_complete;
-#endif
 input  [513:0] mcif2rbk_rd_rsp_pd;
 input          mcif2rbk_rd_rsp_valid;
 input          mcif2rbk_wr_rsp_complete;
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 input          rbk2cvif_rd_req_ready;
 input          rbk2cvif_wr_req_ready;
-#endif
 input          rbk2mcif_rd_req_ready;
 input          rbk2mcif_wr_req_ready;
 input          rd_cdt_lat_fifo_pop;
@@ -77,16 +67,13 @@ input          rd_rsp_rdy;
 input  [514:0] wr_req_pd;
 input          wr_req_type;
 input          wr_req_vld;
-output         mcif2rbk_rd_rsp_ready;
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 output         cvif2rbk_rd_rsp_ready;
+output         mcif2rbk_rd_rsp_ready;
 output         rbk2cvif_rd_cdt_lat_fifo_pop;
 output  [78:0] rbk2cvif_rd_req_pd;
 output         rbk2cvif_rd_req_valid;
 output [514:0] rbk2cvif_wr_req_pd;
 output         rbk2cvif_wr_req_valid;
-reg            rbk2cvif_rd_cdt_lat_fifo_pop;
-#endif
 output         rbk2mcif_rd_cdt_lat_fifo_pop;
 output  [78:0] rbk2mcif_rd_req_pd;
 output         rbk2mcif_rd_req_valid;
@@ -101,12 +88,11 @@ reg            ack_bot_id;
 reg            ack_bot_vld;
 reg            ack_top_id;
 reg            ack_top_vld;
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 reg            cv_pending;
 reg            cv_wr_rsp_complete;
-#endif
 reg            mc_pending;
 reg            mc_wr_rsp_complete;
+reg            rbk2cvif_rd_cdt_lat_fifo_pop;
 reg            rbk2mcif_rd_cdt_lat_fifo_pop;
 reg            wr_rsp_complete;
 wire           ack_bot_rdy;
@@ -114,7 +100,6 @@ wire           ack_raw_id;
 wire           ack_raw_rdy;
 wire           ack_raw_vld;
 wire           ack_top_rdy;
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 wire    [78:0] cv_int_rd_req_pd;
 wire    [78:0] cv_int_rd_req_pd_d0;
 wire           cv_int_rd_req_ready;
@@ -143,7 +128,6 @@ wire           cv_wr_req_vld;
 wire   [513:0] cvif2rbk_rd_rsp_pd_d0;
 wire           cvif2rbk_rd_rsp_ready_d0;
 wire           cvif2rbk_rd_rsp_valid_d0;
-#endif
 wire    [78:0] mc_int_rd_req_pd;
 wire    [78:0] mc_int_rd_req_pd_d0;
 wire           mc_int_rd_req_ready;
@@ -199,15 +183,11 @@ wire           wr_req_rdyi;
 
 //instance dma_rd & dma_wr
 // rd Channel: Request 
-assign mc_rd_req_vld = rd_req_vld & (rd_req_type == 1'b1);
-assign mc_rd_req_rdyi = mc_rd_req_rdy & (rd_req_type == 1'b1);
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 assign cv_rd_req_vld = rd_req_vld & (rd_req_type == 1'b0);
+assign mc_rd_req_vld = rd_req_vld & (rd_req_type == 1'b1);
 assign cv_rd_req_rdyi = cv_rd_req_rdy & (rd_req_type == 1'b0);
+assign mc_rd_req_rdyi = mc_rd_req_rdy & (rd_req_type == 1'b1);
 assign rd_req_rdyi = mc_rd_req_rdyi | cv_rd_req_rdyi;
-#else
-assign rd_req_rdyi = mc_rd_req_rdyi; 
-#endif
 assign rd_req_rdy= rd_req_rdyi;
 NV_NVDLA_RUBIK_DMA_pipe_p1 pipe_p1 (
    .nvdla_core_clk      (nvdla_core_clk)          //|< i
@@ -219,7 +199,6 @@ NV_NVDLA_RUBIK_DMA_pipe_p1 pipe_p1 (
   ,.mc_int_rd_req_valid (mc_int_rd_req_valid)     //|> w
   ,.mc_rd_req_rdy       (mc_rd_req_rdy)           //|> w
   );
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 NV_NVDLA_RUBIK_DMA_pipe_p2 pipe_p2 (
    .nvdla_core_clk      (nvdla_core_clk)          //|< i
   ,.nvdla_core_rstn     (nvdla_core_rstn)         //|< i
@@ -230,7 +209,7 @@ NV_NVDLA_RUBIK_DMA_pipe_p2 pipe_p2 (
   ,.cv_int_rd_req_valid (cv_int_rd_req_valid)     //|> w
   ,.cv_rd_req_rdy       (cv_rd_req_rdy)           //|> w
   );
-#endif
+
 assign mc_int_rd_req_valid_d0 = mc_int_rd_req_valid;
 assign mc_int_rd_req_ready = mc_int_rd_req_ready_d0;
 assign mc_int_rd_req_pd_d0[78:0] = mc_int_rd_req_pd[78:0];
@@ -239,14 +218,12 @@ assign mc_int_rd_req_ready_d0 = rbk2mcif_rd_req_ready;
 assign rbk2mcif_rd_req_pd[78:0] = mc_int_rd_req_pd_d0[78:0];
 
 
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 assign cv_int_rd_req_valid_d0 = cv_int_rd_req_valid;
 assign cv_int_rd_req_ready = cv_int_rd_req_ready_d0;
 assign cv_int_rd_req_pd_d0[78:0] = cv_int_rd_req_pd[78:0];
 assign rbk2cvif_rd_req_valid = cv_int_rd_req_valid_d0;
 assign cv_int_rd_req_ready_d0 = rbk2cvif_rd_req_ready;
 assign rbk2cvif_rd_req_pd[78:0] = cv_int_rd_req_pd_d0[78:0];
-#endif
 
 // rd Channel: Response
 
@@ -258,14 +235,12 @@ assign mcif2rbk_rd_rsp_ready_d0 = mc_int_rd_rsp_ready;
 assign mc_int_rd_rsp_pd[513:0] = mcif2rbk_rd_rsp_pd_d0[513:0];
 
 
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 assign cvif2rbk_rd_rsp_valid_d0 = cvif2rbk_rd_rsp_valid;
 assign cvif2rbk_rd_rsp_ready = cvif2rbk_rd_rsp_ready_d0;
 assign cvif2rbk_rd_rsp_pd_d0[513:0] = cvif2rbk_rd_rsp_pd[513:0];
 assign cv_int_rd_rsp_valid = cvif2rbk_rd_rsp_valid_d0;
 assign cvif2rbk_rd_rsp_ready_d0 = cv_int_rd_rsp_ready;
 assign cv_int_rd_rsp_pd[513:0] = cvif2rbk_rd_rsp_pd_d0[513:0];
-#endif
 
 NV_NVDLA_RUBIK_DMA_pipe_p3 pipe_p3 (
    .nvdla_core_clk      (nvdla_core_clk)          //|< i
@@ -277,7 +252,6 @@ NV_NVDLA_RUBIK_DMA_pipe_p3 pipe_p3 (
   ,.mc_rd_rsp_pd        (mc_rd_rsp_pd[513:0])     //|> w
   ,.mc_rd_rsp_vld       (mc_rd_rsp_vld)           //|> w
   );
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 NV_NVDLA_RUBIK_DMA_pipe_p4 pipe_p4 (
    .nvdla_core_clk      (nvdla_core_clk)          //|< i
   ,.nvdla_core_rstn     (nvdla_core_rstn)         //|< i
@@ -291,10 +265,6 @@ NV_NVDLA_RUBIK_DMA_pipe_p4 pipe_p4 (
 assign rd_rsp_vld = mc_rd_rsp_vld | cv_rd_rsp_vld;
 assign rd_rsp_pd = ({514{mc_rd_rsp_vld}} & mc_rd_rsp_pd) 
                         | ({514{cv_rd_rsp_vld}} & cv_rd_rsp_pd);
-#else
-assign rd_rsp_vld = mc_rd_rsp_vld; 
-assign rd_rsp_pd = ({514{mc_rd_rsp_vld}} & mc_rd_rsp_pd);
-#endif
 
 `ifdef SPYGLASS_ASSERT_ON
 `else
@@ -324,9 +294,7 @@ assign rd_rsp_pd = ({514{mc_rd_rsp_vld}} & mc_rd_rsp_pd);
 `endif // SYNTHESIS
 `endif // FV_ASSERT_ON
   // VCS coverage off 
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
   nv_assert_never #(0,0,"DMAIF: mcif and cvif should never return data both")      zzz_assert_never_1x (nvdla_core_clk, `ASSERT_RESET, mc_rd_rsp_vld & cv_rd_rsp_vld); // spyglass disable W504 SelfDeterminedExpr-ML 
-#endif
   // VCS coverage on
 `undef ASSERT_RESET
 `endif // ASSERT_ON
@@ -351,7 +319,6 @@ always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
   rbk2mcif_rd_cdt_lat_fifo_pop <= rd_cdt_lat_fifo_pop & (rd_rsp_type == 1'b1);
   end
 end
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
   if (!nvdla_core_rstn) begin
     rbk2cvif_rd_cdt_lat_fifo_pop <= 1'b0;
@@ -359,18 +326,13 @@ always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
   rbk2cvif_rd_cdt_lat_fifo_pop <= rd_cdt_lat_fifo_pop & (rd_rsp_type == 1'b0);
   end
 end
-#endif
 
 // wr Channel: Request 
-assign mc_wr_req_vld = wr_req_vld & (wr_req_type == 1'b1);
-assign mc_wr_req_rdyi = mc_wr_req_rdy & (wr_req_type == 1'b1);
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 assign cv_wr_req_vld = wr_req_vld & (wr_req_type == 1'b0);
+assign mc_wr_req_vld = wr_req_vld & (wr_req_type == 1'b1);
 assign cv_wr_req_rdyi = cv_wr_req_rdy & (wr_req_type == 1'b0);
+assign mc_wr_req_rdyi = mc_wr_req_rdy & (wr_req_type == 1'b1);
 assign wr_req_rdyi = mc_wr_req_rdyi | cv_wr_req_rdyi;
-#else
-assign wr_req_rdyi = mc_wr_req_rdyi;
-#endif
 assign wr_req_rdy= wr_req_rdyi;
 NV_NVDLA_RUBIK_DMA_pipe_p5 pipe_p5 (
    .nvdla_core_clk      (nvdla_core_clk)          //|< i
@@ -382,7 +344,6 @@ NV_NVDLA_RUBIK_DMA_pipe_p5 pipe_p5 (
   ,.mc_int_wr_req_valid (mc_int_wr_req_valid)     //|> w
   ,.mc_wr_req_rdy       (mc_wr_req_rdy)           //|> w
   );
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 NV_NVDLA_RUBIK_DMA_pipe_p6 pipe_p6 (
    .nvdla_core_clk      (nvdla_core_clk)          //|< i
   ,.nvdla_core_rstn     (nvdla_core_rstn)         //|< i
@@ -393,7 +354,7 @@ NV_NVDLA_RUBIK_DMA_pipe_p6 pipe_p6 (
   ,.cv_int_wr_req_valid (cv_int_wr_req_valid)     //|> w
   ,.cv_wr_req_rdy       (cv_wr_req_rdy)           //|> w
   );
-#endif
+
 assign mc_int_wr_req_valid_d0 = mc_int_wr_req_valid;
 assign mc_int_wr_req_ready = mc_int_wr_req_ready_d0;
 assign mc_int_wr_req_pd_d0[514:0] = mc_int_wr_req_pd[514:0];
@@ -402,23 +363,19 @@ assign mc_int_wr_req_ready_d0 = rbk2mcif_wr_req_ready;
 assign rbk2mcif_wr_req_pd[514:0] = mc_int_wr_req_pd_d0[514:0];
 
 
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 assign cv_int_wr_req_valid_d0 = cv_int_wr_req_valid;
 assign cv_int_wr_req_ready = cv_int_wr_req_ready_d0;
 assign cv_int_wr_req_pd_d0[514:0] = cv_int_wr_req_pd[514:0];
 assign rbk2cvif_wr_req_valid = cv_int_wr_req_valid_d0;
 assign cv_int_wr_req_ready_d0 = rbk2cvif_wr_req_ready;
 assign rbk2cvif_wr_req_pd[514:0] = cv_int_wr_req_pd_d0[514:0];
-#endif
 
 // wr Channel: Response
 
 assign mc_int_wr_rsp_complete = mcif2rbk_wr_rsp_complete;
 
 
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 assign cv_int_wr_rsp_complete = cvif2rbk_wr_rsp_complete;
-#endif
 
 assign require_ack = (wr_req_pd[514:514]==0) & (wr_req_pd[77:77]==1);
 assign ack_raw_vld = wr_req_vld & wr_req_rdyi & require_ack;
@@ -673,7 +630,6 @@ always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
   mc_wr_rsp_complete <= mc_int_wr_rsp_complete;
   end
 end
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
   if (!nvdla_core_rstn) begin
     cv_wr_rsp_complete <= 1'b0;
@@ -681,7 +637,6 @@ always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
   cv_wr_rsp_complete <= cv_int_wr_rsp_complete;
   end
 end
-#endif
 always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
   if (!nvdla_core_rstn) begin
     wr_rsp_complete <= 1'b0;
@@ -704,7 +659,6 @@ always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
    end
   end
 end
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
   if (!nvdla_core_rstn) begin
     cv_pending <= 1'b0;
@@ -720,14 +674,9 @@ always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
    end
   end
 end
-#endif
 assign mc_releasing = ack_top_id==1'b1 & (mc_wr_rsp_complete | mc_pending);
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 assign cv_releasing = ack_top_id==1'b0 & (cv_wr_rsp_complete | cv_pending);
 assign releasing = mc_releasing | cv_releasing;
-#else
-assign releasing = mc_releasing;
-#endif
 `ifdef SPYGLASS_ASSERT_ON
 `else
 // spyglass disable_block NoWidthInBasedNum-ML 
@@ -756,9 +705,7 @@ assign releasing = mc_releasing;
 `endif // SYNTHESIS
 `endif // FV_ASSERT_ON
   // VCS coverage off 
-  #ifdef NVDLA_SECONDARY_MEMIF_ENABLE
   nv_assert_never #(0,0,"no release both together")      zzz_assert_never_6x (nvdla_core_clk, `ASSERT_RESET, mc_releasing & cv_releasing); // spyglass disable W504 SelfDeterminedExpr-ML 
-  #endif
   // VCS coverage on
 `undef ASSERT_RESET
 `endif // ASSERT_ON
@@ -848,9 +795,7 @@ assign releasing = mc_releasing;
 `endif // SYNTHESIS
 `endif // FV_ASSERT_ON
   // VCS coverage off 
-  #ifdef NVDLA_SECONDARY_MEMIF_ENABLE
   nv_assert_never #(0,0,"no cv resp back and pending together")      zzz_assert_never_8x (nvdla_core_clk, `ASSERT_RESET, cv_pending & cv_wr_rsp_complete); // spyglass disable W504 SelfDeterminedExpr-ML 
-  #endif
   // VCS coverage on
 `undef ASSERT_RESET
 `endif // ASSERT_ON
@@ -895,9 +840,7 @@ assign releasing = mc_releasing;
 `endif // SYNTHESIS
 `endif // FV_ASSERT_ON
   // VCS coverage off 
-  #ifdef NVDLA_SECONDARY_MEMIF_ENABLE
   nv_assert_never #(0,0,"no ack_top_vld when resp from cv")      zzz_assert_never_9x (nvdla_core_clk, `ASSERT_RESET, (cv_pending | cv_wr_rsp_complete) & !ack_top_vld); // spyglass disable W504 SelfDeterminedExpr-ML 
-  #endif
   // VCS coverage on
 `undef ASSERT_RESET
 `endif // ASSERT_ON
@@ -974,7 +917,6 @@ assign releasing = mc_releasing;
         end
     end
 
-  #ifdef NVDLA_SECONDARY_MEMIF_ENABLE
     property dmaif_rbk__two_completes__0_cov;
         disable iff((nvdla_core_rstn !== 1) || funcpoint_cover_off)
         @(posedge nvdla_core_clk)
@@ -982,7 +924,6 @@ assign releasing = mc_releasing;
     endproperty
     // Cover 0 : "mc_wr_rsp_complete & cv_wr_rsp_complete"
     FUNCPOINT_dmaif_rbk__two_completes__0_COV : cover property (dmaif_rbk__two_completes__0_cov);
-  #endif
 
   `endif
 `endif
@@ -992,7 +933,6 @@ assign releasing = mc_releasing;
 `ifndef DISABLE_FUNCPOINT
   `ifdef ENABLE_FUNCPOINT
 
-  #ifdef NVDLA_SECONDARY_MEMIF_ENABLE
     property dmaif_rbk__one_pending_complete_with_mc__1_cov;
         disable iff((nvdla_core_rstn !== 1) || funcpoint_cover_off)
         @(posedge nvdla_core_clk)
@@ -1000,7 +940,7 @@ assign releasing = mc_releasing;
     endproperty
     // Cover 1 : "cv_pending & mc_wr_rsp_complete"
     FUNCPOINT_dmaif_rbk__one_pending_complete_with_mc__1_COV : cover property (dmaif_rbk__one_pending_complete_with_mc__1_cov);
-  #endif
+
   `endif
 `endif
 //VCS coverage on
@@ -1009,7 +949,6 @@ assign releasing = mc_releasing;
 `ifndef DISABLE_FUNCPOINT
   `ifdef ENABLE_FUNCPOINT
 
-  #ifdef NVDLA_SECONDARY_MEMIF_ENABLE
     property dmaif_rbk__one_pending_complete_with_cv__2_cov;
         disable iff((nvdla_core_rstn !== 1) || funcpoint_cover_off)
         @(posedge nvdla_core_clk)
@@ -1017,7 +956,6 @@ assign releasing = mc_releasing;
     endproperty
     // Cover 2 : "mc_pending & cv_wr_rsp_complete"
     FUNCPOINT_dmaif_rbk__one_pending_complete_with_cv__2_COV : cover property (dmaif_rbk__one_pending_complete_with_cv__2_cov);
-  #endif
 
   `endif
 `endif
@@ -1027,7 +965,6 @@ assign releasing = mc_releasing;
 `ifndef DISABLE_FUNCPOINT
   `ifdef ENABLE_FUNCPOINT
 
-  #ifdef NVDLA_SECONDARY_MEMIF_ENABLE
     property dmaif_rbk__sequence_complete_cv_one_cycle_after_mc_in_order__3_cov;
         disable iff((nvdla_core_rstn !== 1) || funcpoint_cover_off)
         @(posedge nvdla_core_clk)
@@ -1035,7 +972,7 @@ assign releasing = mc_releasing;
     endproperty
     // Cover 3 : "cv_int_wr_rsp_complete & mc_wr_rsp_complete & ack_top_id==1'b1"
     FUNCPOINT_dmaif_rbk__sequence_complete_cv_one_cycle_after_mc_in_order__3_COV : cover property (dmaif_rbk__sequence_complete_cv_one_cycle_after_mc_in_order__3_cov);
-  #endif
+
   `endif
 `endif
 //VCS coverage on
@@ -1044,7 +981,6 @@ assign releasing = mc_releasing;
 `ifndef DISABLE_FUNCPOINT
   `ifdef ENABLE_FUNCPOINT
 
-  #ifdef NVDLA_SECONDARY_MEMIF_ENABLE
     property dmaif_rbk__sequence_complete_cv_one_cycle_after_mc_out_of_order__4_cov;
         disable iff((nvdla_core_rstn !== 1) || funcpoint_cover_off)
         @(posedge nvdla_core_clk)
@@ -1052,7 +988,7 @@ assign releasing = mc_releasing;
     endproperty
     // Cover 4 : "cv_int_wr_rsp_complete & mc_wr_rsp_complete & ack_top_id==1'b0"
     FUNCPOINT_dmaif_rbk__sequence_complete_cv_one_cycle_after_mc_out_of_order__4_COV : cover property (dmaif_rbk__sequence_complete_cv_one_cycle_after_mc_out_of_order__4_cov);
-  #endif
+
   `endif
 `endif
 //VCS coverage on
@@ -1061,7 +997,6 @@ assign releasing = mc_releasing;
 `ifndef DISABLE_FUNCPOINT
   `ifdef ENABLE_FUNCPOINT
 
-  #ifdef NVDLA_SECONDARY_MEMIF_ENABLE
     property dmaif_rbk__sequence_complete_mc_one_cycle_after_cv_in_order__5_cov;
         disable iff((nvdla_core_rstn !== 1) || funcpoint_cover_off)
         @(posedge nvdla_core_clk)
@@ -1069,7 +1004,7 @@ assign releasing = mc_releasing;
     endproperty
     // Cover 5 : "mc_int_wr_rsp_complete & cv_wr_rsp_complete & ack_top_id==1'b0"
     FUNCPOINT_dmaif_rbk__sequence_complete_mc_one_cycle_after_cv_in_order__5_COV : cover property (dmaif_rbk__sequence_complete_mc_one_cycle_after_cv_in_order__5_cov);
-  #endif
+
   `endif
 `endif
 //VCS coverage on
@@ -1078,7 +1013,6 @@ assign releasing = mc_releasing;
 `ifndef DISABLE_FUNCPOINT
   `ifdef ENABLE_FUNCPOINT
 
-  #ifdef NVDLA_SECONDARY_MEMIF_ENABLE
     property dmaif_rbk__sequence_complete_mc_one_cycle_after_cv_out_of_order__6_cov;
         disable iff((nvdla_core_rstn !== 1) || funcpoint_cover_off)
         @(posedge nvdla_core_clk)
@@ -1086,7 +1020,7 @@ assign releasing = mc_releasing;
     endproperty
     // Cover 6 : "mc_int_wr_rsp_complete & cv_wr_rsp_complete & ack_top_id==1'b1"
     FUNCPOINT_dmaif_rbk__sequence_complete_mc_one_cycle_after_cv_out_of_order__6_COV : cover property (dmaif_rbk__sequence_complete_mc_one_cycle_after_cv_out_of_order__6_cov);
-  #endif
+
   `endif
 `endif
 //VCS coverage on
@@ -1512,7 +1446,6 @@ endmodule // NV_NVDLA_RUBIK_DMA_pipe_p1
 // **************************************************************************************************************
 // Generated by ::pipe -m -bc -is cv_int_rd_req_pd (cv_int_rd_req_valid,cv_int_rd_req_ready) <= rd_req_pd[78:0] (cv_rd_req_vld,cv_rd_req_rdy)
 // **************************************************************************************************************
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 module NV_NVDLA_RUBIK_DMA_pipe_p2 (
    nvdla_core_clk
   ,nvdla_core_rstn
@@ -1916,7 +1849,6 @@ wire p2_assert_clk = nvdla_core_clk;
 `endif // SPYGLASS_ASSERT_ON
 `endif
 endmodule // NV_NVDLA_RUBIK_DMA_pipe_p2
-#endif
 
 
 
@@ -2334,7 +2266,6 @@ endmodule // NV_NVDLA_RUBIK_DMA_pipe_p3
 // **************************************************************************************************************
 // Generated by ::pipe -m -bc -os cv_rd_rsp_pd (cv_rd_rsp_vld,rd_rsp_rdy) <= cv_int_rd_rsp_pd[513:0] (cv_int_rd_rsp_valid,cv_int_rd_rsp_ready)
 // **************************************************************************************************************
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 module NV_NVDLA_RUBIK_DMA_pipe_p4 (
    nvdla_core_clk
   ,nvdla_core_rstn
@@ -2738,7 +2669,6 @@ wire p4_assert_clk = nvdla_core_clk;
 `endif // SPYGLASS_ASSERT_ON
 `endif
 endmodule // NV_NVDLA_RUBIK_DMA_pipe_p4
-#endif
 
 
 
@@ -3156,7 +3086,6 @@ endmodule // NV_NVDLA_RUBIK_DMA_pipe_p5
 // **************************************************************************************************************
 // Generated by ::pipe -m -bc -is cv_int_wr_req_pd (cv_int_wr_req_valid,cv_int_wr_req_ready) <= wr_req_pd[514:0] (cv_wr_req_vld,cv_wr_req_rdy)
 // **************************************************************************************************************
-#ifdef NVDLA_SECONDARY_MEMIF_ENABLE
 module NV_NVDLA_RUBIK_DMA_pipe_p6 (
    nvdla_core_clk
   ,nvdla_core_rstn
@@ -3560,6 +3489,5 @@ wire p6_assert_clk = nvdla_core_clk;
 `endif // SPYGLASS_ASSERT_ON
 `endif
 endmodule // NV_NVDLA_RUBIK_DMA_pipe_p6
-#endif
 
 

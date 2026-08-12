@@ -6,7 +6,17 @@ The concrete example used here is `conv_1x1x8`, a `1x1x8 -> 1x1x1` convolution f
 
 ## Overview
 
-The fastest safe workflow is:
+There are two workflows.
+
+Fast path when `out_nv_small.nvdla` already exists:
+
+1. Parse the loadable metadata and blob sizes.
+2. Build a replay script from the standard ONNC UMD allocation order.
+3. Generate or embed weights/descriptors.
+4. Run in a fresh VP with normal `opendla.ko`.
+5. Only use `opendla_logged.ko` if the normal replay fails and you need register evidence.
+
+Full path when starting from a new ONNX model:
 
 1. Create a model folder under `ref/onnc-tutorial/models/`.
 2. Generate the ONNX model in that folder.
@@ -20,6 +30,79 @@ The fastest safe workflow is:
 10. Decode blobs progressively into explicit Python descriptor builders, like `examples/conv.py`.
 
 Do not start from `opendla_logged.ko`. The logged KMD can hang or fail submit because it dumps task buffers and register activity. Always prove the loadable works first with normal `opendla.ko`.
+
+## Fast Path For An Existing Loadable
+
+Use this when the shape already has:
+
+```text
+ref/onnc-tutorial/models/<example_name>/out_nv_small.nvdla
+```
+
+Parse the loadable and print everything needed for replay:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import sys
+
+example = '<example_name>'
+sys.path.insert(0, '/home/fedora/nvdla/examples/vp')
+import parse
+
+path = Path('/home/fedora/nvdla/ref/onnc-tutorial/models') / example / 'out_nv_small.nvdla'
+loadable = parse.parse_loadable(path.read_bytes())
+
+print('tasks')
+for task in loadable['task_list']:
+    print(task)
+
+print('memory')
+for idx, memory in enumerate(loadable['memory_list']):
+    print(idx, memory)
+
+print('addresses')
+for idx, address in enumerate(loadable['address_list']):
+    print(idx, address)
+
+print('blobs')
+for blob in loadable['blob_list']:
+    print(blob['name'], blob['size'], len(blob['data']))
+PY
+```
+
+For ONNC single-task CONV+SDP loadables like `conv_1x1x8` and `conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1`, the replay usually uses this UMD/GEM allocation order:
+
+```python
+sizes = [
+    4096,          # scratch0
+    weight_bytes,  # tb-0
+    40,            # task-0-addr0 network descriptor
+    72,            # task-0-dep_graph
+    232,           # task-0-op_list
+    1288,          # task-0-surf_list
+    4096,          # scratch1
+    input_bytes,
+    output_bytes,
+]
+address_slots = [3, 8, 2, 9, 3, 4, 5, 6, 7]
+```
+
+Do not blindly use `memory_list` order as GEM allocation order. It can cause `NVDLA_SUBMIT` to fail with `ENOMEM`. The Python replay must match the UMD allocation order, not just the loadable memory table order.
+
+Use `conv_1x1x8.py` as the smallest replay template and `conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1.py` as the large-buffer template.
+
+Fast replay checklist:
+
+```text
+[ ] Loadable path exists under ref/onnc-tutorial/models/<example_name>/out_nv_small.nvdla
+[ ] Parsed blob sizes are known
+[ ] UMD allocation order uses scratch, weights, descriptors, scratch, input, output
+[ ] address_slots is [3, 8, 2, 9, 3, 4, 5, 6, 7] for standard single-task ONNC CONV+SDP
+[ ] Descriptors and weights match the loadable byte-for-byte, or are intentionally generated
+[ ] VP was restarted after any hung or ENOMEM run
+[ ] Replay passes with normal opendla.ko
+```
 
 ## Prerequisites
 
@@ -81,6 +164,14 @@ ref/onnc-tutorial/models/conv_1x1x8/input1x1.pgm
 examples/vp/conv_1x1x8_nv_small.nvdla
 examples/vp/input1x1.pgm
 examples/conv_1x1x8.py
+```
+
+Another added shape follows the same loadable-replay pattern:
+
+```text
+ref/onnc-tutorial/models/conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1/out_nv_small.nvdla
+examples/vp/conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1_nv_small.nvdla
+examples/conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1.py
 ```
 
 ## Step 1: Create A Model Folder
@@ -504,11 +595,14 @@ Create `examples/<example_name>.py`.
 Recommended first version:
 
 1. Reuse the DRM/KMD ioctl structs from `examples/conv.py` or `examples/conv_1x1x8.py`.
-2. Load the validated `.nvdla` file and extract blobs using `examples/vp/parse.py`.
-3. Allocate GEM buffers in the same order as the UMD runtime.
-4. Fill each buffer with the captured or loadable data.
-5. Submit with the captured task address list order.
-6. Read output buffer and compare to expected result.
+2. Extract blobs from the validated `.nvdla` file once using `examples/vp/parse.py`.
+3. Embed descriptor blobs or rebuild them with Python helpers.
+4. Generate weights and inputs where practical.
+5. Allocate GEM buffers in the same order as the UMD runtime.
+6. Submit with the captured task address list order.
+7. Read output buffer and compare to expected result.
+
+The final replay script should be self-contained. It should not require reading a `.nvdla` loadable or importing `parse.py` at runtime.
 
 For `conv_1x1x8`, the loadable metadata is:
 
@@ -567,9 +661,106 @@ for blob in loadable['blob_list']:
 PY
 ```
 
+Generate copy-paste `bytes.fromhex()` constants for descriptors:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import sys
+import textwrap
+
+example = '<example_name>'
+sys.path.insert(0, '/home/fedora/nvdla/examples/vp')
+import parse
+
+path = Path('/home/fedora/nvdla/ref/onnc-tutorial/models') / example / 'out_nv_small.nvdla'
+loadable = parse.parse_loadable(path.read_bytes())
+blobs = {blob['name']: blob['data'] for blob in loadable['blob_list']}
+
+for const, name in [
+    ('NET_DESC', 'task-0-addr0'),
+    ('DEP_GRAPH', 'task-0-dep_graph'),
+    ('OP_LIST', 'task-0-op_list'),
+    ('SURF_LIST', 'task-0-surf_list'),
+    ('WEIGHTS', 'tb-0'),
+]:
+    if name not in blobs:
+        continue
+    data = blobs[name]
+    print(f'{const} = bytes.fromhex(')
+    for line in textwrap.wrap(data.hex(), 96):
+        print(f'    "{line}"')
+    print(')')
+    print()
+PY
+```
+
+For large weights, prefer a small generator over a huge literal when the pattern is obvious. `conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1.py` rebuilds the 9216-byte `tb-0` from a compact row-start table and verifies it against the source loadable during host-side development.
+
+Avoid `zlib` in guest-side scripts. The VP rootfs Python may not include it. Plain `bytes.fromhex()`, generated tensors, and the standard modules already used by the examples are safer.
+
+Verify generated constants on the host before booting VP:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import sys
+
+example = '<example_name>'
+module_name = '<example_module_name>'
+sys.path.insert(0, '/home/fedora/nvdla/examples/vp')
+sys.path.insert(0, '/home/fedora/nvdla/examples')
+import parse
+module = __import__(module_name)
+
+path = Path('/home/fedora/nvdla/ref/onnc-tutorial/models') / example / 'out_nv_small.nvdla'
+loadable = parse.parse_loadable(path.read_bytes())
+blobs = {blob['name']: blob['data'] for blob in loadable['blob_list']}
+
+assert module.NET_DESC == blobs['task-0-addr0']
+assert module.DEP_GRAPH == blobs['task-0-dep_graph']
+assert module.OP_LIST == blobs['task-0-op_list']
+assert module.SURF_LIST == blobs['task-0-surf_list']
+if hasattr(module, 'WEIGHTS'):
+    assert module.WEIGHTS == blobs['tb-0']
+print('constants match')
+PY
+```
+
+Important descriptor layout fix:
+
+`dla_data_cube` is 28 bytes in these loadables, not 32 bytes. Do not insert an extra reserved `I` between `address` and `size`. The wrong format shifts every surface descriptor field and can make VP hang in `NVDLA_SUBMIT`.
+
+Use:
+
+```python
+"<HhIHHHHIII"
+```
+
+Do not use:
+
+```python
+"<HhIIHHHHIII"
+```
+
+This exact mistake caused `examples/simple_add.py` to hang even after the reference `test_Add.nvdla` loadable passed. Comparing generated descriptor bytes against the parsed working loadable exposed the mismatch; after switching to the 28-byte cube format, `simple_add.py` generated `net`, `dep`, `op`, `surf`, and `tb-0` matching `test_Add.nvdla` byte-for-byte.
+
+The helper should look like this when rebuilding surfaces manually:
+
+```python
+def pack_cube(mem_type=0, address=0, size=0, width=0, height=0, channel=0,
+              line_stride=0, surf_stride=0, plane_stride=0):
+    return struct.pack(
+        "<HhIHHHHIII", mem_type, address, size, width, height,
+        channel, 0, line_stride, surf_stride, plane_stride,
+    )
+```
+
 ## Step 11: Test The Replay Script On VP
 
 Restart VP and use normal `opendla.ko` again.
+
+If a previous run hung or returned `ENOMEM`, restart VP before retrying. A bad submit can leave the KMD or engine state dirty even after the Python process exits.
 
 ```bash
 sshpass -p nvdla ssh \
@@ -579,6 +770,18 @@ sshpass -p nvdla ssh \
   'mount -t 9p -o trans=virtio r /mnt || true; cd /mnt; insmod vp/drm.ko; insmod vp/opendla.ko; python3 examples/<example_name>.py' \
   > examples/vp/<example_name>_replay_opendla.log 2>&1
 ```
+
+When debugging interactively, this shorter flow is usually faster:
+
+```bash
+ssh -p 6667 root@127.0.0.1
+mount -t 9p -o trans=virtio r /mnt
+cd /mnt && insmod drm.ko && insmod opendla.ko
+./nvdla_runtime --loadable test_Add.nvdla --image input1x5x7.pgm --rawdump
+python3 examples/<example_name>.py
+```
+
+Run the reference `test_Add.nvdla` first after a fresh boot. If it does not print `Test pass`, fix the VP/KMD state before debugging the new shape.
 
 Example:
 
@@ -595,8 +798,51 @@ Expected result:
 
 ```text
 SUBMIT ret=0
-conv_1x1x8 NPU=56.0 expected=56.0 PASS output=0053000000000000000000000000000000000000000000000000000000000000
+conv_1x1x8 NPU=56.0 expected=56.0 PASS decoded=[56.0, 0.0, ...] raw=0053000000000000000000000000000000000000000000000000000000000000
 ```
+
+For the larger c144 1x1 shape:
+
+```bash
+python3 examples/conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1.py
+```
+
+Expected output is summarized instead of fully printed:
+
+```text
+SUBMIT ret=0
+conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1 first_pixel=[...] expected_first_pixel=[...] nonzero_fp16=... nan_count=... finite_sum=... PASS
+```
+
+Useful symptoms and fixes while testing replay scripts:
+
+```text
+OSError: [Errno 12] Cannot allocate memory
+```
+
+Likely causes:
+
+1. GEM allocation order or `address_slots` does not match the UMD runtime order.
+2. VP/KMD state is dirty from a previous bad submit.
+3. The loadable was not built for `nv_small`.
+
+Fast fix order:
+
+1. Restart VP and rerun `test_Add.nvdla`.
+2. Check `sizes` and `address_slots` against the fast-path template.
+3. Compare embedded constants against the source loadable on the host.
+
+```text
+Python import fails for zlib
+```
+
+Do not use compressed blob literals in guest scripts. The VP rootfs Python can lack `zlib`. Use `bytes.fromhex()` or generated data.
+
+```text
+NVDLA_SUBMIT hangs
+```
+
+First suspect malformed descriptors, especially `dla_data_cube` packing. Compare generated `SURF_LIST` byte-for-byte against the loadable and restart VP after each bad submit.
 
 ## Step 12: Decode Opaque Blobs Into Python Builders
 
@@ -604,12 +850,14 @@ Once replay works, replace opaque blobs gradually.
 
 Recommended order:
 
-1. Keep loading the `.nvdla` initially for safety.
+1. Use the `.nvdla` only during host-side extraction and comparison.
 2. Decode and rebuild `network_descriptor` first. It is small and stable.
 3. Decode and rebuild `dependency_graph` next.
 4. Decode and rebuild SDP op/surface descriptors.
 5. Decode CONV op/surface descriptors.
 6. Only then replace weight/input packing with generated tensors.
+
+The final example script should remain self-contained and should not read the loadable at runtime.
 
 Do not try to decode everything in one step. Keep each step tested with VP.
 
@@ -673,6 +921,10 @@ Use this checklist before considering a new example done:
 [ ] VP normal opendla.ko runtime says Test pass
 [ ] Logged KMD capture exists, even if it times out
 [ ] Python replay script exists under examples/
+[ ] Python replay script is self-contained and does not import parse.py at runtime
+[ ] GEM allocation order and address_slots match the UMD runtime order
+[ ] Surface descriptors use the 28-byte dla_data_cube format
+[ ] Host-side constant comparison says descriptors and weights match the loadable
 [ ] Python replay passes on VP with normal opendla.ko
 [ ] Decode output exists for loadable inspection
 [ ] Opaque blobs are progressively decoded where practical

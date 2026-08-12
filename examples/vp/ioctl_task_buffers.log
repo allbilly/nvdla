@@ -1,0 +1,56 @@
+MMAP_SEEN ret=0xffff9e454000 length=4096 prot=0x3 flags=0x22 fd=18446744073709551615 off=0x0
+MMAP_SEEN ret=0xffff9e3e5000 length=289600 prot=0x5 flags=0x802 fd=3 off=0x0
+MMAP_SEEN ret=0xffff9e429000 length=12288 prot=0x3 flags=0x812 fd=3 off=0x34000
+MMAP_SEEN ret=0xffff9e257000 length=1626424 prot=0x5 flags=0x802 fd=3 off=0x0
+MMAP_SEEN ret=0xffff9e3d5000 length=49152 prot=0x3 flags=0x812 fd=3 off=0x16e000
+MMAP_SEEN ret=0xffff9e3e1000 length=12600 prot=0x3 flags=0x32 fd=18446744073709551615 off=0x0
+MMAP_SEEN ret=0xffff9e453000 length=4096 prot=0x3 flags=0x22 fd=18446744073709551615 off=0x0
+MMAP_SEEN ret=0xffff9e1ab000 length=701048 prot=0x5 flags=0x802 fd=3 off=0x0
+MMAP_SEEN ret=0xffff9e255000 length=8192 prot=0x3 flags=0x812 fd=3 off=0x9a000
+MMAP_SEEN ret=0xffff9e18a000 length=134592 prot=0x5 flags=0x802 fd=3 off=0x0
+MMAP_SEEN ret=0xffff9e1aa000 length=4096 prot=0x3 flags=0x812 fd=3 off=0x10000
+MMAP_SEEN ret=0xffff9e15e000 length=177056 prot=0x5 flags=0x802 fd=3 off=0x0
+MMAP_SEEN ret=0xffff9e184000 length=8192 prot=0x3 flags=0x812 fd=3 off=0x16000
+MMAP_SEEN ret=0xffff9e186000 length=13216 prot=0x3 flags=0x32 fd=18446744073709551615 off=0x0
+MMAP_SEEN ret=0xffff9e452000 length=4096 prot=0x3 flags=0x22 fd=18446744073709551615 off=0x0
+MMAP_SEEN ret=0xffff9e019000 length=1327728 prot=0x5 flags=0x802 fd=3 off=0x0
+MMAP_SEEN ret=0xffff9e154000 length=24576 prot=0x3 flags=0x812 fd=3 off=0x12b000
+MMAP_SEEN ret=0xffff9e15a000 length=12912 prot=0x3 flags=0x32 fd=18446744073709551615 off=0x0
+MMAP_SEEN ret=0xffff9e451000 length=4096 prot=0x3 flags=0x22 fd=18446744073709551615 off=0x0
+MMAP_SEEN ret=0xffff9e450000 length=4096 prot=0x3 flags=0x22 fd=18446744073709551615 off=0x0
+MMAP_SEEN ret=0xffff9e44f000 length=4096 prot=0x3 flags=0x22 fd=18446744073709551615 off=0x0
+MMAP_SEEN ret=0xffff9e44e000 length=4096 prot=0x3 flags=0x22 fd=18446744073709551615 off=0x0
+MMAP_SEEN ret=0xffff9e44d000 length=4096 prot=0x3 flags=0x1 fd=3 off=0x100009000
+TRACK_MMAP handle=1 ret=0xffff9e44d000 length=4096 prot=0x3 flags=0x1 fd=3 off=0x100009000
+MMAP_SEEN ret=0xffff9e44c000 length=1120 prot=0x3 flags=0x1 fd=3 off=0x10000a000
+TRACK_MMAP handle=2 ret=0xffff9e44c000 length=1120 prot=0x3 flags=0x1 fd=3 off=0x10000a000
+MMAP_SEEN ret=0xffff9e44b000 length=40 prot=0x3 flags=0x1 fd=3 off=0x10000b000
+TRACK_MMAP handle=3 ret=0xffff9e44b000 length=40 prot=0x3 flags=0x1 fd=3 off=0x10000b000
+MMAP_SEEN ret=0xffff9e44a000 length=36 prot=0x3 flags=0x1 fd=3 off=0x10000c000
+TRACK_MMAP handle=4 ret=0xffff9e44a000 length=36 prot=0x3 flags=0x1 fd=3 off=0x10000c000
+MMAP_SEEN ret=0xffff9e449000 length=116 prot=0x3 flags=0x1 fd=3 off=0x10000d000
+TRACK_MMAP handle=5 ret=0xffff9e449000 length=116 prot=0x3 flags=0x1 fd=3 off=0x10000d000
+MMAP_SEEN ret=0xffff9e448000 length=644 prot=0x3 flags=0x1 fd=3 off=0x10000e000
+TRACK_MMAP handle=6 ret=0xffff9e448000 length=644 prot=0x3 flags=0x1 fd=3 off=0x10000e000
+MMAP_SEEN ret=0xffff9e018000 length=4096 prot=0x3 flags=0x1 fd=3 off=0x10000f000
+TRACK_MMAP handle=7 ret=0xffff9e018000 length=4096 prot=0x3 flags=0x1 fd=3 off=0x10000f000
+MMAP_SEEN ret=0xffff9d818000 length=8388608 prot=0x3 flags=0x20022 fd=18446744073709551615 off=0x0
+MMAP_SEEN ret=0xffff9d817000 length=1120 prot=0x3 flags=0x1 fd=3 off=0x100010000
+TRACK_MMAP handle=8 ret=0xffff9d817000 length=1120 prot=0x3 flags=0x1 fd=3 off=0x100010000
+MMAP_SEEN ret=0xffff9d816000 length=1120 prot=0x3 flags=0x1 fd=3 off=0x100011000
+TRACK_MMAP handle=9 ret=0xffff9d816000 length=1120 prot=0x3 flags=0x1 fd=3 off=0x100011000
+ENTER fd=3 req=0xc0106440 arg=0xffffe90060e0 size=16 data=a00df9e8ffffffff0100000000000000
+KNOWN_HANDLES {1: {'size': 4096, 'prime_fd': 4, 'map_offset': 36864, 'vaddr': 281473337053184}, 2: {'size': 1120, 'prime_fd': 5, 'map_offset': 40960, 'vaddr': 281473337049088}, 3: {'size': 40, 'prime_fd': 6, 'map_offset': 45056, 'vaddr': 281473337044992}, 4: {'size': 36, 'prime_fd': 7, 'map_offset': 49152, 'vaddr': 281473337040896}, 5: {'size': 116, 'prime_fd': 8, 'map_offset': 53248, 'vaddr': 281473337036800}, 6: {'size': 644, 'prime_fd': 9, 'map_offset': 57344, 'vaddr': 281473337032704}, 7: {'size': 4096, 'prime_fd': 10, 'map_offset': 61440, 'vaddr': 281473332641792}, 8: {'size': 1120, 'prime_fd': 11, 'map_offset': 65536, 'vaddr': 281473324249088}, 9: {'size': 1120, 'prime_fd': 12, 'map_offset': 69632, 'vaddr': 281473324244992}}
+GEM_BUFFER handle=1 prime_fd=4 size=4096 dumped=0 vaddr=0xffff9e44d000 map_offset=0x9000 data=
+GEM_BUFFER handle=2 prime_fd=5 size=1120 dumped=0 vaddr=0xffff9e44c000 map_offset=0xa000 data=
+GEM_BUFFER handle=3 prime_fd=6 size=40 dumped=0 vaddr=0xffff9e44b000 map_offset=0xb000 data=
+GEM_BUFFER handle=4 prime_fd=7 size=36 dumped=0 vaddr=0xffff9e44a000 map_offset=0xc000 data=
+GEM_BUFFER handle=5 prime_fd=8 size=116 dumped=0 vaddr=0xffff9e449000 map_offset=0xd000 data=
+GEM_BUFFER handle=6 prime_fd=9 size=644 dumped=0 vaddr=0xffff9e448000 map_offset=0xe000 data=
+GEM_BUFFER handle=7 prime_fd=10 size=4096 dumped=0 vaddr=0xffff9e018000 map_offset=0xf000 data=
+GEM_BUFFER handle=8 prime_fd=11 size=1120 dumped=0 vaddr=0xffff9d817000 map_offset=0x10000 data=
+GEM_BUFFER handle=9 prime_fd=12 size=1120 dumped=0 vaddr=0xffff9d816000 map_offset=0x11000 data=
+SUBMIT tasks=0xffffffffe8f90da0 num_tasks=1 flags=0x0 version=0
+TASK[0] addr=0xffffffffe8f90da0 data=
+EXIT fd=3 req=0xc0106440 ret=-12 arg=0xffffe90060e0 size=16 data=a00df9e8ffffffff0100000000000000
+EXIT 1

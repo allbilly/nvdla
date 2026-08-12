@@ -27,12 +27,12 @@ podman run --rm --user 0 --security-opt label=disable \
   python gen_conv_shape_strategy.py
 ```
 
-Compile one model for `nv_small`:
+Compile one model for the ONNC FP16 / `nv_full`-style VP flow:
 
 ```bash
 podman run --rm --user 0 --security-opt label=disable \
   -v /home/fedora/nvdla/ref/onnc-tutorial/models:/tutorial/models \
   -w /onnc/onnc-umbrella/build-normal \
   docker.io/onnc/onnc-community:latest \
-  sh -c 'onnc -mquadruple nvdla -march nv_small /tutorial/models/conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1/conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1.onnx && cp out.nvdla /tutorial/models/conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1/out_nv_small.nvdla'
+  sh -c 'onnc -mquadruple nvdla /tutorial/models/conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1/conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1.onnx && cp out.nvdla /tutorial/models/conv2d_b1_c144_h28_w28_oc32_wic144_k1x1_g1/out.nvdla'
 ```

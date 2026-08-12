@@ -8,7 +8,6 @@
 
 // File Name: NV_NVDLA_SDP_RDMA_REG_dual.v
 
-#include "NV_NVDLA_SDP_define.h"
 module NV_NVDLA_SDP_RDMA_REG_dual (
    reg_rd_data
   ,reg_offset
@@ -124,20 +123,20 @@ input         nvdla_core_rstn;
 
 // Writable register flop/trigger outputs
 output [31:0] bn_base_addr_high;
-output [31:0] bn_base_addr_low;
-output [31:0] bn_batch_stride;
-output [31:0] bn_line_stride;
-output [31:0] bn_surface_stride;
+output [26:0] bn_base_addr_low;
+output [26:0] bn_batch_stride;
+output [26:0] bn_line_stride;
+output [26:0] bn_surface_stride;
 output        brdma_data_mode;
 output        brdma_data_size;
 output [1:0]  brdma_data_use;
 output        brdma_disable;
 output        brdma_ram_type;
 output [31:0] bs_base_addr_high;
-output [31:0] bs_base_addr_low;
-output [31:0] bs_batch_stride;
-output [31:0] bs_line_stride;
-output [31:0] bs_surface_stride;
+output [26:0] bs_base_addr_low;
+output [26:0] bs_batch_stride;
+output [26:0] bs_line_stride;
+output [26:0] bs_surface_stride;
 output [12:0] channel;
 output [12:0] height;
 output [12:0] width;
@@ -147,10 +146,10 @@ output [1:0]  erdma_data_use;
 output        erdma_disable;
 output        erdma_ram_type;
 output [31:0] ew_base_addr_high;
-output [31:0] ew_base_addr_low;
-output [31:0] ew_batch_stride;
-output [31:0] ew_line_stride;
-output [31:0] ew_surface_stride;
+output [26:0] ew_base_addr_low;
+output [26:0] ew_batch_stride;
+output [26:0] ew_line_stride;
+output [26:0] ew_surface_stride;
 output [4:0]  batch_number;
 output        flying_mode;
 output [1:0]  in_precision;
@@ -166,10 +165,10 @@ output        op_en_trigger;
 output        perf_dma_en;
 output        perf_nan_inf_count_en;
 output [31:0] src_base_addr_high;
-output [31:0] src_base_addr_low;
+output [26:0] src_base_addr_low;
 output        src_ram_type;
-output [31:0] src_line_stride;
-output [31:0] src_surface_stride;
+output [26:0] src_line_stride;
+output [26:0] src_surface_stride;
 
 // Read-only register inputs
 input         op_en;
@@ -191,20 +190,20 @@ reg           arreggen_dump;
 // leda FM_2_23 on
 reg     [4:0] batch_number;
 reg    [31:0] bn_base_addr_high;
-reg    [31:0] bn_base_addr_low;
-reg    [31:0] bn_batch_stride;
-reg    [31:0] bn_line_stride;
-reg    [31:0] bn_surface_stride;
+reg    [26:0] bn_base_addr_low;
+reg    [26:0] bn_batch_stride;
+reg    [26:0] bn_line_stride;
+reg    [26:0] bn_surface_stride;
 reg           brdma_data_mode;
 reg           brdma_data_size;
 reg     [1:0] brdma_data_use;
 reg           brdma_disable;
 reg           brdma_ram_type;
 reg    [31:0] bs_base_addr_high;
-reg    [31:0] bs_base_addr_low;
-reg    [31:0] bs_batch_stride;
-reg    [31:0] bs_line_stride;
-reg    [31:0] bs_surface_stride;
+reg    [26:0] bs_base_addr_low;
+reg    [26:0] bs_batch_stride;
+reg    [26:0] bs_line_stride;
+reg    [26:0] bs_surface_stride;
 reg    [12:0] channel;
 reg           erdma_data_mode;
 reg           erdma_data_size;
@@ -212,10 +211,10 @@ reg     [1:0] erdma_data_use;
 reg           erdma_disable;
 reg           erdma_ram_type;
 reg    [31:0] ew_base_addr_high;
-reg    [31:0] ew_base_addr_low;
-reg    [31:0] ew_batch_stride;
-reg    [31:0] ew_line_stride;
-reg    [31:0] ew_surface_stride;
+reg    [26:0] ew_base_addr_low;
+reg    [26:0] ew_batch_stride;
+reg    [26:0] ew_line_stride;
+reg    [26:0] ew_surface_stride;
 reg           flying_mode;
 reg    [12:0] height;
 reg     [1:0] in_precision;
@@ -230,10 +229,10 @@ reg           perf_nan_inf_count_en;
 reg     [1:0] proc_precision;
 reg    [31:0] reg_rd_data;
 reg    [31:0] src_base_addr_high;
-reg    [31:0] src_base_addr_low;
-reg    [31:0] src_line_stride;
+reg    [26:0] src_base_addr_low;
+reg    [26:0] src_line_stride;
 reg           src_ram_type;
-reg    [31:0] src_surface_stride;
+reg    [26:0] src_surface_stride;
 reg    [12:0] width;
 reg           winograd;
 
@@ -278,25 +277,25 @@ wire nvdla_sdp_rdma_d_status_inf_input_num_0_wren = (reg_offset_wr == (32'ha07c 
 wire nvdla_sdp_rdma_d_status_nan_input_num_0_wren = (reg_offset_wr == (32'ha078  & 32'h00000fff)) & reg_wr_en ;  //spyglass disable UnloadedNet-ML //(W528)
 
 assign nvdla_sdp_rdma_d_bn_base_addr_high_0_out[31:0] = { bn_base_addr_high };
-assign nvdla_sdp_rdma_d_bn_base_addr_low_0_out[31:0] = { bn_base_addr_low};
-assign nvdla_sdp_rdma_d_bn_batch_stride_0_out[31:0] = { bn_batch_stride};
-assign nvdla_sdp_rdma_d_bn_line_stride_0_out[31:0] = { bn_line_stride};
-assign nvdla_sdp_rdma_d_bn_surface_stride_0_out[31:0] = { bn_surface_stride};
+assign nvdla_sdp_rdma_d_bn_base_addr_low_0_out[31:0] = { bn_base_addr_low, 5'b0 };
+assign nvdla_sdp_rdma_d_bn_batch_stride_0_out[31:0] = { bn_batch_stride, 5'b0 };
+assign nvdla_sdp_rdma_d_bn_line_stride_0_out[31:0] = { bn_line_stride, 5'b0 };
+assign nvdla_sdp_rdma_d_bn_surface_stride_0_out[31:0] = { bn_surface_stride, 5'b0 };
 assign nvdla_sdp_rdma_d_brdma_cfg_0_out[31:0] = { 26'b0, brdma_ram_type, brdma_data_mode, brdma_data_size, brdma_data_use, brdma_disable };
 assign nvdla_sdp_rdma_d_bs_base_addr_high_0_out[31:0] = { bs_base_addr_high };
-assign nvdla_sdp_rdma_d_bs_base_addr_low_0_out[31:0] = { bs_base_addr_low};
-assign nvdla_sdp_rdma_d_bs_batch_stride_0_out[31:0] = { bs_batch_stride};
-assign nvdla_sdp_rdma_d_bs_line_stride_0_out[31:0] = { bs_line_stride};
-assign nvdla_sdp_rdma_d_bs_surface_stride_0_out[31:0] = { bs_surface_stride};
+assign nvdla_sdp_rdma_d_bs_base_addr_low_0_out[31:0] = { bs_base_addr_low, 5'b0 };
+assign nvdla_sdp_rdma_d_bs_batch_stride_0_out[31:0] = { bs_batch_stride, 5'b0 };
+assign nvdla_sdp_rdma_d_bs_line_stride_0_out[31:0] = { bs_line_stride, 5'b0 };
+assign nvdla_sdp_rdma_d_bs_surface_stride_0_out[31:0] = { bs_surface_stride, 5'b0 };
 assign nvdla_sdp_rdma_d_data_cube_channel_0_out[31:0] = { 19'b0, channel };
 assign nvdla_sdp_rdma_d_data_cube_height_0_out[31:0] = { 19'b0, height };
 assign nvdla_sdp_rdma_d_data_cube_width_0_out[31:0] = { 19'b0, width };
 assign nvdla_sdp_rdma_d_erdma_cfg_0_out[31:0] = { 26'b0, erdma_ram_type, erdma_data_mode, erdma_data_size, erdma_data_use, erdma_disable };
 assign nvdla_sdp_rdma_d_ew_base_addr_high_0_out[31:0] = { ew_base_addr_high };
-assign nvdla_sdp_rdma_d_ew_base_addr_low_0_out[31:0] = { ew_base_addr_low};
-assign nvdla_sdp_rdma_d_ew_batch_stride_0_out[31:0] = { ew_batch_stride};
-assign nvdla_sdp_rdma_d_ew_line_stride_0_out[31:0] = { ew_line_stride};
-assign nvdla_sdp_rdma_d_ew_surface_stride_0_out[31:0] = { ew_surface_stride};
+assign nvdla_sdp_rdma_d_ew_base_addr_low_0_out[31:0] = { ew_base_addr_low, 5'b0 };
+assign nvdla_sdp_rdma_d_ew_batch_stride_0_out[31:0] = { ew_batch_stride, 5'b0 };
+assign nvdla_sdp_rdma_d_ew_line_stride_0_out[31:0] = { ew_line_stride, 5'b0 };
+assign nvdla_sdp_rdma_d_ew_surface_stride_0_out[31:0] = { ew_surface_stride, 5'b0 };
 assign nvdla_sdp_rdma_d_feature_mode_cfg_0_out[31:0] = { 19'b0, batch_number, out_precision, proc_precision, in_precision, winograd, flying_mode };
 assign nvdla_sdp_rdma_d_nrdma_cfg_0_out[31:0] = { 26'b0, nrdma_ram_type, nrdma_data_mode, nrdma_data_size, nrdma_data_use, nrdma_disable };
 assign nvdla_sdp_rdma_d_op_enable_0_out[31:0] = { 31'b0, op_en };
@@ -306,10 +305,10 @@ assign nvdla_sdp_rdma_d_perf_erdma_read_stall_0_out[31:0] = { erdma_stall };
 assign nvdla_sdp_rdma_d_perf_mrdma_read_stall_0_out[31:0] = { mrdma_stall };
 assign nvdla_sdp_rdma_d_perf_nrdma_read_stall_0_out[31:0] = { nrdma_stall };
 assign nvdla_sdp_rdma_d_src_base_addr_high_0_out[31:0] = { src_base_addr_high };
-assign nvdla_sdp_rdma_d_src_base_addr_low_0_out[31:0] = { src_base_addr_low};
+assign nvdla_sdp_rdma_d_src_base_addr_low_0_out[31:0] = { src_base_addr_low, 5'b0 };
 assign nvdla_sdp_rdma_d_src_dma_cfg_0_out[31:0] = { 31'b0, src_ram_type };
-assign nvdla_sdp_rdma_d_src_line_stride_0_out[31:0] = { src_line_stride};
-assign nvdla_sdp_rdma_d_src_surface_stride_0_out[31:0] = { src_surface_stride};
+assign nvdla_sdp_rdma_d_src_line_stride_0_out[31:0] = { src_line_stride, 5'b0 };
+assign nvdla_sdp_rdma_d_src_surface_stride_0_out[31:0] = { src_surface_stride, 5'b0 };
 assign nvdla_sdp_rdma_d_status_inf_input_num_0_out[31:0] = { status_inf_input_num };
 assign nvdla_sdp_rdma_d_status_nan_input_num_0_out[31:0] = { status_nan_input_num };
 
@@ -473,34 +472,34 @@ end
 // Register flop declarations
 always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
   if (!nvdla_core_rstn) begin
-    bn_base_addr_high[31:0] <= 32'h0;
-    bn_base_addr_low[31:0] <= {(32){1'b0}};
-    bn_batch_stride[31:0] <= {(32){1'b0}};
-    bn_line_stride[31:0] <= {(32){1'b0}};
-    bn_surface_stride[31:0] <= {(32){1'b0}};
+    bn_base_addr_high[31:0] <= 32'b00000000000000000000000000000000;
+    bn_base_addr_low[26:0] <= 27'b000000000000000000000000000;
+    bn_batch_stride[26:0] <= 27'b000000000000000000000000000;
+    bn_line_stride[26:0] <= 27'b000000000000000000000000000;
+    bn_surface_stride[26:0] <= 27'b000000000000000000000000000;
     brdma_data_mode <= 1'b0;
     brdma_data_size <= 1'b0;
     brdma_data_use[1:0] <= 2'b00;
-    brdma_disable <= 1'b1;
+    brdma_disable <= 1'b0;
     brdma_ram_type <= 1'b0;
-    bs_base_addr_high[31:0] <= 32'h0;
-    bs_base_addr_low[31:0] <= {(32){1'b0}};
-    bs_batch_stride[31:0] <= {(32){1'b0}};
-    bs_line_stride[31:0] <= {(32){1'b0}};
-    bs_surface_stride[31:0] <= {(32){1'b0}};
+    bs_base_addr_high[31:0] <= 32'b00000000000000000000000000000000;
+    bs_base_addr_low[26:0] <= 27'b000000000000000000000000000;
+    bs_batch_stride[26:0] <= 27'b000000000000000000000000000;
+    bs_line_stride[26:0] <= 27'b000000000000000000000000000;
+    bs_surface_stride[26:0] <= 27'b000000000000000000000000000;
     channel[12:0] <= 13'b0000000000000;
     height[12:0] <= 13'b0000000000000;
     width[12:0] <= 13'b0000000000000;
     erdma_data_mode <= 1'b0;
     erdma_data_size <= 1'b0;
     erdma_data_use[1:0] <= 2'b00;
-    erdma_disable <= 1'b1;
+    erdma_disable <= 1'b0;
     erdma_ram_type <= 1'b0;
-    ew_base_addr_high[31:0] <= 32'h0;
-    ew_base_addr_low[31:0] <= {(32){1'b0}};
-    ew_batch_stride[31:0] <= {(32){1'b0}};
-    ew_line_stride[31:0] <= {(32){1'b0}};
-    ew_surface_stride[31:0] <= {(32){1'b0}};
+    ew_base_addr_high[31:0] <= 32'b00000000000000000000000000000000;
+    ew_base_addr_low[26:0] <= 27'b000000000000000000000000000;
+    ew_batch_stride[26:0] <= 27'b000000000000000000000000000;
+    ew_line_stride[26:0] <= 27'b000000000000000000000000000;
+    ew_surface_stride[26:0] <= 27'b000000000000000000000000000;
     batch_number[4:0] <= 5'b00000;
     flying_mode <= 1'b0;
     in_precision[1:0] <= 2'b01;
@@ -510,15 +509,15 @@ always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
     nrdma_data_mode <= 1'b0;
     nrdma_data_size <= 1'b0;
     nrdma_data_use[1:0] <= 2'b00;
-    nrdma_disable <= 1'b1;
+    nrdma_disable <= 1'b0;
     nrdma_ram_type <= 1'b0;
     perf_dma_en <= 1'b0;
     perf_nan_inf_count_en <= 1'b0;
-    src_base_addr_high[31:0] <= 32'h0;
-    src_base_addr_low[31:0] <= {(32){1'b0}};
+    src_base_addr_high[31:0] <= 32'b00000000000000000000000000000000;
+    src_base_addr_low[26:0] <= 27'b000000000000000000000000000;
     src_ram_type <= 1'b0;
-    src_line_stride[31:0] <= {(32){1'b0}};
-    src_surface_stride[31:0] <= {(32){1'b0}};
+    src_line_stride[26:0] <= 27'b000000000000000000000000000;
+    src_surface_stride[26:0] <= 27'b000000000000000000000000000;
   end else begin
   // Register: NVDLA_SDP_RDMA_D_BN_BASE_ADDR_HIGH_0    Field: bn_base_addr_high
   if (nvdla_sdp_rdma_d_bn_base_addr_high_0_wren) begin
@@ -527,22 +526,22 @@ always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
 
   // Register: NVDLA_SDP_RDMA_D_BN_BASE_ADDR_LOW_0    Field: bn_base_addr_low
   if (nvdla_sdp_rdma_d_bn_base_addr_low_0_wren) begin
-    bn_base_addr_low[31:0] <= reg_wr_data[31:0];
+    bn_base_addr_low[26:0] <= reg_wr_data[31:5];
   end
 
   // Register: NVDLA_SDP_RDMA_D_BN_BATCH_STRIDE_0    Field: bn_batch_stride
   if (nvdla_sdp_rdma_d_bn_batch_stride_0_wren) begin
-    bn_batch_stride[31:0] <= reg_wr_data[31:0];
+    bn_batch_stride[26:0] <= reg_wr_data[31:5];
   end
 
   // Register: NVDLA_SDP_RDMA_D_BN_LINE_STRIDE_0    Field: bn_line_stride
   if (nvdla_sdp_rdma_d_bn_line_stride_0_wren) begin
-    bn_line_stride[31:0] <= reg_wr_data[31:0];
+    bn_line_stride[26:0] <= reg_wr_data[31:5];
   end
 
   // Register: NVDLA_SDP_RDMA_D_BN_SURFACE_STRIDE_0    Field: bn_surface_stride
   if (nvdla_sdp_rdma_d_bn_surface_stride_0_wren) begin
-    bn_surface_stride[31:0] <= reg_wr_data[31:0];
+    bn_surface_stride[26:0] <= reg_wr_data[31:5];
   end
 
   // Register: NVDLA_SDP_RDMA_D_BRDMA_CFG_0    Field: brdma_data_mode
@@ -577,22 +576,22 @@ always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
 
   // Register: NVDLA_SDP_RDMA_D_BS_BASE_ADDR_LOW_0    Field: bs_base_addr_low
   if (nvdla_sdp_rdma_d_bs_base_addr_low_0_wren) begin
-    bs_base_addr_low[31:0] <= reg_wr_data[31:0];
+    bs_base_addr_low[26:0] <= reg_wr_data[31:5];
   end
 
   // Register: NVDLA_SDP_RDMA_D_BS_BATCH_STRIDE_0    Field: bs_batch_stride
   if (nvdla_sdp_rdma_d_bs_batch_stride_0_wren) begin
-    bs_batch_stride[31:0] <= reg_wr_data[31:0];
+    bs_batch_stride[26:0] <= reg_wr_data[31:5];
   end
 
   // Register: NVDLA_SDP_RDMA_D_BS_LINE_STRIDE_0    Field: bs_line_stride
   if (nvdla_sdp_rdma_d_bs_line_stride_0_wren) begin
-    bs_line_stride[31:0] <= reg_wr_data[31:0];
+    bs_line_stride[26:0] <= reg_wr_data[31:5];
   end
 
   // Register: NVDLA_SDP_RDMA_D_BS_SURFACE_STRIDE_0    Field: bs_surface_stride
   if (nvdla_sdp_rdma_d_bs_surface_stride_0_wren) begin
-    bs_surface_stride[31:0] <= reg_wr_data[31:0];
+    bs_surface_stride[26:0] <= reg_wr_data[31:5];
   end
 
   // Register: NVDLA_SDP_RDMA_D_DATA_CUBE_CHANNEL_0    Field: channel
@@ -642,22 +641,22 @@ always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
 
   // Register: NVDLA_SDP_RDMA_D_EW_BASE_ADDR_LOW_0    Field: ew_base_addr_low
   if (nvdla_sdp_rdma_d_ew_base_addr_low_0_wren) begin
-    ew_base_addr_low[31:0] <= reg_wr_data[31:0];
+    ew_base_addr_low[26:0] <= reg_wr_data[31:5];
   end
 
   // Register: NVDLA_SDP_RDMA_D_EW_BATCH_STRIDE_0    Field: ew_batch_stride
   if (nvdla_sdp_rdma_d_ew_batch_stride_0_wren) begin
-    ew_batch_stride[31:0] <= reg_wr_data[31:0];
+    ew_batch_stride[26:0] <= reg_wr_data[31:5];
   end
 
   // Register: NVDLA_SDP_RDMA_D_EW_LINE_STRIDE_0    Field: ew_line_stride
   if (nvdla_sdp_rdma_d_ew_line_stride_0_wren) begin
-    ew_line_stride[31:0] <= reg_wr_data[31:0];
+    ew_line_stride[26:0] <= reg_wr_data[31:5];
   end
 
   // Register: NVDLA_SDP_RDMA_D_EW_SURFACE_STRIDE_0    Field: ew_surface_stride
   if (nvdla_sdp_rdma_d_ew_surface_stride_0_wren) begin
-    ew_surface_stride[31:0] <= reg_wr_data[31:0];
+    ew_surface_stride[26:0] <= reg_wr_data[31:5];
   end
 
   // Register: NVDLA_SDP_RDMA_D_FEATURE_MODE_CFG_0    Field: batch_number
@@ -742,7 +741,7 @@ always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
 
   // Register: NVDLA_SDP_RDMA_D_SRC_BASE_ADDR_LOW_0    Field: src_base_addr_low
   if (nvdla_sdp_rdma_d_src_base_addr_low_0_wren) begin
-    src_base_addr_low[31:0] <= reg_wr_data[31:0];
+    src_base_addr_low[26:0] <= reg_wr_data[31:5];
   end
 
   // Register: NVDLA_SDP_RDMA_D_SRC_DMA_CFG_0    Field: src_ram_type
@@ -752,12 +751,12 @@ always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
 
   // Register: NVDLA_SDP_RDMA_D_SRC_LINE_STRIDE_0    Field: src_line_stride
   if (nvdla_sdp_rdma_d_src_line_stride_0_wren) begin
-    src_line_stride[31:0] <= reg_wr_data[31:0];
+    src_line_stride[26:0] <= reg_wr_data[31:5];
   end
 
   // Register: NVDLA_SDP_RDMA_D_SRC_SURFACE_STRIDE_0    Field: src_surface_stride
   if (nvdla_sdp_rdma_d_src_surface_stride_0_wren) begin
-    src_surface_stride[31:0] <= reg_wr_data[31:0];
+    src_surface_stride[26:0] <= reg_wr_data[31:5];
   end
 
   // Not generating flops for read-only field NVDLA_SDP_RDMA_D_STATUS_INF_INPUT_NUM_0::status_inf_input_num

@@ -1,3 +1,0 @@
-sc_cor_fiber.lo: ../../../../src/sysc/kernel/sc_cor_fiber.cpp \
- /usr/include/stdc-predef.h
-/usr/include/stdc-predef.h:

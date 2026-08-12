@@ -9,8 +9,7 @@ endif
 
 TARGET ?= libnvdla_cmod.so
 
-PROJECT_DIR ?= $(DEPTH)/$(OUTDIR)/$(PROJECT)
-BUILD_DIR ?= $(PROJECT_DIR)/$(REL_PATH_FROM_TOT)
+BUILD_DIR ?= $(DEPTH)/$(OUTDIR)/$(PROJECT)/$(REL_PATH_FROM_TOT)
 SRC_DIR ?= $(DEPTH)/cmod
 
 PREFIX ?=$(BUILD_DIR)/release
@@ -42,7 +41,7 @@ SRCS := \
 	$(SRC_DIR)/glb/NV_NVDLA_glb.cpp \
 	$(SRC_DIR)/glb/gen/glb_reg_model.cpp \
 	$(SRC_DIR)/glb/gen/gec_reg_model.cpp \
-#	$(SRC_DIR)/hls_wrapper/cdma_hls_wrapper.cpp \
+	$(SRC_DIR)/hls_wrapper/cdma_hls_wrapper.cpp \
 	$(SRC_DIR)/hls_wrapper/cdp_hls_wrapper.cpp \
 	$(SRC_DIR)/hls_wrapper/cdp_icvt_wrapper.cpp \
 	$(SRC_DIR)/hls_wrapper/cdp_ocvt_wrapper.cpp \
@@ -51,7 +50,6 @@ SRCS := \
 	$(SRC_DIR)/hls_wrapper/sdp_hls_wrapper.cpp \
 	$(SRC_DIR)/mcif/gen/NV_NVDLA_mcif.cpp \
 	$(SRC_DIR)/nvdla_clibs/NvdlaDataFormatConvertor.cpp \
-	$(SRC_DIR)/nvdla_clibs/NvdlaPacker.cpp \
 	$(SRC_DIR)/nvdla_core/NV_NVDLA_core.cpp \
 	$(SRC_DIR)/nvdla_core/NvdlaCoreDummy.cpp \
 	$(SRC_DIR)/nvdla_top/NV_nvdla.cpp \
@@ -102,13 +100,10 @@ OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
 INC_DIRS := \
-	$(PROJECT_DIR)/spec/defs \
-	$(PROJECT_DIR)/spec/manual \
 	./include \
 	$(SRC_DIR)/include/nvdla_ness_header \
 	$(SRC_DIR)/include \
 	$(SRC_DIR)/nvdla_payload \
-	$(SRC_DIR)/nvdla_clibs \
 	$(SRC_DIR)/bdma \
 	$(SRC_DIR)/cacc \
 	$(SRC_DIR)/cbuf \
@@ -159,7 +154,7 @@ CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -fPIC -Wall -Werror -DSC_INCLUDE_DYNAMIC_PROCE
 LDFLAGS ?= -shared $(addprefix -l,$($(notdir $(SYSTEMC_LIBRARIES)):lib%.so=%)) $(LD_FLAGS)
 
 $(BUILD_DIR)/$(TARGET): $(OBJS) 
-	$(CC) $(OBJS) -o $@ $(LDFLAGS) -L$(BUILD_DIR)
+	$(GCC) $(OBJS) -o $@ $(LDFLAGS) -L$(BUILD_DIR)
 
 default: $(BUILD_DIR)/$(TARGET) install
 	@echo "=============================================="
@@ -168,7 +163,7 @@ default: $(BUILD_DIR)/$(TARGET) install
 
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	$(MKDIR_P) $(dir $@)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(GCC) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 .PHONY: clean
 
@@ -184,7 +179,6 @@ install:
 	$(CP) $(SRC_DIR)/include/scsim_common.h $(PREFIX)/include
 	$(CP) $(SRC_DIR)/include/NV_nvdla_top_base.h $(PREFIX)/include
 	$(CP) $(SRC_DIR)/nvdla_top/NV_nvdla.h $(PREFIX)/include
-	$(CP) $(SRC_DIR)/nvdla_payload/nvdla_dbb_extension.h $(PREFIX)/include
 	@echo "=============================================="
 	@echo "release files are installed to $(PREFIX)"
 	@echo "=============================================="

@@ -138,66 +138,13 @@ set(NVDLA_ADAPTOR_FILES
   src/adaptors/irq_adaptor.cpp
   )
 
-set(NVDLA_CMOD_COMPAT_FILES
-  ${NVDLA_HW_PREFIX}/cmod/hls_wrapper/cdma_hls_wrapper.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls_wrapper/cdp_hls_wrapper.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls_wrapper/cdp_icvt_wrapper.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls_wrapper/cdp_ocvt_wrapper.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls_wrapper/csc_hls_wrapper.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls_wrapper/pdp_hls_wrapper.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls_wrapper/sdp_hls_wrapper.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/cdma_libs/cdma_cvt.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/cdp_libs/cdp_icvt.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/cdp_libs/cdp_ocvt.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/cdp_libs/cdp_sq.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/csc_libs/csc_cvt.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/sdp/sdp_c.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/sdp/sdp_x.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/sdp/sdp_y.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/sdp/sdp_y_core.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/sdp/sdp_y_cvt.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/sdp/sdp_y_idx.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/sdp/sdp_y_inp.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/vlibs/fp16_max.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/vlibs/fp16_min.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/vlibs/fp16_to_fp17.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/vlibs/fp16_to_fp32.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/vlibs/fp17_add.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/vlibs/fp17_mul.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/vlibs/fp17_to_fp16.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/vlibs/fp17_to_fp32.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/vlibs/fp32_add.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/vlibs/fp32_mul.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/vlibs/fp32_sub.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/vlibs/fp32_to_fp17.cpp
-  ${NVDLA_HW_PREFIX}/cmod/hls/vlibs/uint16_to_fp17.cpp
-  ${NVDLA_HW_PREFIX}/cmod/nvdla_clibs/NvdlaPacker.cpp
-  ${NVDLA_HW_PREFIX}/cmod/mcif/gen/NV_NVDLA_mcif.cpp
-  ${NVDLA_HW_PREFIX}/cmod/nvdla_core/NV_NVDLA_core.cpp
-  ${NVDLA_HW_PREFIX}/cmod/nvdla_core/NvdlaCoreDummy.cpp
-  ${NVDLA_HW_PREFIX}/cmod/nvdla_top/NV_nvdla.cpp
-  ${NVDLA_HW_PREFIX}/cmod/nvdla_top/NvdlaAxiAdaptor.cpp
-  ${NVDLA_HW_PREFIX}/cmod/nvdla_top/NvdlaCsbAdaptor.cpp
-  ${NVDLA_HW_PREFIX}/cmod/nvdla_top/NvdlaTopDummy.cpp
-  ${NVDLA_HW_PREFIX}/cmod/pdp/gen/pdp_rdma_reg_model.cpp
-  ${NVDLA_HW_PREFIX}/cmod/pdp/gen/pdp_reg_model.cpp
-  ${NVDLA_HW_PREFIX}/cmod/pdp/NV_NVDLA_pdp.cpp
-  ${NVDLA_HW_PREFIX}/cmod/rubik/gen/rbk_reg_model.cpp
-  ${NVDLA_HW_PREFIX}/cmod/rubik/NV_NVDLA_rbk.cpp
-  ${NVDLA_HW_PREFIX}/cmod/sdp/gen/sdp_rdma_reg_model.cpp
-  ${NVDLA_HW_PREFIX}/cmod/sdp/gen/sdp_reg_model.cpp
-  ${NVDLA_HW_PREFIX}/cmod/sdp/NV_NVDLA_sdp.cpp
-  )
-
 if(MINGW)
     add_library(nvdla STATIC src/nvdla_top.cpp
       ${NVDLA_ADAPTOR_FILES}
-      ${NVDLA_CMOD_COMPAT_FILES}
       )
 else()
     add_library(nvdla SHARED src/nvdla_top.cpp
       ${NVDLA_ADAPTOR_FILES}
-      ${NVDLA_CMOD_COMPAT_FILES}
       )
 endif()  
 

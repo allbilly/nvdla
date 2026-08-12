@@ -11,8 +11,10 @@ import re
 import struct
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-REG_HEADER_DIR = os.path.join(SCRIPT_DIR,
-    "../../../../ref/hw/outdir/nv_small/spec/manual")
+REG_HEADER_DIR = os.path.abspath(os.path.join(SCRIPT_DIR,
+    "../ref/hw2/outdir/nv_small/spec/manual"))
+ARNVDLA_HEADER = os.path.abspath(os.path.join(SCRIPT_DIR,
+    "../ref/hw/cmod/include/arnvdla.h"))
 
 # VP DRAM range (from conf/aarch64_nvdla.lua)
 # Must relocate UVM test addresses (0x8xxx/0x9xxx/0xAxxx) into 0xCxxxxxxx-0xFxxxxxxx
@@ -22,7 +24,10 @@ VP_OUT_BASE    = 0xf0000000
 
 # Build register name -> offset map
 reg_map = {}
-for hfile in glob.glob(os.path.join(REG_HEADER_DIR, "NVDLA_*.h")):
+header_files = glob.glob(os.path.join(REG_HEADER_DIR, "NVDLA_*.h"))
+if not header_files and os.path.exists(ARNVDLA_HEADER):
+    header_files = [ARNVDLA_HEADER]
+for hfile in header_files:
     with open(hfile) as f:
         for line in f:
             m = re.match(r'#define\s+(NVDLA_\S+_0)\s+.*?_MK_ADDR_CONST\((0x[0-9a-fA-F]+)\)', line)
@@ -267,7 +272,7 @@ def generate_c_source(cfg_path):
     lines.append('    return 0;')
     lines.append('}')
 
-    c_path = os.path.join(SCRIPT_DIR, f'{test_name}_test.c')
+    c_path = os.path.join(test_dir, f'{test_name}_test.c')
     with open(c_path, 'w') as f:
         f.write('\n'.join(lines))
     print(f"Generated {c_path}")
@@ -288,7 +293,7 @@ if __name__ == '__main__':
 
     if os.path.exists(dt_dat):
         entries = parse_dat_file(dt_dat)
-        generate_devmem_script(entries, VP_DATA_BASE, os.path.join(SCRIPT_DIR, 'dat_load.sh'))
+        generate_devmem_script(entries, VP_DATA_BASE, os.path.join(test_dir, 'dat_load.sh'))
     if os.path.exists(wt_dat):
         entries = parse_dat_file(wt_dat)
-        generate_devmem_script(entries, VP_WEIGHT_BASE, os.path.join(SCRIPT_DIR, 'wt_load.sh'))
+        generate_devmem_script(entries, VP_WEIGHT_BASE, os.path.join(test_dir, 'wt_load.sh'))

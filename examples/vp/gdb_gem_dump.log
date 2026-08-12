@@ -1,0 +1,53 @@
+warning: Can not parse XML syscalls information; XML support was disabled at compile time.
+Catchpoint 1 (syscall 29)
+Catchpoint 2 (syscall 222)
+warning: Unable to find libthread_db matching inferior's thread library, thread debugging will not be available.
+GEM_CREATE handle=1 size=4096
+PRIME handle=1 fd=4
+GEM_MMAP handle=1 offset=0x0
+MMAP fd=3 addr=0x9675c000 len=4096 off=0x0 low=0x0
+GEM_CREATE handle=2 size=1120
+PRIME handle=2 fd=5
+GEM_MMAP handle=2 offset=0x1000
+MMAP fd=3 addr=0x9675b000 len=1120 off=0x1000 low=0x1000
+GEM_CREATE handle=3 size=40
+PRIME handle=3 fd=6
+GEM_MMAP handle=3 offset=0x2000
+MMAP fd=3 addr=0x9675a000 len=40 off=0x2000 low=0x2000
+GEM_CREATE handle=4 size=36
+PRIME handle=4 fd=7
+GEM_MMAP handle=4 offset=0x3000
+MMAP fd=3 addr=0x96759000 len=36 off=0x3000 low=0x3000
+GEM_CREATE handle=5 size=116
+PRIME handle=5 fd=8
+GEM_MMAP handle=5 offset=0x4000
+MMAP fd=3 addr=0x96758000 len=116 off=0x4000 low=0x4000
+GEM_CREATE handle=6 size=644
+PRIME handle=6 fd=9
+GEM_MMAP handle=6 offset=0x5000
+MMAP fd=3 addr=0x96757000 len=644 off=0x5000 low=0x5000
+GEM_CREATE handle=7 size=4096
+PRIME handle=7 fd=10
+GEM_MMAP handle=7 offset=0x6000
+MMAP fd=3 addr=0x96327000 len=4096 off=0x6000 low=0x6000
+[New LWP 1485]
+[Switching to LWP 1485]
+[Switching to LWP 1482]
+GEM_CREATE handle=8 size=1120
+PRIME handle=8 fd=11
+GEM_MMAP handle=8 offset=0x7000
+MMAP fd=3 addr=0x95b26000 len=1120 off=0x7000 low=0x7000
+GEM_CREATE handle=9 size=1120
+PRIME handle=9 fd=12
+GEM_MMAP handle=9 offset=0x8000
+MMAP fd=3 addr=0x95b25000 len=1120 off=0x8000 low=0x8000
+SUBMIT_BREAK fd=3 arg=0xcae68e50
+GEM_ADDR handle=1 addr=0x9675c000 size=4096 off=0x0
+GEM_ADDR handle=2 addr=0x9675b000 size=1120 off=0x1000
+GEM_ADDR handle=3 addr=0x9675a000 size=40 off=0x2000
+GEM_ADDR handle=4 addr=0x96759000 size=36 off=0x3000
+GEM_ADDR handle=5 addr=0x96758000 size=116 off=0x4000
+GEM_ADDR handle=6 addr=0x96757000 size=644 off=0x5000
+GEM_ADDR handle=7 addr=0x96327000 size=4096 off=0x6000
+GEM_ADDR handle=8 addr=0x95b26000 size=1120 off=0x7000
+GEM_ADDR handle=9 addr=0x95b25000 size=1120 off=0x8000

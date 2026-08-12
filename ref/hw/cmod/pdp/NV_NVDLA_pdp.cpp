@@ -13,8 +13,8 @@
 #include "NV_NVDLA_pdp.h"
 #include "NV_NVDLA_pdp_pdp_gen.h"
 #include "NV_NVDLA_pdp_pdp_rdma_gen.h"
-#include "opendla.uh"
-#include "opendla.h"
+#include "arnvdla.uh"
+#include "arnvdla.h"
 #include "cmacros.uh"
 #include "math.h"
 #include "log.h"
@@ -27,7 +27,6 @@
 #define DATA_FORMAT_INT16       NVDLA_PDP_D_DATA_FORMAT_0_INPUT_DATA_INT16
 #define DATA_FORMAT_FP16        NVDLA_PDP_D_DATA_FORMAT_0_INPUT_DATA_FP16
 #define KERNEL_WIDTH_MAX        8
-#define PDP_ATOM_PER_TRANSFER   (DMAIF_WIDTH / DLA_ATOM_SIZE)
 
 USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
@@ -35,6 +34,19 @@ using namespace std;
 using namespace tlm;
 using namespace sc_core;
 
+// DELETME, const static uint32_t MPCORE2MC_MAX_DATA_LEN = 4; // mpcore 2 mc request will be 32b each time.
+const static uint32_t CSB_DATA_LEN = 1;     // CSB data length is always 1
+const static uint32_t CSB_BYTE_WIDTH = 4;   // CSB bus data byte width is 4
+const static uint32_t STRIPE_SIZE = 256;    // Stripe size, unit is byte
+const static uint32_t MEM_ACCESS_BURST_LENGTH = 256;    // Stripe size, unit is byte
+const static uint32_t MAX_MEM_TRANSACTION_BYTE_SIZE = 256;
+const static uint8_t DATA_FROM_CONV_MAX_LEN = 32;
+const static uint8_t PADDING_NONE   = 0;
+const static uint8_t PADDING_ZERO   = 1;
+const static uint8_t PADDING_MIRROR = 2;
+const static bool USE_LUT = true;
+const static bool NOT_USE_LUT = false;
+const static uint32_t pdp_RDMA_READ_BUFFER_SIZE = 2304;
 enum PDP_OPERATION_MODE_ALIAS {
     SPLIT_WIDTH_DIS_16B_TO_8B,
     SPLIT_WIDTH_DIS_COMMON,
@@ -61,7 +73,7 @@ NV_NVDLA_pdp::NV_NVDLA_pdp( sc_module_name module_name ):
     csb_delay_(SC_ZERO_TIME),
     b_transport_delay_(SC_ZERO_TIME)
 {
-    sdp2pdp_fifo_ = new sc_core::sc_fifo <uint8_t *> (SDP2PDP_FIFO_ENTRY_NUM);
+    spd2pdp_fifo_ = new sc_core::sc_fifo <uint8_t *> (SDP2PDP_FIFO_ENTRY_NUM);
     rdma_buffer_  = new sc_fifo <uint8_t *> (PDP_RDMA_BUFFER_ENTRY_NUM);
     wdma_buffer_  = new sc_fifo <uint8_t *> (PDP_RDMA_BUFFER_ENTRY_NUM);
     pdp_ack_fifo_     = new sc_fifo <pdp_ack_info*> (2);
@@ -70,6 +82,7 @@ NV_NVDLA_pdp::NV_NVDLA_pdp( sc_module_name module_name ):
         line_buffer_usage_free_[i]  = new sc_core::sc_fifo<uint8_t> (1);
         line_buffer_ready_[i]       = new sc_core::sc_fifo<uint8_t> (1);
     }
+    line_buffer_usage_available_    = new sc_core::sc_fifo<uint8_t> (PDP_LINE_BUFFER_ENTRY_NUM);
     dma_rd_req_payload_             = new nvdla_dma_rd_req_t;
     dma_wr_req_cmd_payload_         = new nvdla_dma_wr_req_t;
     dma_wr_req_data_payload_        = new nvdla_dma_wr_req_t;
@@ -96,7 +109,7 @@ NV_NVDLA_pdp::NV_NVDLA_pdp( sc_module_name module_name ):
 
 #pragma CTC SKIP
 NV_NVDLA_pdp::~NV_NVDLA_pdp () {
-    if (sdp2pdp_fifo_)                  delete sdp2pdp_fifo_;
+    if (spd2pdp_fifo_)                  delete spd2pdp_fifo_;
     if (rdma_buffer_)                   delete rdma_buffer_;
     if( wdma_buffer_ )                  delete wdma_buffer_;
     if (dma_rd_req_payload_)            delete dma_rd_req_payload_;
@@ -220,7 +233,7 @@ void NV_NVDLA_pdp::PdpRdmaSequenceThread(){
                 break;
 #pragma CTC ENDSKIP
             case SPLIT_WIDTH_DIS_COMMON:
-                src_base_addr = uint64_t(pdp_rdma_src_base_addr_high_) << 32 | uint64_t(pdp_rdma_src_base_addr_low_);
+                src_base_addr = uint64_t(pdp_rdma_src_base_addr_high_) << 32 | uint64_t(pdp_rdma_src_base_addr_low_) << 5;
                 cube_in_width = pdp_rdma_cube_in_width_ + 1;
                 cslDebug((30, "PdpRdmaSequenceThread, split disabled. before RdmaSequenceCommon. src_base_addr=0x%lx cube_in_width=0x%x\n", src_base_addr, cube_in_width));
                 RdmaSequenceCommon(src_base_addr, cube_in_width);
@@ -236,19 +249,19 @@ void NV_NVDLA_pdp::PdpRdmaSequenceThread(){
                 for (split_iter = 0; split_iter < split_num; split_iter ++) {
                     if (0 == split_iter) {
                         // The first split width
-                        src_base_addr = uint64_t(pdp_rdma_src_base_addr_high_) << 32 | uint64_t(pdp_rdma_src_base_addr_low_);
+                        src_base_addr = uint64_t(pdp_rdma_src_base_addr_high_) << 32 | uint64_t(pdp_rdma_src_base_addr_low_) << 5;
                         cube_in_width = partial_width_in_first;
                     } else if ( split_num - uint32_t(1) == split_iter ) {
                         // The last split width
                         //Note: kernel_stride_width may be larger than kernel_width
-                        src_base_addr = uint64_t(pdp_rdma_src_base_addr_high_) << 32 | uint64_t(pdp_rdma_src_base_addr_low_);
-                        split_offset = (partial_width_in_first + (split_iter-1)*partial_width_in_mid - (kernel_width - kernel_stride_width)) * DLA_ATOM_SIZE;
+                        src_base_addr = uint64_t(pdp_rdma_src_base_addr_high_) << 32 | uint64_t(pdp_rdma_src_base_addr_low_) << 5;
+                        split_offset = (partial_width_in_first + (split_iter-1)*partial_width_in_mid - (kernel_width - kernel_stride_width)) * ATOM_CUBE_SIZE;
                         src_base_addr += (int64_t)split_offset;
                         cube_in_width = partial_width_in_last + (kernel_width - kernel_stride_width);
                     } else {
                         //Note: kernel_stride_width may be larger than kernel_width
-                        src_base_addr = uint64_t(pdp_rdma_src_base_addr_high_) << 32 | uint64_t(pdp_rdma_src_base_addr_low_);
-                        split_offset = (partial_width_in_first + (split_iter-1)*partial_width_in_mid - (kernel_width - kernel_stride_width)) * DLA_ATOM_SIZE;
+                        src_base_addr = uint64_t(pdp_rdma_src_base_addr_high_) << 32 | uint64_t(pdp_rdma_src_base_addr_low_) << 5;
+                        split_offset = (partial_width_in_first + (split_iter-1)*partial_width_in_mid - (kernel_width - kernel_stride_width)) * ATOM_CUBE_SIZE;
                         src_base_addr += (int64_t)split_offset;
                         cube_in_width = partial_width_in_mid + (kernel_width - kernel_stride_width);
                     }
@@ -306,11 +319,11 @@ void NV_NVDLA_pdp::RdmaSequenceCommon(uint64_t src_base_addr, uint32_t cube_in_w
     cube_in_height      = pdp_rdma_cube_in_height_+1;
     cube_in_channel     = pdp_rdma_cube_in_channel_+1;
     // RDMA read sequence does not support partial height
-    src_line_stride     = pdp_rdma_src_line_stride_;
-    src_surface_stride  = pdp_rdma_src_surface_stride_;
+    src_line_stride     = pdp_rdma_src_line_stride_ << 5;
+    src_surface_stride  = pdp_rdma_src_surface_stride_ << 5;
 
     // Modified. If mode_split is true, is_src_line_packed should always be false.
-    if ( src_line_stride == DLA_ATOM_SIZE * cube_in_width ) {
+    if ( src_line_stride == ATOM_CUBE_SIZE * cube_in_width ) {
         is_src_line_packed = true;
     } else {
         is_src_line_packed = false;
@@ -355,8 +368,8 @@ void NV_NVDLA_pdp::RdmaSequenceCommon(uint64_t src_base_addr, uint32_t cube_in_w
             // Calculate payload size, payload transaction must be within a 256 byte
             payload_size        = MAX_MEM_TRANSACTION_SIZE - payload_addr%MAX_MEM_TRANSACTION_SIZE;
             // Payload transaction shall not larger than rest of atom cube number
-            payload_atom_num    = min(atom_num-atom_sent_num, payload_size/DLA_ATOM_SIZE);
-            payload_size        = payload_atom_num*DLA_ATOM_SIZE;
+            payload_atom_num    = min(atom_num-atom_sent_num, payload_size/ATOM_CUBE_SIZE);
+            payload_size        = payload_atom_num*ATOM_CUBE_SIZE;
           // Prepare payload
             dma_rd_req_payload_->pd.dma_read_cmd.addr = payload_addr;
             dma_rd_req_payload_->pd.dma_read_cmd.size = payload_atom_num-1;
@@ -473,6 +486,8 @@ void NV_NVDLA_pdp::PoolingStage0SequenceCommon(uint32_t cube_in_width, uint32_t 
     //if ((kernel_width < kernel_stride_width) || (kernel_height < kernel_stride_height))
     //    FAIL(("NV_NVDLA_pdp::PoolingStage0SequenceCommon, invalid pooling configuration."));
 
+    // line_buffer_atom_free_num = (PDP_LINE_BUFFER_PHYSICAL_BUFFER_NUM - PDP_LINE_BUFFER_PHYSICAL_BUFFER_NUM% overlapped_line_num) * PDP_LINE_BUFFER_INT8_ELEMENT_NUM/ATOM_CUBE_SIZE;
+    // line_buffer_atom_available_num = (PDP_LINE_BUFFER_PHYSICAL_BUFFER_NUM - PDP_LINE_BUFFER_PHYSICAL_BUFFER_NUM% overlapped_line_num) * PDP_LINE_BUFFER_INT8_ELEMENT_NUM/ATOM_CUBE_SIZE;
     overlapped_kernel_max_num_width = (kernel_width+kernel_stride_width-1)/kernel_stride_width;
 
     switch (precision) {
@@ -551,7 +566,7 @@ void NV_NVDLA_pdp::PoolingStage0SequenceCommon(uint32_t cube_in_width, uint32_t 
                             if(valid_height_iter)
                             {
                                 cslDebug((50, "Input s=%d w=%d h=%d maps to output w=%d h=%d, data: ", surface_iter, width_iter, height_iter, idx_atom_width_out, idx_atom_height_out));
-                                for(int i=0; i<DLA_ATOM_SIZE; i++) cslDebug((50, "%02x ", atomic_cube[i]));
+                                for(int i=0; i<ATOM_CUBE_SIZE; i++) cslDebug((50, "%02x ", atomic_cube[i]));
                                 cslDebug((50, "\n"));
                             }
                         }
@@ -586,7 +601,7 @@ void NV_NVDLA_pdp::PoolingStage0SequenceCommon(uint32_t cube_in_width, uint32_t 
                                 idx_atom_height_out = (pad_top + height_iter - kernel_height_iter)/kernel_stride_height;
                                 cslDebug((50, "kernel_height_iter:0x%02x, idx_atom_height_out:0x%02x\n", kernel_height_iter, idx_atom_height_out));
                                 if (valid_height_iter) {
-                                    uint32_t atomic_stride   = uint32_t(DLA_ATOM_SIZE) * 2;     //In size of Byte. INT8 uses 2bytes, INT16 and FP16 uses 4bytes
+                                    uint32_t atomic_stride   = uint32_t(ATOM_CUBE_SIZE) * 2;     //In size of Byte. INT8 uses 2bytes, INT16 and FP16 uses 4bytes
                                     uint32_t line_stride     = cube_out_width * atomic_stride;
                                     uint32_t surf_stride     = (pdp_cube_out_height_+1) * line_stride;
                                     uint32_t acc_subcube_start = (pdp_cube_out_height_+1) * acc_subcube_out_width * surface_num * atomic_stride;
@@ -606,13 +621,13 @@ void NV_NVDLA_pdp::PoolingStage0SequenceCommon(uint32_t cube_in_width, uint32_t 
 
                                     switch (precision) {
                                         case DATA_FORMAT_INT8:
-                                            PoolingStage0Calc (&line_operation_buffer_ptr_int8[lob_idx*ELEMENT_PER_ATOM_INT8], line_buffer_ptr_int8, idx_atom_width_out, idx_atom_height_out, surface_iter, cube_in_height, kernel_height_iter, kernel_height, height_iter, padding_value_array_ptr_int8, ELEMENT_PER_ATOM_INT8, surface_num, acc_subcube_out_width, cube_out_width);
+                                            PoolingStage0Calc (&line_operation_buffer_ptr_int8[lob_idx*ELEMENT_PER_ATOM_INT8], line_buffer_ptr_int8, idx_atom_width_out, idx_atom_height_out, surface_iter, cube_in_height, kernel_height_iter, kernel_height, height_iter, padding_value_array_ptr_int8, 32, surface_num, acc_subcube_out_width, cube_out_width);
                                             break;
                                         case DATA_FORMAT_INT16:
-                                            PoolingStage0Calc (&line_operation_buffer_ptr_int16[lob_idx*ELEMENT_PER_ATOM_INT16], line_buffer_ptr_int16, idx_atom_width_out, idx_atom_height_out, surface_iter, cube_in_height, kernel_height_iter, kernel_height, height_iter, padding_value_array_ptr_int16, ELEMENT_PER_ATOM_INT16, surface_num, acc_subcube_out_width, cube_out_width);
+                                            PoolingStage0Calc (&line_operation_buffer_ptr_int16[lob_idx*ELEMENT_PER_ATOM_INT16], line_buffer_ptr_int16, idx_atom_width_out, idx_atom_height_out, surface_iter, cube_in_height, kernel_height_iter, kernel_height, height_iter, padding_value_array_ptr_int16, 16, surface_num, acc_subcube_out_width, cube_out_width);
                                             break;
                                         case DATA_FORMAT_FP16:
-											PoolingStage0Calc (&line_operation_buffer_ptr_fp16[lob_idx*ELEMENT_PER_ATOM_FP16], line_buffer_ptr_fp16, idx_atom_width_out, idx_atom_height_out, surface_iter, cube_in_height, kernel_height_iter, kernel_height, height_iter, padding_value_array_ptr_fp16, ELEMENT_PER_ATOM_FP16, surface_num, acc_subcube_out_width, cube_out_width);
+											PoolingStage0Calc (&line_operation_buffer_ptr_fp16[lob_idx*ELEMENT_PER_ATOM_FP16], line_buffer_ptr_fp16, idx_atom_width_out, idx_atom_height_out, surface_iter, cube_in_height, kernel_height_iter, kernel_height, height_iter, padding_value_array_ptr_fp16, 16, surface_num, acc_subcube_out_width, cube_out_width);
                                             break;
 #pragma CTC SKIP
                                         default:
@@ -625,6 +640,8 @@ void NV_NVDLA_pdp::PoolingStage0SequenceCommon(uint32_t cube_in_width, uint32_t 
                                     if (is_last_element)
                                     {
                                         cslDebug((50, "write to line_buffer_ready_[%d], out h=%d, out w=%d\n", linebuf_entry_idx, idx_atom_height_out, idx_atom_width_out));
+                                        //cslDebug((50, "write to line_buffer_usage_available_\n"));
+                                        //line_buffer_usage_available_->write(1); //tell stage1 that there is available in line buffer.
                                         line_buffer_ready_[linebuf_entry_idx]->write(1);
                                     }
                                 }
@@ -738,13 +755,13 @@ void NV_NVDLA_pdp::PoolingStage1SequenceCommon(uint32_t cube_out_width, uint32_t
 
                 switch (precision) {
                     case DATA_FORMAT_INT8:
-                        PoolingStage1Calc (atomic_cube_ptr_int8, line_buffer_ptr_int8, output_width_iter, output_height_iter, surface_iter, ELEMENT_PER_ATOM_INT8, surface_num, acc_subcube_out_width, cube_out_width, pad_left, pad_right, cube_in_width);
+                        PoolingStage1Calc (atomic_cube_ptr_int8, line_buffer_ptr_int8, output_width_iter, output_height_iter, surface_iter, 32, surface_num, acc_subcube_out_width, cube_out_width, pad_left, pad_right, cube_in_width);
                         break;
                     case DATA_FORMAT_INT16:
-                        PoolingStage1Calc (atomic_cube_ptr_int16, line_buffer_ptr_int16, output_width_iter, output_height_iter, surface_iter, ELEMENT_PER_ATOM_INT16, surface_num, acc_subcube_out_width, cube_out_width, pad_left, pad_right, cube_in_width);
+                        PoolingStage1Calc (atomic_cube_ptr_int16, line_buffer_ptr_int16, output_width_iter, output_height_iter, surface_iter, 16, surface_num, acc_subcube_out_width, cube_out_width, pad_left, pad_right, cube_in_width);
                         break;
                     case DATA_FORMAT_FP16:
-                        PoolingStage1Calc (atomic_cube_ptr_fp16, line_buffer_ptr_fp16, output_width_iter, output_height_iter, surface_iter, ELEMENT_PER_ATOM_FP16, surface_num, acc_subcube_out_width, cube_out_width, pad_left, pad_right, cube_in_width);
+                        PoolingStage1Calc (atomic_cube_ptr_fp16, line_buffer_ptr_fp16, output_width_iter, output_height_iter, surface_iter, 16, surface_num, acc_subcube_out_width, cube_out_width, pad_left, pad_right, cube_in_width);
                         break;
 #pragma CTC SKIP
                     default:
@@ -771,7 +788,7 @@ void NV_NVDLA_pdp::PoolingStage1SequenceCommon(uint32_t cube_out_width, uint32_t
                 }
 
                 cslDebug((70, "NV_NVDLA_pdp::PoolingStage1SequenceCommon, write to wdma_buffer: "));
-                for(int i=0;i<KERNEL_PER_GROUP_INT8;i++)
+                for(int i=0;i<32;i++)
                     cslDebug((70, "0x%02x ", atomic_cube[i]));
                 cslDebug((70, "\n"));
             }
@@ -806,7 +823,7 @@ void NV_NVDLA_pdp::PdpWdmaSequenceThread () {
                 break;
 #pragma CTC ENDSKIP
             case SPLIT_WIDTH_DIS_COMMON:
-                dst_base_addr = uint64_t(pdp_dst_base_addr_high_) << 32 | uint64_t(pdp_dst_base_addr_low_);
+                dst_base_addr = uint64_t(pdp_dst_base_addr_high_) << 32 | uint64_t(pdp_dst_base_addr_low_) << 5;
                 cube_out_width = pdp_cube_out_width_+1;
                 split_last     = true;
                 WdmaSequenceCommon(dst_base_addr, cube_out_width, split_last);
@@ -821,17 +838,17 @@ void NV_NVDLA_pdp::PdpWdmaSequenceThread () {
                 for (split_iter = 0; split_iter < split_num; split_iter ++) {
                     if (0 == split_iter) {
                         // The first split width
-                        dst_base_addr  = uint64_t(pdp_dst_base_addr_high_) << 32 | uint64_t(pdp_dst_base_addr_low_);
+                        dst_base_addr  = uint64_t(pdp_dst_base_addr_high_) << 32 | uint64_t(pdp_dst_base_addr_low_) << 5;
                         cube_out_width = partial_width_out_first;
                         split_last     = false;
                     } else if ((split_num - 1) == split_iter) { // The last split width
-                        dst_base_addr  = uint64_t(pdp_dst_base_addr_high_) << 32 | uint64_t(pdp_dst_base_addr_low_);
-                        dst_base_addr += (partial_width_out_first + (split_iter-1)*partial_width_out_mid) * DLA_ATOM_SIZE;
+                        dst_base_addr  = uint64_t(pdp_dst_base_addr_high_) << 32 | uint64_t(pdp_dst_base_addr_low_) << 5;
+                        dst_base_addr += (partial_width_out_first + (split_iter-1)*partial_width_out_mid) * ATOM_CUBE_SIZE;
                         cube_out_width = partial_width_out_last;
                         split_last     = true;
                     } else {
-                        dst_base_addr  = uint64_t(pdp_dst_base_addr_high_) << 32 | uint64_t(pdp_dst_base_addr_low_);
-                        dst_base_addr += (partial_width_out_first + (split_iter-1)*partial_width_out_mid) * DLA_ATOM_SIZE;
+                        dst_base_addr  = uint64_t(pdp_dst_base_addr_high_) << 32 | uint64_t(pdp_dst_base_addr_low_) << 5;
+                        dst_base_addr += (partial_width_out_first + (split_iter-1)*partial_width_out_mid) * ATOM_CUBE_SIZE;
                         cube_out_width = partial_width_out_mid;
                         split_last     = false;
                     }
@@ -867,11 +884,11 @@ void NV_NVDLA_pdp::WdmaSequenceCommon(uint64_t dst_base_addr, uint32_t cube_out_
     // overlapped_line_num = pdp_overlapped_line_num_;
     cube_in_channel     = pdp_cube_in_channel_+1;
     cube_out_height     = pdp_cube_out_height_+1;
-    dst_line_stride     = pdp_dst_line_stride_;
-    dst_surface_stride  = pdp_dst_surface_stride_;
+    dst_line_stride     = pdp_dst_line_stride_ << 5;
+    dst_surface_stride  = pdp_dst_surface_stride_ << 5;
 
     // Evaluated
-    if ( dst_line_stride == DLA_ATOM_SIZE * cube_out_width ) {
+    if ( dst_line_stride == ATOM_CUBE_SIZE * cube_out_width ) {
         is_dst_line_packed = true;
     } else {
         is_dst_line_packed = false;
@@ -911,8 +928,8 @@ void NV_NVDLA_pdp::WdmaSequenceCommon(uint64_t dst_base_addr, uint32_t cube_out_
                 // Calculate payload size, payload transaction must be within a 256 byte
                 payload_size        = MAX_MEM_TRANSACTION_SIZE - payload_addr%MAX_MEM_TRANSACTION_SIZE;
                 // Payload transaction shall not be larger than rest of atom cube number
-                payload_atom_num    = min(atom_num-atom_sent_num, payload_size/DLA_ATOM_SIZE);
-                payload_size        = payload_atom_num*DLA_ATOM_SIZE;
+                payload_atom_num    = min(atom_num-atom_sent_num, payload_size/ATOM_CUBE_SIZE);
+                payload_size        = payload_atom_num*ATOM_CUBE_SIZE;
                 if ((block_iter_height+1 == block_num_height) && (surface_iter+1 == surface_num) && (atom_sent_num+payload_atom_num == atom_num) ) {
                     is_required_ack = true;
                 }
@@ -928,7 +945,7 @@ void NV_NVDLA_pdp::WdmaSequenceCommon(uint64_t dst_base_addr, uint32_t cube_out_
             for (output_height_iter = 0; output_height_iter < cube_out_height; output_height_iter++) {
                 payload_addr     = dst_base_addr + output_height_iter * dst_line_stride + surface_iter * dst_surface_stride;
                 payload_atom_num = cube_out_width;
-                payload_size     = payload_atom_num*DLA_ATOM_SIZE;
+                payload_size     = payload_atom_num*ATOM_CUBE_SIZE;
                 // Prepare Payload
                 if ( split_last && (surface_iter+1 == surface_num) && (output_height_iter+1 == cube_out_height) ) {
                     is_required_ack = true;
@@ -1133,7 +1150,7 @@ void NV_NVDLA_pdp::sdp2pdp_b_transport(int ID, nvdla_sdp2pdp_t* payload, sc_core
     payload_data_ptr    = reinterpret_cast <uint8_t *> (payload->pd.sdp2pdp.data);
     fifo_data_ptr = new uint8_t[SDP2PDP_PAYLOAD_SIZE];
     memcpy (fifo_data_ptr, payload_data_ptr, SDP2PDP_PAYLOAD_SIZE);
-    sdp2pdp_fifo_->write(fifo_data_ptr);
+    spd2pdp_fifo_->write(fifo_data_ptr);
     //sdp2pdp_trans_cnt++;
     //printf("sdp2pdp_trans_cnt=%d\n", sdp2pdp_trans_cnt);
 }
@@ -1188,43 +1205,80 @@ void NV_NVDLA_pdp::ExtractDmaPayload(nvdla_dma_rd_rsp_t* payload){
 
     cslDebug((50, "NV_NVDLA_pdp::ExtractDmaPayload\n"));
 
-    for(int atom_iter = 0; atom_iter < PDP_ATOM_PER_TRANSFER; atom_iter++) {
-        if (0 != (mask & (0x1 << atom_iter))) {
-            rdma_atom_cube_ptr = new uint8_t[DLA_ATOM_SIZE]; 
-            memcpy(rdma_atom_cube_ptr, &payload_data_ptr[DLA_ATOM_SIZE*atom_iter], DLA_ATOM_SIZE);
-            rdma_buffer_->write(rdma_atom_cube_ptr);
+    // Handling lower 32 bytes
+    if (0 != (mask & 0x1)) {
+        rdma_atom_cube_ptr = new uint8_t[ATOM_CUBE_SIZE]; 
+        memcpy(rdma_atom_cube_ptr, payload_data_ptr, ATOM_CUBE_SIZE);
+        rdma_buffer_->write(rdma_atom_cube_ptr);
 
-            if(pdp_input_data_ == DATA_FORMAT_FP16)
+        if(pdp_input_data_ == DATA_FORMAT_FP16)
+        {
+            uint16_t *ptr = reinterpret_cast <uint16_t *> (rdma_atom_cube_ptr);
+
+            for(int i=0;i<16;i++)
             {
-                uint16_t *ptr = reinterpret_cast <uint16_t *> (rdma_atom_cube_ptr);
+                uint32_t exp = (ptr[i] >> 10) & 0x1f;
+                uint32_t frac = ptr[i] & 0x3ff;
 
-                for(int i=0;i<16;i++)
+                if(exp == 0x1f)
                 {
-                    uint32_t exp = (ptr[i] >> 10) & 0x1f;
-                    uint32_t frac = ptr[i] & 0x3ff;
-
-                    if(exp == 0x1f)
+                    if(frac == 0)
                     {
-                        if(frac == 0)
-                        {
-                            inf_input_num++;
-                        }
-                        else
-                        {
-                            nan_input_num++;
-                            cslDebug((70, "got NaN:%x i=%d\n", ptr[i], i));
-                        }
+                        inf_input_num++;
+                    }
+                    else
+                    {
+                        nan_input_num++;
+                        cslDebug((70, "got NaN:%x i=%d\n", ptr[i], i));
                     }
                 }
             }
+        }
 
 #ifdef NVDLA_CMOD_DEBUG
-            cslDebug((70, "write to rdma_buffer. mask A\n"));
-            for(int i=0;i<DLA_ATOM_SIZE;i++)
-                cslDebug((70, "0x%02x \n", rdma_atom_cube_ptr[i]));
-            cslDebug((70, "\n"));
+        cslDebug((70, "write to rdma_buffer. mask A\n"));
+        for(int i=0;i<32;i++)
+            cslDebug((70, "0x%02x \n", rdma_atom_cube_ptr[i]);
+        cslDebug((70, "\n"));
 #endif
+    }
+
+    // Handling upper 32 bytes
+    if (0 != (mask & 0x2)) {
+        rdma_atom_cube_ptr = new uint8_t[ATOM_CUBE_SIZE]; 
+        memcpy(rdma_atom_cube_ptr, payload_data_ptr + ATOM_CUBE_SIZE, ATOM_CUBE_SIZE);
+        rdma_buffer_->write(rdma_atom_cube_ptr);
+
+        if(pdp_input_data_ == DATA_FORMAT_FP16)
+        {
+            uint16_t *ptr = reinterpret_cast <uint16_t *> (rdma_atom_cube_ptr);
+
+            for(int i=0;i<16;i++)
+            {
+                uint32_t exp = (ptr[i] >> 10) & 0x1f;
+                uint32_t frac = ptr[i] & 0x3ff;
+
+                if(exp == 0x1f)
+                {
+                    if(frac == 0)
+                    {
+                        inf_input_num++;
+                    }
+                    else
+                    {
+                        nan_input_num++;
+                        cslDebug((70, "got NaN:%x i=%d\n", ptr[i], i));
+                    }
+                }
+            }
         }
+
+#ifdef NVDLA_CMOD_DEBUG
+        cslDebug((70, "write to rdma_buffer. mask B\n"));
+        for(int i=0;i<32;i++)
+            cslDebug((70, "0x%02x \n", rdma_atom_cube_ptr[i]));
+        cslDebug((70, "\n"));
+#endif
     }
 
     cslDebug((50, "NV_NVDLA_pdp::ExtractDmaPayload done\n"));
@@ -1240,9 +1294,7 @@ void NV_NVDLA_pdp::cvif2pdp_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* paylo
 
 // Send DMA write request
 void NV_NVDLA_pdp::SendDmaWriteRequest(uint64_t payload_addr, uint32_t payload_size, uint32_t payload_atom_num, bool ack_required){
-    uint32_t atom_iter;
-    uint32_t transfer_iter;
-    uint32_t transfer_num;
+    uint32_t atom_iter = 0;
     uint8_t *dma_write_data_ptr;
     uint8_t *payload_data_ptr;
     // Prepare payload
@@ -1254,27 +1306,24 @@ void NV_NVDLA_pdp::SendDmaWriteRequest(uint64_t payload_addr, uint32_t payload_s
     cslDebug((50, "NV_NVDLA_pdp::SendDmaWriteRequest cmd, payload_addr=0x%lx payload_atom_num=0x%x\n", payload_addr, payload_atom_num));
     SendDmaWriteRequest(dma_wr_req_cmd_payload_, dma_delay_, ack_required);
     cslDebug((50, "NV_NVDLA_pdp::SendDmaWriteRequest cmd done\n"));
-    transfer_num = (payload_atom_num + PDP_ATOM_PER_TRANSFER - 1)/PDP_ATOM_PER_TRANSFER;
-    for (transfer_iter = 0; transfer_iter < transfer_num; transfer_iter++) {
-        for (atom_iter=0; atom_iter<PDP_ATOM_PER_TRANSFER; atom_iter++) {
-            if((transfer_iter*PDP_ATOM_PER_TRANSFER + atom_iter) == payload_atom_num) {
-                // Fill 0
-                memset(&payload_data_ptr[atom_iter*DLA_ATOM_SIZE], 0, (PDP_ATOM_PER_TRANSFER-atom_iter)*DLA_ATOM_SIZE);
-                SendDmaWriteRequest (dma_wr_req_data_payload_, dma_delay_);
-                break;
-            }
-            dma_write_data_ptr = wdma_buffer_->read();
-            cslDebug((50, "NV_NVDLA_pdp::SendDmaWriteRequest data transfer_iter=%d w=%d of %d, read from wdma_buffer_: ", transfer_iter, atom_iter, payload_atom_num));
-            for(int i=0;i<DLA_ATOM_SIZE;i++)
-                cslDebug((70, "0x%02x ", dma_write_data_ptr[i]));
-            cslDebug((70, "\n"));
-            memcpy(&payload_data_ptr[DLA_ATOM_SIZE*(atom_iter%PDP_ATOM_PER_TRANSFER)], dma_write_data_ptr, DLA_ATOM_SIZE);
-            delete[] dma_write_data_ptr;
-            // Send write data
-            if (atom_iter == (PDP_ATOM_PER_TRANSFER - 1)) {
-                SendDmaWriteRequest (dma_wr_req_data_payload_, dma_delay_);
-            }
+    for (atom_iter = 0; atom_iter < payload_atom_num; atom_iter++) {
+        dma_write_data_ptr = wdma_buffer_->read();
+        cslDebug((50, "NV_NVDLA_pdp::SendDmaWriteRequest data w=%d of %d, read from wdma_buffer_: ", atom_iter, payload_atom_num));
+        for(int i=0;i<32;i++)
+            cslDebug((70, "0x%02x ", dma_write_data_ptr[i]));
+        cslDebug((70, "\n"));
+        memcpy (&payload_data_ptr[ATOM_CUBE_SIZE*(atom_iter%2)], dma_write_data_ptr, ATOM_CUBE_SIZE);
+        delete[] dma_write_data_ptr;
+        // Send write data
+        if ( (atom_iter%2) == 1 ) {
+            SendDmaWriteRequest (dma_wr_req_data_payload_, dma_delay_);
         }
+    }
+    // payload_atom_num is a odd number
+    if ( (payload_atom_num%2) == 1 ) {
+        // Fill the last 32 byte with 0
+        memset (&payload_data_ptr[ATOM_CUBE_SIZE], 0, ATOM_CUBE_SIZE);
+        SendDmaWriteRequest (dma_wr_req_data_payload_, dma_delay_);
     }
 
     if (ack_required) pdp_done_.notify();
@@ -1330,38 +1379,38 @@ void NV_NVDLA_pdp::SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_time& del
 //          2. Int16/FP16: 16 bits
 uint8_t * NV_NVDLA_pdp::FetchInputData () {
     uint8_t *data;
-    uint8_t sdp2pdp_element_iter;
+    uint8_t *sdp2pdp_payload_data;
+    uint8_t spd2pdp_element_iter;
+    uint8_t round_iter;
     data = NULL;
     if (POOLING_FLYING_MODE_ON_FLYING == pdp_flying_mode_) {
-        data = new uint8_t[DLA_ATOM_SIZE];
-        for(int iter = 0; iter < NVDLA_MEMORY_ATOMIC_SIZE/SDP_MAX_THROUGHPUT; iter++) {
-            if (NVDLA_PDP_D_DATA_FORMAT_0_INPUT_DATA_INT8 == pdp_input_data_) {
-                // Int8, 8 bits per container, only use 8*SDP_THROUGHPUT bits
-                uint8_t *sdp2pdp_payload_data;
-                sdp2pdp_payload_data = sdp2pdp_fifo_->read();
+        data = new uint8_t[ATOM_CUBE_SIZE];
+        if (NVDLA_PDP_D_DATA_FORMAT_0_INPUT_DATA_INT8 == pdp_input_data_) {
+            // Int8, 16 bits per container, only use lower 8 bits
+            for (round_iter = 0; round_iter < 2; round_iter ++) {
+                sdp2pdp_payload_data = spd2pdp_fifo_->read();
                 cslDebug((50, "Before copy data from sdp2pdp_payload_data to data\n"));
-                for (sdp2pdp_element_iter = 0; sdp2pdp_element_iter < SDP_MAX_THROUGHPUT; sdp2pdp_element_iter ++) {
-                    data[iter*SDP_MAX_THROUGHPUT+sdp2pdp_element_iter] =  sdp2pdp_payload_data[sdp2pdp_element_iter];
+                for (spd2pdp_element_iter = 0; spd2pdp_element_iter < SDP2PDP_PAYLOAD_ELEMENT_NUM; spd2pdp_element_iter ++) {
+                    data[round_iter*SDP2PDP_PAYLOAD_ELEMENT_NUM+spd2pdp_element_iter] =  sdp2pdp_payload_data[spd2pdp_element_iter*2];
                 }
                 cslDebug((50, "After copy data from sdp2pdp_payload_data to data\n"));
 #pragma CTC SKIP
                 if (sdp2pdp_payload_data) delete [] sdp2pdp_payload_data;
 #pragma CTC ENDSKIP
-            } else {
-                // Int16/FP16, 16 bits per container, user full 16 bits
-                uint16_t *sdp2pdp_payload_data;
-                sdp2pdp_payload_data = (uint16_t*)sdp2pdp_fifo_->read();
-                memcpy (data + iter*SDP_MAX_THROUGHPUT*sizeof(int16_t), sdp2pdp_payload_data, SDP_MAX_THROUGHPUT*sizeof(int16_t));
-#pragma CTC SKIP
-                if (sdp2pdp_payload_data) delete [] sdp2pdp_payload_data;
-#pragma CTC ENDSKIP
             }
+        } else {
+            // Int16/FP16, 16 bits per container, user full 16 bits
+            sdp2pdp_payload_data = spd2pdp_fifo_->read();
+            memcpy (data, sdp2pdp_payload_data, SDP2PDP_PAYLOAD_SIZE);
+#pragma CTC SKIP
+            if (sdp2pdp_payload_data) delete [] sdp2pdp_payload_data;
+#pragma CTC ENDSKIP
         }
     } else if (POOLING_FLYING_MODE_OFF_FLYING == pdp_flying_mode_) {
         // atomic_cube = rdma_buffer_->read();
         data = rdma_buffer_->read();
         cslDebug((50, "FetchInputData: read rdma_buffer, data is.\n"));
-        for(int i=0;i<DLA_ATOM_SIZE;i++) {
+        for(int i=0;i<32;i++) {
             cslDebug((50, "0x%02x ", data[i]));
         }
         cslDebug((50, "\n"));
@@ -1482,7 +1531,7 @@ void NV_NVDLA_pdp::PoolingStage0Calc (T_IN * atomic_data_in, T_OUT * line_buffer
     uint32_t acc_subcube_start;
     uint32_t kernel_width;
 
-    atomic_stride   = uint32_t(DLA_ATOM_SIZE) * 2;     //In size of Byte. INT8 uses 2bytes, INT16 and FP16 uses 4bytes
+    atomic_stride   = uint32_t(ATOM_CUBE_SIZE) * 2;     //In size of Byte. INT8 uses 2bytes, INT16 and FP16 uses 4bytes
     line_stride     = cube_out_width * atomic_stride;
     surf_stride     = (pdp_cube_out_height_+1) * line_stride;
     acc_subcube_start = (pdp_cube_out_height_+1) * acc_subcube_out_width * surface_num * atomic_stride;
@@ -1626,7 +1675,7 @@ void NV_NVDLA_pdp::PoolingStage1Calc (T_OUT * atomic_data_out, T_IN * line_buffe
 
     // pooling_size        = kernel_width*kernel_height;
 
-    atomic_stride   = uint32_t(DLA_ATOM_SIZE) * 2;     //In size of Byte. INT8 uses 2bytes, INT16 and FP16 uses 4bytes
+    atomic_stride   = uint32_t(ATOM_CUBE_SIZE) * 2;     //In size of Byte. INT8 uses 2bytes, INT16 and FP16 uses 4bytes
     line_stride     = cube_out_width * atomic_stride;
     surf_stride     = (pdp_cube_out_height_+1)*line_stride;
     acc_subcube_start = (pdp_cube_out_height_+1) * acc_subcube_out_width * surface_num * atomic_stride;

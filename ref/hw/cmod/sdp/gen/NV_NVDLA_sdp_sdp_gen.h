@@ -8,8 +8,8 @@
 
 // File Name: NV_NVDLA_sdp_sdp_gen.h
 
-#include "NV_NVDLA_sdp.h"
 #include "log.h"
+#include "NV_NVDLA_sdp.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 

@@ -8,8 +8,8 @@
 
 // File Name: NV_NVDLA_cdma_cdma_gen.h
 
-#include "NV_NVDLA_cdma.h"
 #include "log.h"
+#include "NV_NVDLA_cdma.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 

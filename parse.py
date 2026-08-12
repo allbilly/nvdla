@@ -331,6 +331,12 @@ def kmd_bypass(condition):
     return 0 if condition else 1
 
 
+def ram_type_reg(mem_type):
+    # DLA_MEM_MC/CV descriptor values map to MCIF/CVIF register enums in the
+    # opposite order for nv_small/openDLA initial register files.
+    return {0: 1, 1: 0}.get(mem_type, mem_type)
+
+
 def sdp_kmd_cfg(op, ew=False):
     reg = kmd_bypass(op["enable"])
     reg |= kmd_bypass(op["type"] != 1 and op["type"] != 0) << 1
@@ -408,7 +414,7 @@ def sdp_kmd_regs(surface, op):
 
     feature = (1 if src["type"] == 2 else 0) | ((1 if dst["type"] == 2 else 0) << 1) | ((1 if op["conv_mode"] == 1 else 0) << 2) | ((op["batch_num"] - 1) << 8)
     add("D_FEATURE_MODE_CFG_0", feature)
-    add("D_DST_DMA_CFG_0", 0 if dst["type"] == 0 else dst["type"])
+    add("D_DST_DMA_CFG_0", ram_type_reg(dst["type"]))
     if op["batch_num"] > 1:
         add("D_DST_BATCH_STRIDE_0", op["batch_stride"])
     add("D_DATA_FORMAT_0", op["dst_precision"] | (op["dst_precision"] << 2))
@@ -433,14 +439,14 @@ def conv_kmd_regs(surface, op):
     add("CACC", "D_BATCH_NUMBER_0", op["batch"] - 1)
     add("CACC", "D_LINE_STRIDE_0", dst["line_stride"])
     add("CACC", "D_SURF_STRIDE_0", dst["surf_stride"])
-    add("CACC", "D_DATAOUT_MAP_0", 3 if dst["width"] == 1 and dst["height"] == 1 else 0)
+    add("CACC", "D_DATAOUT_MAP_0", 0x00010001 if dst["width"] == 1 and dst["height"] == 1 else 0)
     add("CACC", "D_CLIP_CFG_0", op["out_cvt"]["truncate"])
 
     cmac_misc = (op["conv_mode"] << 0) | (op["out_precision"] << 12)
     add("CMAC_A", "D_MISC_CFG_0", cmac_misc)
     add("CMAC_B", "D_MISC_CFG_0", cmac_misc)
 
-    cc_misc = (op["conv_mode"] << 0) | (op["out_precision"] << 8) | (op["out_precision"] << 12) | (op["data_reuse"] << 16) | (op["weight_reuse"] << 17) | (op["skip_data_rls"] << 18) | (op["skip_weight_rls"] << 19)
+    cc_misc = (op["conv_mode"] << 0) | (op["out_precision"] << 8) | (op["out_precision"] << 12) | (op["data_reuse"] << 16) | (op["weight_reuse"] << 20) | (op["skip_data_rls"] << 24) | (op["skip_weight_rls"] << 28)
     add("CSC", "D_MISC_CFG_0", cc_misc)
     add("CSC", "D_DATAIN_FORMAT_0", 0)
     add("CSC", "D_DATAIN_SIZE_EXT_0_0", pack_lo_hi(op["input_width_csc"] - 1, op["input_height_csc"] - 1))
@@ -468,13 +474,13 @@ def conv_kmd_regs(surface, op):
     add("CSC", "D_BANK_0", ((op["weight_bank"] - 1) << 16) | (op["data_bank"] - 1))
     add("CSC", "D_PRA_CFG_0", op["pra_truncate"])
 
-    cdma_misc = (op["conv_mode"] << 0) | (op["in_precision"] << 8) | (op["out_precision"] << 12) | (op["data_reuse"] << 16) | (op["weight_reuse"] << 17) | (op["skip_data_rls"] << 18) | (op["skip_weight_rls"] << 19)
+    cdma_misc = (op["conv_mode"] << 0) | (op["in_precision"] << 8) | (op["out_precision"] << 12) | (op["data_reuse"] << 16) | (op["weight_reuse"] << 20) | (op["skip_data_rls"] << 24) | (op["skip_weight_rls"] << 28)
     add("CDMA", "D_MISC_CFG_0", cdma_misc)
     add("CDMA", "D_DATAIN_FORMAT_0", 0)
     add("CDMA", "D_DATAIN_SIZE_0_0", pack_lo_hi(src["width"] - 1, src["height"] - 1))
     add("CDMA", "D_DATAIN_SIZE_1_0", src["channel"] - 1)
     add("CDMA", "D_DATAIN_SIZE_EXT_0_0", pack_lo_hi(op["input_width_csc"] - 1, op["input_height_csc"] - 1))
-    add("CDMA", "D_DAIN_RAM_TYPE_0", 0 if src["type"] == 0 else src["type"])
+    add("CDMA", "D_DAIN_RAM_TYPE_0", ram_type_reg(src["type"]))
     add("CDMA", "D_DAIN_ADDR_HIGH_0_0", 0)
     add("CDMA", "D_DAIN_ADDR_LOW_0_0", src["offset"])
     add("CDMA", "D_DAIN_ADDR_HIGH_1_0", 0)
@@ -482,7 +488,10 @@ def conv_kmd_regs(surface, op):
     add("CDMA", "D_LINE_STRIDE_0", src["line_stride"])
     add("CDMA", "D_SURF_STRIDE_0", src["surf_stride"])
     add("CDMA", "D_LINE_UV_STRIDE_0", surface["in_line_uv_stride"])
-    add("CDMA", "D_DAIN_MAP_0", 0)
+    atom_size = 32
+    line_packed = 1 if src["line_stride"] == src["width"] * atom_size else 0
+    surf_packed = 1 if src["surf_stride"] == src["width"] * src["height"] * atom_size else 0
+    add("CDMA", "D_DAIN_MAP_0", line_packed | (surf_packed << 16))
     add("CDMA", "D_BATCH_NUMBER_0", op["batch"] - 1)
     add("CDMA", "D_BATCH_STRIDE_0", op["batch_stride"])
     add("CDMA", "D_ENTRY_PER_SLICE_0", op["entry_per_slice"] - 1)
@@ -490,7 +499,7 @@ def conv_kmd_regs(surface, op):
     add("CDMA", "D_WEIGHT_FORMAT_0", op["weight_format"])
     add("CDMA", "D_WEIGHT_SIZE_0_0", op["bytes_per_kernel"] - 1)
     add("CDMA", "D_WEIGHT_SIZE_1_0", dst["channel"] - 1)
-    add("CDMA", "D_WEIGHT_RAM_TYPE_0", 1 if weight["type"] == 0 else weight["type"])
+    add("CDMA", "D_WEIGHT_RAM_TYPE_0", ram_type_reg(weight["type"]))
     add("CDMA", "D_WEIGHT_ADDR_HIGH_0", 0)
     add("CDMA", "D_WEIGHT_ADDR_LOW_0", weight["offset"])
     add("CDMA", "D_WEIGHT_BYTES_0", weight["size"])
